@@ -58,7 +58,7 @@ def _find_rns_bin(name):
     return found or name
 _RNS_BIN = os.path.dirname(_find_rns_bin("rnstatus"))
 
-SERVICES = ["noema_lxmf_bridge", "rnsd", "i2pd", "nomadnet", "rbrowser"]
+SERVICES = ["dashboard", "noema_lxmf_bridge", "rnsd", "i2pd", "nomadnet", "rbrowser"]
 
 NOMADNET_PAGE = f"{_HOME}/.nomadnetwork/storage/pages/index.mu"
 NOMADNET_PAGES_DIR = f"{_HOME}/.nomadnetwork/storage/pages"
