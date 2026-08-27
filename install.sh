@@ -328,19 +328,6 @@ else
     echo "      [!] You need to log out and back in for serial port access."
 fi
 
-# --- RNode host (optional) ---
-echo ""
-echo "========================================"
-echo "  RNode Configuration (optional)"
-echo "========================================"
-echo ""
-echo "  If your RNode is connected via TCP (e.g. tcp://10.0.1.103),"
-echo "  enter the host IP so the installer can configure a connection"
-echo "  watchdog. Leave blank to skip."
-echo ""
-read -rp "  RNode host IP [leave blank to skip]: " RNODE_HOST
-echo ""
-
 # --- Systemd services ---
 echo "[6/7] Installing systemd services..."
 
@@ -393,19 +380,6 @@ install_service "dashboard" \
     "$PYTHON $INSTALL_DIR/dashboard/app.py" \
     "$INSTALL_DIR/dashboard" \
     "network.target"
-
-# --- RNode connection watchdog delay ---
-# Dashboard owns RNS and connects to RNode on start.
-# If RNode is on a remote host (e.g. tcp://...) it may take time to come up.
-# Wait for RNode to be reachable before starting dashboard.
-if [ -n "$RNODE_HOST" ]; then
-    mkdir -p /etc/systemd/system/dashboard.service.d
-    cat > /etc/systemd/system/dashboard.service.d/override.conf << EOF
-[Service]
-ExecStartPre=/bin/bash -c 'for i in \$(seq 1 60); do ping -c1 -W1 ${RNODE_HOST} > /dev/null 2>&1 && break; sleep 2; done'
-EOF
-    echo "      RNode ping-wait configured for $RNODE_HOST"
-fi
 
 install_service "noema_lxmf_bridge" \
     "NOEMA LXMF Bridge" \
