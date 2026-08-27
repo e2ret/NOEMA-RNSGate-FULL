@@ -1,0 +1,16 @@
+[Unit]
+Description=rBrowser Nomadnet Browser
+After=network.target rnsd.service
+Wants=rnsd.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/rBrowser
+ExecStart=/root/NOEMA-RNSGate/.venv/bin/python3 rBrowser.py
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target
