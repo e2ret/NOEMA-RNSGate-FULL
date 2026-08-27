@@ -28,7 +28,7 @@ RNS_CONFIG_DIR = f"{_HOME}/.reticulum"
 try:
     import sys as _boot_sys, glob as _boot_glob
     _boot_sp = _boot_glob.glob(f"{_HOME}/NOEMA-RNSGate-FULL/.venv/lib/python*/site-packages") + \
-               _boot_glob.glob(f"{_HOME}/NOEMA-RNSGate-Lite/.venv/lib/python*/site-packages") + \
+               _boot_glob.glob(f"{_HOME}/NOEMA-RNSGate-FULL/.venv/lib/python*/site-packages") + \
                _boot_glob.glob(f"{_HOME}/MeshGate/.venv/lib/python*/site-packages")
     if _boot_sp and _boot_sp[0] not in _boot_sys.path:
         _boot_sys.path.insert(0, _boot_sp[0])
@@ -48,7 +48,7 @@ def _find_rns_bin(name):
     for path in [
         f"{_HOME}/rns-env/bin/{name}",
         f"{_HOME}/MeshGate/.venv/bin/{name}",
-        f"{_HOME}/NOEMA-RNSGate-Lite/.venv/bin/{name}",
+        f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/{name}",
         f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/{name}",
     ]:
         if os.path.exists(path):
@@ -62,7 +62,7 @@ SERVICES = ["dashboard", "noema_lxmf_bridge", "rnsd", "i2pd", "nomadnet", "rbrow
 
 NOMADNET_PAGE = f"{_HOME}/.nomadnetwork/storage/pages/index.mu"
 NOMADNET_PAGES_DIR = f"{_HOME}/.nomadnetwork/storage/pages"
-SCRIPTS_DIR = f"{_HOME}/NOEMA-RNSGate-Lite/scripts"
+SCRIPTS_DIR = f"{_HOME}/NOEMA-RNSGate-FULL/scripts"
 NOMADNET_ADDR_FILE = f"{_HOME}/.nomadnetwork/storage/hashes"
 
 CONFIGS = {
@@ -1351,8 +1351,8 @@ def backup_restore():
                     # Recalculate nomadnet address from restored identity
                     try:
                         import subprocess as _sp_nn
-                        _venv = os.path.join(_HOME, "NOEMA-RNSGate-Lite/.venv/bin/python3")
-                        _script = os.path.join(_HOME, "NOEMA-RNSGate-Lite/recalc_nn_addr.py")
+                        _venv = os.path.join(_HOME, "NOEMA-RNSGate-FULL/.venv/bin/python3")
+                        _script = os.path.join(_HOME, "NOEMA-RNSGate-FULL/recalc_nn_addr.py")
                         if os.path.exists(_venv) and os.path.exists(_script):
                             _sp_nn.run([_venv, _script], timeout=30, capture_output=True)
                     except: pass
@@ -1503,7 +1503,7 @@ def _chat_init():
     import sys as _sys, glob as _glob
     # Find site-packages in venv
     _sp_paths = _glob.glob(f"{_HOME}/rns-env/lib/python*/site-packages") +                 _glob.glob(f"{_HOME}/MeshGate/.venv/lib/python*/site-packages") + \
-                _glob.glob(f"{_HOME}/NOEMA-RNSGate-Lite/.venv/lib/python*/site-packages")
+                _glob.glob(f"{_HOME}/NOEMA-RNSGate-FULL/.venv/lib/python*/site-packages")
     if _sp_paths: _sys.path.insert(0, _sp_paths[0])
     import RNS, LXMF
     os.makedirs(CHAT_STORAGE, exist_ok=True)
@@ -1804,7 +1804,7 @@ def chat_hops(addr):
         import sys as _sys, glob as _glob
         _sp_paths = _glob.glob(f"{_HOME}/rns-env/lib/python*/site-packages") + \
                     _glob.glob(f"{_HOME}/MeshGate/.venv/lib/python*/site-packages") + \
-                    _glob.glob(f"{_HOME}/NOEMA-RNSGate-Lite/.venv/lib/python*/site-packages")
+                    _glob.glob(f"{_HOME}/NOEMA-RNSGate-FULL/.venv/lib/python*/site-packages")
         if _sp_paths: _sys.path.insert(0, _sp_paths[0])
         import RNS
         dest_hash = bytes.fromhex(addr)
@@ -1862,7 +1862,7 @@ def chat_send():
     import sys as _sys, glob as _glob
     # Find site-packages in venv
     _sp_paths = _glob.glob(f"{_HOME}/rns-env/lib/python*/site-packages") +                 _glob.glob(f"{_HOME}/MeshGate/.venv/lib/python*/site-packages") + \
-                _glob.glob(f"{_HOME}/NOEMA-RNSGate-Lite/.venv/lib/python*/site-packages")
+                _glob.glob(f"{_HOME}/NOEMA-RNSGate-FULL/.venv/lib/python*/site-packages")
     if _sp_paths: _sys.path.insert(0, _sp_paths[0])
     import RNS, LXMF, time as _t, uuid as _uuid
     data = request.get_json(silent=True) or {}
@@ -2110,7 +2110,7 @@ def telegram_settings():
 @app.route("/api/git_status")
 def git_status():
     try:
-        install_dir = os.path.join(_HOME, "NOEMA-RNSGate-Lite")
+        install_dir = os.path.join(_HOME, "NOEMA-RNSGate-FULL")
         subprocess.run("git fetch origin", shell=True, cwd=install_dir, capture_output=True, timeout=10)
         r = subprocess.run("git rev-list HEAD..origin/main --count", shell=True, cwd=install_dir, capture_output=True, text=True, timeout=5)
         behind = int(r.stdout.strip() or 0)
@@ -2133,8 +2133,8 @@ def run_command():
         "uptime":          "uptime",
         "rns_update":      f"{_RNS_BIN}/pip install --upgrade rns && echo OK",
         "noema_update":    (
-            f"cd {_HOME}/NOEMA-RNSGate-Lite && git fetch origin 2>&1 && git checkout dashboard/index.html dashboard/app.py lxmf-tools/noema_lxmf_bridge.py 2>&1; git pull 2>&1 && "
-            f"{_HOME}/NOEMA-RNSGate-Lite/.venv/bin/pip install --upgrade rns lxmf lxmfy flask paho-mqtt nomadnet -q 2>&1 && "
+            f"cd {_HOME}/NOEMA-RNSGate-FULL && git fetch origin 2>&1 && git checkout dashboard/index.html dashboard/app.py lxmf-tools/noema_lxmf_bridge.py 2>&1; git pull 2>&1 && "
+            f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/pip install --upgrade rns lxmf lxmfy flask paho-mqtt nomadnet -q 2>&1 && "
             "sudo systemctl restart dashboard noema_lxmf_bridge rnsd && "
             "sleep 3 && systemctl is-active dashboard noema_lxmf_bridge rnsd"
         ),
@@ -2306,7 +2306,7 @@ def nomadnet_status():
     except:
         try:
             import sys as _sys, glob as _glob
-            _sp = _glob.glob(f"{_HOME}/NOEMA-RNSGate-Lite/.venv/lib/python*/site-packages")
+            _sp = _glob.glob(f"{_HOME}/NOEMA-RNSGate-FULL/.venv/lib/python*/site-packages")
             if _sp: _sys.path.insert(0, _sp[0])
             import RNS as _rns
             # NOEMA FULL: Reticulum is already initialized at module level —
@@ -2484,7 +2484,7 @@ def script_run(name):
         return jsonify({"ok": False, "error": "Invalid name"})
     path = os.path.join(SCRIPTS_DIR, name)
     try:
-        venv_python = f"{_HOME}/NOEMA-RNSGate-Lite/.venv/bin/python3"
+        venv_python = f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3"
         out, rc = sh(f"{venv_python} {path} 2>&1")
         return jsonify({"ok": rc == 0, "output": out})
     except Exception as e:
@@ -2496,7 +2496,7 @@ def script_cron_get(name):
         return jsonify({"ok": False, "error": "Invalid name"})
     path = os.path.join(SCRIPTS_DIR, name)
     try:
-        venv_python = f"{_HOME}/NOEMA-RNSGate-Lite/.venv/bin/python3"
+        venv_python = f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3"
         crontab_out, _ = sh("crontab -l 2>/dev/null")
         marker = f"# noema-script:{name}"
         schedule = None
@@ -2517,7 +2517,7 @@ def script_cron_set(name):
     data = request.get_json(silent=True) or {}
     schedule = data.get("schedule")  # None = disable
     try:
-        venv_python = f"{_HOME}/NOEMA-RNSGate-Lite/.venv/bin/python3"
+        venv_python = f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3"
         marker = f"# noema-script:{name}"
         crontab_out, _ = sh("crontab -l 2>/dev/null")
         lines = [l for l in crontab_out.splitlines() if marker not in l]
@@ -2720,7 +2720,7 @@ def reset_identity():
         import threading as _thr
         _thr.Thread(target=_recalc_nn, daemon=True).start()
         # Restart all services in background - dashboard last
-        _sp.Popen(f"sleep 1 && sudo systemctl restart i2pd rnsd noema_lxmf_bridge nomadnet && sleep 8 && {_HOME}/NOEMA-RNSGate-Lite/.venv/bin/python3 {_HOME}/NOEMA-RNSGate-Lite/recalc_nn_addr.py && sleep 2 && sudo systemctl restart dashboard", shell=True)
+        _sp.Popen(f"sleep 1 && sudo systemctl restart i2pd rnsd noema_lxmf_bridge nomadnet && sleep 8 && {_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3 {_HOME}/NOEMA-RNSGate-FULL/recalc_nn_addr.py && sleep 2 && sudo systemctl restart dashboard", shell=True)
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
@@ -2754,7 +2754,7 @@ def cron_rnsd():
 @app.route("/api/cron/tcp_watchdog", methods=["GET", "POST"])
 def cron_tcp_watchdog():
     watchdog_path = f"{_HOME}/lxmf-tools/tcp_watchdog.py"
-    python_bin = f"{_HOME}/NOEMA-RNSGate-Lite/.venv/bin/python3"
+    python_bin = f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3"
     cron_line = f"*/5 * * * * {python_bin} {watchdog_path} >> /var/log/noema_tcp_watchdog.log 2>&1"
     def get_crontab():
         try:
