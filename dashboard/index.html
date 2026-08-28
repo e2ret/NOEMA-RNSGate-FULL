@@ -166,6 +166,13 @@ body{
   .svc-btns .sys-btn{flex:1 1 0;min-width:88px;justify-content:center;font-size:11px;padding:7px 8px}
   .ctab{font-size:12px;padding:6px 12px}
   .two-col{grid-template-columns:1fr!important}
+  #logs-split{grid-template-columns:1fr!important;grid-template-rows:auto auto!important}
+  #logs-split>div{min-height:280px}
+  #rnode-metrics{grid-template-columns:repeat(4,1fr)!important}
+  #rnode-charts-grid{grid-template-columns:repeat(2,1fr)!important}
+  #nodes-grid{grid-template-columns:1fr!important}
+  #nodes-dartboard{max-width:260px;margin:0 auto;display:block!important}
+  #nodes-table-wrap{height:auto!important;max-height:420px}
 }
 
 .sys-btn{
@@ -350,6 +357,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
 @media(max-width:900px){
   .body{overflow-y:auto}
   .main{flex:none;overflow-y:visible}
+  .main:has(#panel-nodes.active){overflow-y:visible}
 }
 </style>
 
@@ -875,7 +883,7 @@ function chatShowMessages(){
 
     <!-- LOGS -->
     <div class="panel" id="panel-logs">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0">
+      <div id="logs-split" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0">
         <div style="display:flex;flex-direction:column;min-height:0">
           <div class="log-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
             <select id="log-unit" onchange="loadLogs()" style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;color:var(--tx);padding:4px 8px;font-family:var(--fn);font-size:12px">
@@ -1049,7 +1057,7 @@ function chatShowMessages(){
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div id="rnode-charts-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
         <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden">
           <div class="section-lbl" style="margin-bottom:6px;font-size:9px" data-i18n="sec_airtime">Airtime % (15s)</div>
           <div style="position:relative;height:100px"><canvas id="rnode-chart-airtime"></canvas></div>
@@ -1090,7 +1098,7 @@ function chatShowMessages(){
       </div>
 
       <!-- Dartboard + Table two-column layout -->
-      <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;flex:1;min-height:0;overflow:hidden">
+      <div id="nodes-grid" style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;flex:1;min-height:0;overflow:hidden">
         <!-- LEFT: Dartboard -->
         <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:12px;position:sticky;top:0;align-self:start">
           <div style="font-size:10px;color:var(--mu);letter-spacing:.08em;margin-bottom:8px;font-family:var(--mono)">NETWORK MAP</div>
