@@ -173,6 +173,8 @@ body{
   #nodes-grid{grid-template-columns:1fr!important}
   #nodes-dartboard{max-width:260px;margin:0 auto;display:block!important}
   #nodes-table-wrap{height:auto!important;max-height:420px}
+  #cfg-main-grid{grid-template-columns:1fr!important}
+  #rns-iface-toggles{max-height:none!important}
 }
 
 .sys-btn{
@@ -198,6 +200,7 @@ body{
 .sys-btn.rd{color:var(--rd);border-color:rgba(255,92,92,.3)}
 .main{overflow-y:auto;padding:20px 20px;background:transparent;display:flex;flex-direction:column;flex:1;min-height:0}
 .main:has(#panel-nodes.active){overflow-y:hidden}
+.main:has(#panel-system.active){overflow-y:hidden}
 .panel{display:none}
 .panel.active{display:flex;flex-direction:column;flex:1;min-height:0;animation:panel-in .18s var(--ease)}
 @keyframes panel-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
@@ -275,7 +278,7 @@ textarea{
   width:100%;background:var(--s1);border:1px solid var(--bd);
   border-radius:var(--radius);padding:14px 16px;
   color:var(--tx);font-family:var(--mono);font-size:12px;
-  line-height:1.7;resize:vertical;flex:1;min-height:200px;
+  line-height:1.7;resize:none;flex:1;min-height:0;
 }
 textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
 
@@ -358,6 +361,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
   .body{overflow-y:auto}
   .main{flex:none;overflow-y:visible}
   .main:has(#panel-nodes.active){overflow-y:visible}
+  .main:has(#panel-system.active){overflow-y:visible}
 }
 </style>
 
@@ -916,13 +920,17 @@ function chatShowMessages(){
 
     <!-- CONFIGS -->
     <div class="panel" id="panel-configs">
-      <div style="display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--bd);padding-bottom:8px">
-        <button class="sys-btn teal" id="cfg-mode-text" onclick="cfgMode('text')" data-i18n="btn_cfg_text">TEXT</button>
-        <button class="sys-btn" id="cfg-mode-form" onclick="cfgMode('form')" data-i18n="btn_cfg_form">RETICULUM FORM</button>
-      </div>
+      <div id="cfg-main-grid" style="display:grid;grid-template-columns:1fr 260px;gap:16px;flex:1;min-height:0">
+
+        <!-- LEFT: config editor -->
+        <div style="min-width:0;display:flex;flex-direction:column">
+          <div style="display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--bd);padding-bottom:8px">
+            <button class="sys-btn teal" id="cfg-mode-text" onclick="cfgMode('text')" data-i18n="btn_cfg_text">TEXT</button>
+            <button class="sys-btn" id="cfg-mode-form" onclick="cfgMode('form')" data-i18n="btn_cfg_form">RETICULUM FORM</button>
+          </div>
 
       <!-- Text editor -->
-      <div id="cfg-text-panel">
+      <div id="cfg-text-panel" style="display:flex;flex-direction:column;flex:1;min-height:0">
         <div class="cfg-tabs" id="cfg-tabs"></div>
         <div class="cfg-path" id="cfg-path"></div>
         <textarea id="cfg-area" spellcheck="false"></textarea>
@@ -989,6 +997,31 @@ function chatShowMessages(){
         </style>
 
       </div>
+        </div><!-- /left col -->
+
+        <!-- RIGHT: RNS interface toggles -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div class="section-lbl" style="margin:0">RNS Interfaces</div>
+            <button class="sys-btn" style="padding:2px 8px;font-size:10px" onclick="_rnsTogglesLoad()">↻</button>
+          </div>
+          <!-- enable_transport -->
+          <div style="background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:8px 10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div id="rns-transport-dot" style="width:8px;height:8px;border-radius:50%;background:var(--mu);flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:9px;color:var(--mu);font-family:var(--mono)">enable_transport</div>
+                <div id="rns-transport-val" style="font-size:11px;font-weight:600;color:var(--tx)">—</div>
+              </div>
+              <button id="rns-transport-btn" class="sys-btn" style="padding:2px 8px;font-size:10px;flex-shrink:0" onclick="_rnsToggleTransport()">…</button>
+            </div>
+          </div>
+          <!-- Interface cards -->
+          <div id="rns-iface-toggles" style="display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:calc(100vh - 320px)"></div>
+          <div id="rns-toggle-status" style="font-size:11px;color:var(--teal);display:none;padding:4px 0;text-align:center"></div>
+        </div><!-- /right col -->
+
+      </div><!-- /grid -->
 
       <!-- Add Interface Modal -->
       <div id="add-iface-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
@@ -1028,7 +1061,7 @@ function chatShowMessages(){
         <button class="sys-btn teal" onclick="loadRnodePanel()" data-i18n="btn_refresh">REFRESH</button>
       </div>
       <div id="rnode-status" style="margin-bottom:12px"></div>
-      <div id="rnode-metrics" style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:16px;align-items:start"></div>
+      <div id="rnode-metrics" style="display:flex;gap:8px;margin-bottom:16px;align-items:stretch;flex-wrap:wrap"></div>
       <!-- RF Activity + Interference in two columns -->
       <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:0">
@@ -1046,7 +1079,7 @@ function chatShowMessages(){
         </div>
         <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div class="section-lbl" style="margin:0;color:var(--am)" data-i18n="sec_interference">⚡ Interference Events</div>
+            <div class="section-lbl" style="margin:0;color:var(--am);cursor:pointer" data-i18n="sec_interference" onclick="_showInterferenceInfo()">⚡ Interference Events</div>
             <div style="display:flex;gap:6px;align-items:center">
               <span id="interference-threshold" style="font-size:11px;color:var(--mu)"></span>
               <button class="sys-btn rd" style="padding:2px 8px;font-size:11px" onclick="clearInterference()">Clear</button>
@@ -1058,21 +1091,67 @@ function chatShowMessages(){
         </div>
       </div>
       <div id="rnode-charts-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden">
-          <div class="section-lbl" style="margin-bottom:6px;font-size:9px" data-i18n="sec_airtime">Airtime % (15s)</div>
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('airtime')">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px" data-i18n="sec_airtime">Airtime % (15s)</div>
+            <div id="rnode-val-airtime" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--teal)">—</div>
+          </div>
           <div style="position:relative;height:100px"><canvas id="rnode-chart-airtime"></canvas></div>
         </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden">
-          <div class="section-lbl" style="margin-bottom:6px;font-size:9px" data-i18n="sec_noise">Noise dBm</div>
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('noise')">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px" data-i18n="sec_noise">Noise dBm</div>
+            <div id="rnode-val-noise" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--purple)">—</div>
+          </div>
           <div style="position:relative;height:100px"><canvas id="rnode-chart-noise"></canvas></div>
         </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden">
-          <div class="section-lbl" style="margin-bottom:6px;font-size:9px" data-i18n="sec_rssi">RSSI dBm</div>
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('rssi')">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px" data-i18n="sec_rssi">RSSI dBm</div>
+            <div id="rnode-val-rssi" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--gr)">—</div>
+          </div>
           <div style="position:relative;height:100px"><canvas id="rnode-chart-rssi"></canvas></div>
         </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden">
-          <div class="section-lbl" style="margin-bottom:6px;font-size:9px" data-i18n="sec_snr">SNR dB</div>
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('snr')">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px" data-i18n="sec_snr">SNR dB</div>
+            <div id="rnode-val-snr" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--am)">—</div>
+          </div>
           <div style="position:relative;height:100px"><canvas id="rnode-chart-snr"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Extra RNode charts: Battery, Ch.Load, Rate, CPU Temp -->
+      <div id="rnode-charts-grid2" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div id="rnode-chart-chload-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px">📶 Ch. Load %</div>
+            <div id="rnode-val-chload" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--sky)">—</div>
+          </div>
+          <div style="position:relative;height:100px"><canvas id="rnode-chart-chload"></canvas></div>
+        </div>
+        <div id="rnode-chart-rate-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px">⚡ Rate</div>
+            <div id="rnode-val-rate" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--am)">—</div>
+          </div>
+          <div style="position:relative;height:100px"><canvas id="rnode-chart-rate"></canvas></div>
+        </div>
+        <div id="rnode-chart-traffic-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+            <div class="section-lbl" style="font-size:9px">↕ TX bps</div>
+            <div id="rnode-val-traffic" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--teal)">—</div>
+          </div>
+          <div style="position:relative;height:100px"><canvas id="rnode-chart-traffic"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Metric info popup -->
+      <div id="metric-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center">
+        <div style="background:var(--s2);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:340px;width:90%;position:relative;box-shadow:0 8px 32px #000a">
+          <button onclick="document.getElementById('metric-popup').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;line-height:1">✕</button>
+          <div id="metric-popup-title" style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px;font-family:var(--mono);letter-spacing:.05em"></div>
+          <div id="metric-popup-body" style="font-size:13px;color:var(--tx);line-height:1.6"></div>
         </div>
       </div>
     </div>
@@ -1445,12 +1524,12 @@ function nav(id,el){
   if(id==="logs") { loadLogs(); setTimeout(_ptyInit, 150); }
   if(id==="monitor"){ loadLxmf(); loadRns(); }
   if(id==="system") checkRnsVersion();
-  if(id==="configs") loadConfigs();
+  if(id==="configs") { loadConfigs(); _rnsTogglesLoad(); }
 
   if(id==="rnode") { loadRnodePanel(); loadInterference(); loadRfActivity(); }
   if(id==="nodes") loadNodesPanel();
   if(id==="i2p") loadI2pStatus();
-  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; }
+  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; _initSysPanel(); }
 }
 
 function toast(msg,ok=true){
@@ -2157,6 +2236,82 @@ function toggleLogAuto(){
 }
 
 // Configs
+let _rnsCfgCache = null;
+
+async function _rnsTogglesLoad() {
+  try {
+    const d = await fetch(API+"/api/rns_config_parsed").then(r=>r.json());
+    _rnsCfgCache = d;
+
+    // enable_transport
+    const transport = d.reticulum?.enable_transport || "No";
+    const isOn = transport === "Yes";
+    const dot = document.getElementById("rns-transport-dot");
+    const val = document.getElementById("rns-transport-val");
+    const btn = document.getElementById("rns-transport-btn");
+    if(dot) dot.style.background = isOn ? "#4ade9a" : "#6b7280";
+    if(val) val.textContent = transport;
+    if(btn) { btn.textContent = isOn ? "Off" : "On"; btn.className = "sys-btn"; }
+
+    // interfaces
+    const el = document.getElementById("rns-iface-toggles");
+    if(!el) return;
+    el.innerHTML = (d.interfaces||[]).map((iface, i) => {
+      const type = iface.params?.type || "Unknown";
+      const enabled = (iface.params?.enabled || "yes").toLowerCase() !== "no";
+      const col = type.includes("RNode") ? "var(--teal)" : type.includes("TCP") ? "var(--bl)" : type.includes("I2P") ? "var(--am)" : "var(--mu)";
+      return `<div style="background:var(--s1);border:1px solid ${enabled?"var(--bd)":"#6b728044"};border-radius:10px;padding:8px 10px;opacity:${enabled?1:0.6}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${enabled?"#4ade9a":"#6b7280"};flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:600;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(iface.name)}</div>
+            <div style="font-size:9px;color:${enabled?"var(--gr)":"var(--mu)"}">${enabled?"enabled":"disabled"}</div>
+          </div>
+          <button class="sys-btn" style="padding:2px 8px;font-size:10px;flex-shrink:0" onclick="_rnsToggleIface(${i})">
+            ${enabled?"Off":"On"}
+          </button>
+        </div>
+      </div>`;
+    }).join("");
+  } catch(e) {}
+}
+
+async function _rnsToggleTransport() {
+  if(!_rnsCfgCache) return;
+  const cur = _rnsCfgCache.reticulum?.enable_transport || "No";
+  _rnsCfgCache.reticulum = { ...(_rnsCfgCache.reticulum||{}), enable_transport: cur === "Yes" ? "No" : "Yes" };
+  await _rnsSaveToggle();
+}
+
+async function _rnsToggleIface(idx) {
+  if(!_rnsCfgCache) return;
+  const iface = _rnsCfgCache.interfaces[idx];
+  if(!iface) return;
+  const cur = (iface.params?.enabled || "yes").toLowerCase();
+  iface.params = { ...(iface.params||{}), enabled: cur === "no" ? "yes" : "no" };
+  await _rnsSaveToggle();
+}
+
+async function _rnsSaveToggle() {
+  const st = document.getElementById("rns-toggle-status");
+  if(st) { st.style.display=""; st.textContent="Saving…"; }
+  try {
+    const r = await fetch(API+"/api/rns_config_save", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(_rnsCfgCache)
+    });
+    const d = await r.json();
+    if(d.ok || d.status==="ok") {
+      if(st) { st.textContent="✓ Saved — restart to apply"; setTimeout(()=>{ if(st) st.style.display="none"; }, 4000); }
+      _rnsTogglesLoad();
+    } else {
+      if(st) st.textContent="❌ Error";
+    }
+  } catch(e) {
+    if(st) st.textContent="❌ Error";
+  }
+}
+
 async function loadConfigs(){
   const r=await fetch(API+"/api/configs");
   cfgData=await r.json();
@@ -3008,34 +3163,71 @@ function selectRnode(idx){
   const f = rnode.fields||{};
   const isUp = f["Status"]==="Up";
 
+  // Name + status + metrics all in one row — set via metricsEl after building bars
   const nameEl = document.getElementById("rnode-selected-name");
-  if(nameEl) nameEl.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px">
-      <div style="width:10px;height:10px;border-radius:50%;background:${isUp?"#4ade9a":"#f87171"};box-shadow:0 0 8px ${isUp?"#4ade9a60":"#f8717160"}"></div>
-      <span>${esc(rnode.name)}</span>
-      <span style="font-size:11px;color:${isUp?"var(--gr)":"var(--rd)"}">● ${isUp?"online":"offline"}</span>
-    </div>`;
+  if(nameEl) nameEl.style.display = "none"; // hidden — we render inline with metrics
 
   const metricsEl = document.getElementById("rnode-metrics");
   const metrics = [
-    f["Battery"]    && {icon:"🔋", label:"Battery",   value: f["Battery"]},
-    f["Airtime"]    && {icon:"📡", label:"Airtime",    value: f["Airtime"].split(",")[0]},
-    f["Ch. Load"]   && {icon:"📶", label:"Ch. Load",   value: f["Ch. Load"].split(",")[0]},
-    f["CPU temp"]   && {icon:"🌡", label:"CPU Temp.",  value: f["CPU temp"]},
-    f["Noise Fl."]  && {icon:"📻", label:"Noise",      value: f["Noise Fl."]},
-    f["Rate"]       && {icon:"⚡", label:"Rate",       value: f["Rate"]},
-    f["Traffic"]    && {icon:"↕",  label:"Traffic",    value: f["Traffic"]},
     f["Mode"]       && {icon:"⚙",  label:"Mode",       value: f["Mode"]},
   ].filter(Boolean);
 
-  if(metricsEl) metricsEl.innerHTML = metrics.map(m=>`
-    <div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:6px 10px;align-self:start">
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
-        <span style="font-size:12px">${m.icon}</span>
-        <span style="font-size:9px;color:var(--mu);letter-spacing:.07em;text-transform:uppercase">${esc(m.label)}</span>
+  // Build CPU temp and Battery bars
+  const cpuTempVal = f["CPU temp"] ? parseFloat(f["CPU temp"]) : null;
+  const batteryVal = (() => {
+    const s = f["Battery"] || "";
+    const m = s.match(/(\d+\.?\d*)/);
+    return m ? parseFloat(m[1]) : null;
+  })();
+  const batteryStr = f["Battery"] || "";
+  const isCharging = batteryStr.toLowerCase().includes("charg");
+
+  const extraBars = [];
+  if(cpuTempVal !== null) {
+    const pct = Math.min(cpuTempVal / 120 * 100, 100);
+    const col = cpuTempVal >= 70 ? "#ef4444" : cpuTempVal >= 55 ? "#f59e0b" : "#10b981";
+    extraBars.push(`<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:5px 10px;display:flex;flex-direction:column;justify-content:center;min-width:130px">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
+        <span style="font-size:11px">🌡</span>
+        <span style="font-size:9px;color:var(--mu);letter-spacing:.07em;text-transform:uppercase">CPU Temp</span>
+        <span style="font-size:11px;font-weight:700;color:${col};margin-left:auto">${cpuTempVal}°C</span>
       </div>
-      <div style="font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.value)}</div>
-    </div>`).join("");
+      <div style="height:3px;background:var(--bd);border-radius:2px"><div style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width .4s"></div></div>
+    </div>`);
+  }
+  if(batteryVal !== null) {
+    const col = batteryVal <= 20 ? "#ef4444" : batteryVal <= 40 ? "#f59e0b" : "#10b981";
+    const icon = isCharging ? "🔌" : "🔋";
+    extraBars.push(`<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:5px 10px;display:flex;flex-direction:column;justify-content:center;min-width:130px">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
+        <span style="font-size:11px">${icon}</span>
+        <span style="font-size:9px;color:var(--mu);letter-spacing:.07em;text-transform:uppercase">Battery</span>
+        <span style="font-size:11px;font-weight:700;color:${col};margin-left:auto">${batteryVal}%</span>
+      </div>
+      <div style="height:3px;background:var(--bd);border-radius:2px"><div style="height:100%;width:${batteryVal}%;background:${col};border-radius:2px;transition:width .4s"></div></div>
+    </div>`);
+  }
+
+  if(metricsEl) metricsEl.innerHTML =
+    `<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;flex-shrink:0">
+      <div style="width:8px;height:8px;border-radius:50%;background:${isUp?"#4ade9a":"#f87171"};flex-shrink:0"></div>
+      <span style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap">${esc(rnode.name.replace("RNodeInterface[","").replace("]",""))}</span>
+      <span style="font-size:10px;color:${isUp?"var(--gr)":"var(--rd)"}">${isUp?"online":"offline"}</span>
+    </div>` +
+    metrics.map(m=>`
+    <div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:5px 10px;display:flex;flex-direction:column;justify-content:center;min-width:100px">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
+        <span style="font-size:11px">${m.icon}</span>
+        <span style="font-size:9px;color:var(--mu);letter-spacing:.07em;text-transform:uppercase">${esc(m.label)}</span>
+        <span style="font-size:11px;font-weight:700;color:var(--teal);margin-left:auto">${esc(m.value)}</span>
+      </div>
+      <div style="height:3px;background:var(--bd);border-radius:2px"></div>
+    </div>`).join("") + extraBars.join("");
+
+  // Update chart overlays with current values
+  const _setVal = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val || "—"; };
+  _setVal("rnode-val-airtime", f["Airtime"] ? f["Airtime"].split(",")[0] : null);
+  _setVal("rnode-val-noise",   f["Noise Fl."] && f["Noise Fl."] !== "Unknown" ? f["Noise Fl."] : null);
 
   loadRnodeCharts(rnode.name);
 }
@@ -3100,6 +3292,58 @@ async function loadRnodeCharts(rnodeName){
       ...chartOpts(cssVar("--am")),
       data:{labels, datasets:[{data:snr,borderColor:cssVar("--am"),backgroundColor:cssVar("--am")+"20",borderWidth:1.5,pointRadius:0,fill:true,tension:.3}]}
     });
+
+    // Update RSSI/SNR overlays with last non-null value
+    const lastRssi = [...rssi].reverse().find(v => v !== null);
+    const lastSnr  = [...snr].reverse().find(v => v !== null);
+    const _sv = (id, val, unit) => { const el=document.getElementById(id); if(el) el.textContent = val!=null ? val+unit : "—"; };
+    _sv("rnode-val-rssi", lastRssi, " dBm");
+    _sv("rnode-val-snr",  lastSnr,  " dB");
+
+    // Extra charts: battery, ch_load, rate, cpu_temp
+    const _extraChart = (key, wrapId, canvasId, valId, color, unit, fmtFn, alwaysShow, labelCb) => {
+      const vals = data.map(d => d[key] != null ? d[key] : null);
+      const hasData = vals.some(v => v !== null);
+      const wrap = document.getElementById(wrapId);
+      if(!wrap) return;
+      wrap.style.display = (alwaysShow || hasData) ? "" : "none";
+      if(!hasData) return;
+      const ctx = document.getElementById(canvasId);
+      if(!ctx) return;
+      if(ctx._chart) { ctx._chart.destroy(); ctx._chart = null; }
+      ctx._chart = new Chart(ctx, {
+        type:"line",
+        options:{responsive:true,maintainAspectRatio:false,animation:false,spanGaps:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:cssVar("--mu"),font:{size:9},maxTicksLimit:8},grid:{color:cssVar("--chart-grid")}},
+            y:{ticks:{color:cssVar("--mu"),font:{size:9}},grid:{color:cssVar("--chart-grid")}}
+          }},
+        data:{labels, datasets:[{data:vals,borderColor:color,backgroundColor:color+"20",borderWidth:1.5,pointRadius:0,fill:true,tension:.3}]}
+      });
+      if(labelCb) {
+        labelCb(data);
+      } else {
+        const lastVal = [...vals].reverse().find(v => v !== null);
+        const el = document.getElementById(valId);
+        if(el) el.textContent = lastVal != null ? (fmtFn ? fmtFn(lastVal) : lastVal+unit) : "—";
+      }
+    };
+
+    _extraChart("ch_load",  "rnode-chart-chload-wrap",   "rnode-chart-chload",   "rnode-val-chload",   cssVar("--sky"),  "%",    v => v.toFixed(1)+"%", false);
+    _extraChart("rate",     "rnode-chart-rate-wrap",     "rnode-chart-rate",     "rnode-val-rate",     cssVar("--am"),   "",     v => v >= 1000 ? (v/1000).toFixed(2)+" kbps" : v.toFixed(0)+" bps", false);
+    _extraChart("tx_bps",   "rnode-chart-traffic-wrap",  "rnode-chart-traffic",  "rnode-val-traffic",  cssVar("--teal"),"",
+      v => v >= 1000 ? (v/1000).toFixed(2)+" kbps" : v.toFixed(0)+" bps",
+      false,
+      data => {
+        // Show total TX bytes as overlay label
+        const last = [...data].reverse().find(d => d.tx_bytes != null);
+        if(!last) return;
+        const b = last.tx_bytes;
+        const el = document.getElementById("rnode-val-traffic");
+        if(el) el.textContent = b >= 1048576 ? (b/1048576).toFixed(2)+" MB" : b >= 1024 ? (b/1024).toFixed(1)+" KB" : b+" B";
+      }
+    );
 
   }catch(e){}
 }
@@ -3206,6 +3450,37 @@ async function loadRnsLog(){
 
 
 // ── RF ACTIVITY LOG ───────────────────────────────────────────────────────────
+const _METRIC_INFO = {
+  airtime: {
+    en: { title: "Airtime % (15s)", body: "Channel occupancy over the last 15 seconds.\n\n0% — no transmissions on the channel.\n\nA LoRa packet at SF9 / BW125 kHz takes about 0.5–1 second to transmit, so a single packet shows up as roughly 3–7% airtime.\n\nHigh airtime means the channel is busy — more collisions, more retries." },
+    ru: { title: "Airtime % (15с)", body: "Занятость канала за последние 15 секунд.\n\n0% — нет передач на канале.\n\nОдин пакет LoRa SF9 / BW125 кГц занимает ~0.5–1 сек, поэтому отображается как ≈ 3–7% airtime.\n\nВысокий airtime = канал загружен, больше коллизий и повторных передач." }
+  },
+  noise: {
+    en: { title: "Noise Floor (dBm)", body: "Background electromagnetic noise on the channel — measured constantly, even when no packets are received.\n\n−100 to −112 dBm — very clean channel, ideal conditions.\n\nRising noise (e.g. −90 dBm) means interference from other devices transmitting on the same or nearby frequency." },
+    ru: { title: "Шум (dBm)", body: "Фоновый электромагнитный шум на канале — измеряется постоянно, даже без пакетов.\n\n−100…−112 dBm — очень чистый канал, идеальные условия.\n\nРост шума (например −90 dBm) = помехи от других устройств на той же или соседней частоте." }
+  },
+  rssi: {
+    en: { title: "RSSI (dBm)", body: "Received Signal Strength Indicator — the power of the last received packet at the antenna input.\n\nCloser to 0 = stronger signal:\n• −20 dBm — node is very close (same room)\n• −60 dBm — good signal\n• −90 dBm — weak, near reception limit\n• −120 dBm — barely decodable\n\nMeasured only when a packet is received." },
+    ru: { title: "RSSI (dBm)", body: "Мощность принятого сигнала последнего пакета на входе антенны.\n\nБлиже к 0 = сильнее сигнал:\n• −20 dBm — нода очень близко (соседняя комната)\n• −60 dBm — хороший сигнал\n• −90 dBm — слабый, на грани приёма\n• −120 dBm — едва декодируется\n\nИзмеряется только при получении пакета." }
+  },
+  snr: {
+    en: { title: "SNR (dB)", body: "Signal-to-Noise Ratio — how much stronger the signal is compared to background noise.\n\nHigher = better:\n• +10 dB — excellent\n• 0 dB — signal equals noise\n• −10 dB — signal is below noise, but LoRa can still decode it!\n\nThis is the key advantage of LoRa spread spectrum: it can receive packets even at negative SNR, where conventional radio would hear only noise." },
+    ru: { title: "SNR (dB)", body: "Отношение сигнал/шум — насколько сигнал сильнее фонового шума.\n\nВыше = лучше:\n• +10 dB — отлично\n• 0 dB — сигнал равен шуму\n• −10 dB — сигнал ниже шума, но LoRa всё равно декодирует!\n\nЭто ключевое преимущество технологии LoRa: она принимает пакеты даже при отрицательном SNR, где обычное радио слышит только шум." }
+  }
+};
+
+function _showMetricInfo(key) {
+  const lang = localStorage.getItem("noema-lang") || "en";
+  const info = _METRIC_INFO[key];
+  if (!info) return;
+  const d = info[lang] || info.en;
+  const popup = document.getElementById("metric-popup");
+  document.getElementById("metric-popup-title").textContent = d.title;
+  document.getElementById("metric-popup-body").innerHTML = d.body.replace(/\n/g, "<br>");
+  popup.style.display = "flex";
+}
+document.addEventListener("keydown", e => { if(e.key==="Escape") { const p=document.getElementById("metric-popup"); if(p) p.style.display="none"; } });
+
 function _rssiBar(rssi){
   // -60 dBm = strong, -120 dBm = weak; map to 0-100%
   const pct = Math.max(0, Math.min(100, ((rssi + 120) / 60) * 100));
@@ -3380,6 +3655,26 @@ function _vuUpdate(rssiVal, snrVal) {
 // ── END VU METERS ─────────────────────────────────────────────────────────────
 
 // ── INTERFERENCE EVENTS ───────────────────────────────────────────────────────
+function _showInterferenceInfo() {
+  const lang = localStorage.getItem("noema-lang") || "en";
+  const info = {
+    en: {
+      title: "⚡ Interference Events",
+      body: "An interference event is detected when the noise floor rises more than 3 dBm above the rolling baseline.\n\nBaseline — the average noise level calculated from the last 6 samples (~1 minute of history).\n\nNoise floor is negative dBm — a less negative value means more noise:\n• −112 dBm — very clean channel\n• −100 dBm — slightly elevated\n• −90 dBm — significant interference\n\nCommon causes: nearby transmitters on the same frequency, industrial equipment, WiFi on adjacent bands, lightning."
+    },
+    ru: {
+      title: "⚡ События помех",
+      body: "Событие помехи фиксируется когда уровень шума поднимается более чем на 3 dBm выше скользящего базового уровня.\n\nБазовый уровень — среднее значение шума за последние 6 измерений (~1 минута истории).\n\nШум измеряется в отрицательных dBm — чем ближе к нулю, тем больше помех:\n• −112 dBm — очень чистый канал\n• −100 dBm — незначительный шум\n• −90 dBm — существенные помехи\n\nТипичные причины: передатчики на той же частоте, промышленное оборудование, WiFi на соседних полосах, молния."
+    }
+  };
+  const d = info[lang] || info.en;
+  const popup = document.getElementById("metric-popup");
+  document.getElementById("metric-popup-title").textContent = d.title;
+  document.getElementById("metric-popup-body").innerHTML = d.body.replace(/\n/g, "<br>");
+  popup.style.display = "flex";
+}
+
+
 function _fmtTs(ts){
   const d = new Date(ts*1000);
   return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
@@ -3888,6 +4183,12 @@ setInterval(pollLxmf, 3000 * _pollMul);
 setInterval(loadRfActivity, 5000 * _pollMul);
 setInterval(updateTopology, 10000 * _pollMul);
 updateTopology();
+setInterval(() => {
+  if(document.getElementById("panel-rnode")?.classList.contains("active")) {
+    loadRnodePanel();
+    loadInterference();
+  }
+}, 10000 * _pollMul);
 setInterval(pollChatIncoming, 5000 * _pollMul);
 setInterval(pollChatStatus, 3000 * _pollMul);
 if("Notification" in window && Notification.permission === "default"){ Notification.requestPermission(); }
@@ -4347,6 +4648,85 @@ function _ptyConnect(){
 }
 function ptyReconnect(){if(_ptyTerm)_ptyTerm.clear();_ptyConnect();}
 function ptyClear(){if(_ptyTerm)_ptyTerm.clear();}
+</script>
+<style>
+.sys-side-btn{display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;border-left:2px solid transparent;color:var(--mu);font-family:var(--fn);font-size:12px;cursor:pointer;transition:all .15s}
+.sys-side-btn:hover{background:var(--s2);color:var(--tx)}
+.sys-side-btn.active{background:var(--s2);color:var(--teal);font-weight:600;border-left-color:var(--teal)}
+#sys-content-area{padding:20px;overflow-y:auto;max-height:calc(100vh - 160px)}
+@media(max-width:768px){
+  #sys-shell{grid-template-columns:1fr!important;grid-template-rows:auto 1fr!important}
+  #sys-sidebar{flex-direction:row!important;overflow-x:auto!important;border-right:none!important;border-bottom:1px solid var(--bd);padding:6px 4px!important;gap:2px;-webkit-mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%)}
+  .sys-side-btn{white-space:nowrap;flex-shrink:0;border-left:none!important;border-bottom:2px solid transparent;padding:8px 12px!important}
+  .sys-side-btn.active{border-bottom-color:var(--teal)}
+  #sys-content-area{max-height:none!important}
+}
+</style>
+<script>
+let _sysPanelBuilt = false;
+const _SYS_TABS = [
+  {id:'quickcmds',   i18n:'sec_quick_commands', icon:'⚡', label:'Quick Cmds'},
+  {id:'maintenance', i18n:'sec_maintenance',    icon:'🔧', label:'Maintenance'},
+  {id:'system',      i18n:'sec_system',         icon:'⚙',  label:'System'},
+  {id:'backup',      i18n:'sec_backup_restore', icon:'💾', label:'Backup'},
+  {id:'versions',    i18n:'sec_versions',       icon:'📦', label:'Versions', sep:true},
+  {id:'chat',        i18n:'sec_chat_settings',  icon:'💬', label:'Chat'},
+  {id:'bridge',      i18n:'sec_bridge_access',  icon:'🔒', label:'Bridge Access'},
+  {id:'chataccess',  i18n:'sec_chat_access',    icon:'🔒', label:'Chat Access'},
+  {id:'telegram',    i18n:'sec_telegram',       icon:'📱', label:'Telegram'},
+];
+const _SYS_SEC_MAP = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',telegram:'sec_telegram'};
+
+function _initSysPanel() {
+  const panel = document.getElementById('panel-system');
+  if(!panel || _sysPanelBuilt) { sysTab('quickcmds'); return; }
+  _sysPanelBuilt = true;
+
+  const allLabels = [...panel.querySelectorAll('.section-lbl[data-i18n]')];
+  const sections = {};
+  allLabels.forEach((lbl, i) => {
+    const i18nKey = lbl.getAttribute('data-i18n');
+    const tabId = Object.keys(_SYS_SEC_MAP).find(k => _SYS_SEC_MAP[k] === i18nKey);
+    if(!tabId) return;
+    const nextLbl = allLabels[i+1];
+    const nodes = [];
+    let el = lbl.nextSibling;
+    while(el && el !== nextLbl && !(el.classList?.contains('section-lbl'))) {
+      nodes.push(el.cloneNode(true));
+      el = el.nextSibling;
+    }
+    sections[tabId] = {label: lbl, nodes};
+  });
+
+  panel.innerHTML = `
+    <div id="sys-shell" style="display:grid;grid-template-columns:180px 1fr;gap:0;flex:1;min-height:0;background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden">
+      <div id="sys-sidebar" style="border-right:1px solid var(--bd);padding:8px 0;display:flex;flex-direction:column">
+        ${_SYS_TABS.map((t,i)=>`${t.sep?'<div style="height:1px;background:var(--bd);margin:4px 8px"></div>':''}<button class="sys-side-btn${i===0?' active':''}" onclick="sysTab('${t.id}')" data-i18n="${t.i18n}">${t.icon} ${t.label}</button>`).join('')}
+      </div>
+      <div id="sys-content-area" style="padding:20px;overflow-y:auto">
+        ${_SYS_TABS.map((t,i)=>`<div id="sys-tab-${t.id}" style="display:${i===0?'block':'none'}"></div>`).join('')}
+      </div>
+    </div>`;
+
+  Object.entries(sections).forEach(([tabId, {label, nodes}]) => {
+    const tab = document.getElementById(`sys-tab-${tabId}`);
+    if(!tab) return;
+    tab.appendChild(label.cloneNode(true));
+    nodes.forEach(n => tab.appendChild(n));
+  });
+
+  sysTab('quickcmds');
+  applyLang();
+}
+
+function sysTab(id) {
+  _SYS_TABS.forEach(t => {
+    const tab = document.getElementById(`sys-tab-${t.id}`);
+    const btn = document.querySelector(`button[onclick="sysTab('${t.id}')"]`);
+    if(tab) tab.style.display = t.id===id ? 'block' : 'none';
+    if(btn) btn.classList.toggle('active', t.id===id);
+  });
+}
 </script>
 </body>
 </html>

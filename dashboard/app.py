@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.0.1"
+__version__ = "1.0.0"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -162,14 +162,80 @@ def collect_metrics():
 
                         noise_val = float(noise_str.strip()) if noise_str.strip().replace("-","").replace(".","").isdigit() else 0
 
+                        # Parse extra fields for graphs
+                        def _parse_pct(s):
+                            try: return float(s.split("%")[0].split("(")[-1].strip())
+                            except: return None
+                        def _parse_kbps(s):
+                            # "1.10 kbps" or "0 bps"
+                            try:
+                                s = s.strip()
+                                if "kbps" in s: return float(s.replace("kbps","").strip()) * 1000
+                                if "bps" in s: return float(s.replace("bps","").strip())
+                                return None
+                            except: return None
+
+                        ch_load_str = fields.get("Ch. Load","")
+                        ch_load_val = _parse_pct(ch_load_str.split(",")[0]) if ch_load_str else None
+
+                        rate_str = fields.get("Rate","")
+                        rate_val = _parse_kbps(rate_str) if rate_str else None
+
+                        battery_str = fields.get("Battery","")
+                        battery_val = None
+                        if battery_str:
+                            try:
+                                import re as _bre
+                                bm = _bre.search(r"(\d+\.?\d*)", battery_str)
+                                if bm: battery_val = float(bm.group(1))
+                            except: pass
+
+                        cpu_temp_str = fields.get("CPU temp","")
+                        cpu_temp_val = None
+                        if cpu_temp_str:
+                            try: cpu_temp_val = float(cpu_temp_str.replace("°C","").replace("C","").strip())
+                            except: pass
+
+                        # Parse traffic TX: "↑513 B  0 bps ↓..." or "↑9.45 KB  1.10 kbps ↓..."
+                        tx_bps_val = None
+                        tx_bytes_val = None
+                        try:
+                            traffic_full = fields.get("Traffic","")
+                            import re as _re
+                            # Extract TX section (between ↑ and ↓)
+                            tx_section = _re.search(r"↑(.+?)(?:↓|$)", traffic_full)
+                            if tx_section:
+                                tx_str = tx_section.group(1).strip()
+                                # Find speed: last number + unit before bps/kbps/Kbps/Mbps
+                                speed_m = _re.search(r"(\d+\.?\d*)\s*(Mbps|kbps|Kbps|bps)\s*$", tx_str.strip())
+                                if speed_m:
+                                    num2, unit2 = float(speed_m.group(1)), speed_m.group(2).lower()
+                                    if "kbps" in unit2: tx_bps_val = num2 * 1000
+                                    elif "mbps" in unit2: tx_bps_val = num2 * 1_000_000
+                                    else: tx_bps_val = num2
+                                # Find total bytes: first number + B/KB/MB
+                                bytes_m = _re.search(r"(\d+\.?\d*)\s*(MB|KB|B)\b", tx_str)
+                                if bytes_m:
+                                    num3, unit3 = float(bytes_m.group(1)), bytes_m.group(2)
+                                    if unit3 == "MB": tx_bytes_val = int(num3 * 1024 * 1024)
+                                    elif unit3 == "KB": tx_bytes_val = int(num3 * 1024)
+                                    else: tx_bytes_val = int(num3)
+                        except: pass
+
                         rnode_history.append({
                             "ts": ts,
                             "iface": iname,
                             "airtime": float(airtime_str.strip()) if airtime_str.strip().replace(".","").isdigit() else 0,
                             "noise": noise_val,
                             "traffic_raw": traffic_str,
+                            "tx_bps": tx_bps_val,
+                            "tx_bytes": tx_bytes_val,
                             "rssi": rssi,
                             "snr": snr,
+                            "ch_load": ch_load_val,
+                            "rate": rate_val,
+                            "battery": battery_val,
+                            "cpu_temp": cpu_temp_val,
                         })
 
                         # Interference detection: compare current noise to rolling baseline
