@@ -1247,13 +1247,16 @@ def backup_download():
     buf = io.BytesIO()
 
     single_files = {
-        "configs/reticulum.cfg":       f"{_HOME}/.reticulum/config",
-        "configs/noema_bridge.cfg":    "/etc/noema/bridge.cfg",
-        "configs/nomadnet.cfg":        f"{_HOME}/.nomadnetwork/config",
-        "identity/reticulum_identity": f"{_HOME}/.reticulum/storage/identity",
-        "identity/i2p_keys":           "/var/lib/i2pd/router.keys",
-        "data/monitored_nodes.json":   f"{_HOME}/dashboard/monitored_nodes.json",
-        "data/nomadnet_hashes":        NOMADNET_ADDR_FILE,
+        "configs/reticulum.cfg":           f"{_HOME}/.reticulum/config",
+        "configs/noema_bridge.cfg":        "/etc/noema/bridge.cfg",
+        "configs/nomadnet.cfg":            f"{_HOME}/.nomadnetwork/config",
+        "configs/dashboard_override.conf": "/etc/systemd/system/dashboard.service.d/override.conf",
+        "identity/reticulum_identity":     f"{_HOME}/.reticulum/storage/identity",
+        "identity/i2p_keys":               "/var/lib/i2pd/router.keys",
+        "identity/i2p_reticulum.dat":      "/var/lib/i2pd/reticulum.dat",
+        "data/monitored_nodes.json":       f"{_HOME}/dashboard/monitored_nodes.json",
+        "data/node_tracker.json":          f"{_HOME}/dashboard/node_tracker.json",
+        "data/nomadnet_hashes":            NOMADNET_ADDR_FILE,
     }
 
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
