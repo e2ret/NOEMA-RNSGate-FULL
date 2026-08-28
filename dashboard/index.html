@@ -1554,6 +1554,7 @@ const I18N = {
     sec_quick_commands: "Quick Commands", sec_maintenance: "Maintenance", sec_system: "System",
     sec_backup_restore: "Backup & Restore", sec_versions: "Versions", sec_chat_settings: "Chat Settings",
     sec_bridge_access: "Bridge Access Control", sec_chat_access: "Chat Access Control",
+    sys_tab_ops: "Operations", sys_tab_access: "Chat & Access",
     sec_telegram: "Telegram Notifications",
     col_type: "Type", col_hash: "Address", col_name: "Name", col_hops: "Hops", col_last_seen: "Last seen",
     filter_all: "All", txt_nodes_loading: "Loading…",
@@ -1650,6 +1651,7 @@ const I18N = {
     sec_quick_commands: "Быстрые команды", sec_maintenance: "Обслуживание", sec_system: "Система",
     sec_backup_restore: "Резервная копия", sec_versions: "Версии", sec_chat_settings: "Настройки чата",
     sec_bridge_access: "Доступ к мосту", sec_chat_access: "Доступ к чату",
+    sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ",
     sec_telegram: "Уведомления Telegram",
     col_type: "Тип", col_hash: "Адрес", col_name: "Имя", col_hops: "Хопы", col_last_seen: "Последний раз",
     filter_all: "Все", txt_nodes_loading: "Загрузка…",
@@ -4665,28 +4667,31 @@ function ptyClear(){if(_ptyTerm)_ptyTerm.clear();}
 <script>
 let _sysPanelBuilt = false;
 const _SYS_TABS = [
-  {id:'quickcmds',   i18n:'sec_quick_commands', icon:'⚡', label:'Quick Cmds'},
-  {id:'maintenance', i18n:'sec_maintenance',    icon:'🔧', label:'Maintenance'},
-  {id:'system',      i18n:'sec_system',         icon:'⚙',  label:'System'},
-  {id:'backup',      i18n:'sec_backup_restore', icon:'💾', label:'Backup'},
-  {id:'versions',    i18n:'sec_versions',       icon:'📦', label:'Versions', sep:true},
-  {id:'chat',        i18n:'sec_chat_settings',  icon:'💬', label:'Chat'},
-  {id:'bridge',      i18n:'sec_bridge_access',  icon:'🔒', label:'Bridge Access'},
-  {id:'chataccess',  i18n:'sec_chat_access',    icon:'🔒', label:'Chat Access'},
-  {id:'telegram',    i18n:'sec_telegram',       icon:'📱', label:'Telegram'},
+  {id:'ops',     i18n:'sys_tab_ops',    label:'Operations'},
+  {id:'versions',i18n:'sec_versions',   label:'Versions', sep:true},
+  {id:'access',  i18n:'sys_tab_access', label:'Chat & Access'},
+  {id:'telegram',i18n:'sec_telegram',   label:'Telegram'},
 ];
-const _SYS_SEC_MAP = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',telegram:'sec_telegram'};
+const _SYS_SEC_MAP = {ops:'sec_system',versions:'sec_versions',access:'sec_chat_settings',telegram:'sec_telegram'};
+// Merged sections mapping
+const _SYS_MERGE = {
+  ops: ['sec_quick_commands','sec_maintenance','sec_system','sec_backup_restore'],
+  access: ['sec_chat_settings','sec_bridge_access','sec_chat_access'],
+};
 
 function _initSysPanel() {
   const panel = document.getElementById('panel-system');
-  if(!panel || _sysPanelBuilt) { sysTab('quickcmds'); return; }
+  if(!panel || _sysPanelBuilt) { sysTab('ops'); return; }
   _sysPanelBuilt = true;
+
+  const _SYS_SEC_MAP_FULL = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',telegram:'sec_telegram'};
 
   const allLabels = [...panel.querySelectorAll('.section-lbl[data-i18n]')];
   const sections = {};
+  console.log('[SysPanel] found labels:', allLabels.map(l=>l.getAttribute('data-i18n')));
   allLabels.forEach((lbl, i) => {
     const i18nKey = lbl.getAttribute('data-i18n');
-    const tabId = Object.keys(_SYS_SEC_MAP).find(k => _SYS_SEC_MAP[k] === i18nKey);
+    const tabId = Object.keys(_SYS_SEC_MAP_FULL).find(k => _SYS_SEC_MAP_FULL[k] === i18nKey);
     if(!tabId) return;
     const nextLbl = allLabels[i+1];
     const nodes = [];
@@ -4701,21 +4706,35 @@ function _initSysPanel() {
   panel.innerHTML = `
     <div id="sys-shell" style="display:grid;grid-template-columns:180px 1fr;gap:0;flex:1;min-height:0;background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden">
       <div id="sys-sidebar" style="border-right:1px solid var(--bd);padding:8px 0;display:flex;flex-direction:column">
-        ${_SYS_TABS.map((t,i)=>`${t.sep?'<div style="height:1px;background:var(--bd);margin:4px 8px"></div>':''}<button class="sys-side-btn${i===0?' active':''}" onclick="sysTab('${t.id}')" data-i18n="${t.i18n}">${t.icon} ${t.label}</button>`).join('')}
+        ${_SYS_TABS.map((t,i)=>`${t.sep?'<div style="height:1px;background:var(--bd);margin:4px 8px"></div>':''}<button class="sys-side-btn${i===0?' active':''}" onclick="sysTab('${t.id}')" data-sys-tab="${t.id}"><span data-i18n="${t.i18n}">${t.label}</span></button>`).join('')}
       </div>
       <div id="sys-content-area" style="padding:20px;overflow-y:auto">
         ${_SYS_TABS.map((t,i)=>`<div id="sys-tab-${t.id}" style="display:${i===0?'block':'none'}"></div>`).join('')}
       </div>
     </div>`;
 
-  Object.entries(sections).forEach(([tabId, {label, nodes}]) => {
-    const tab = document.getElementById(`sys-tab-${tabId}`);
+  // Fill tab content — support merged sections
+  _SYS_TABS.forEach(t => {
+    const tab = document.getElementById(`sys-tab-${t.id}`);
     if(!tab) return;
-    tab.appendChild(label.cloneNode(true));
-    nodes.forEach(n => tab.appendChild(n));
+    const mergedKeys = _SYS_MERGE[t.id];
+    if(mergedKeys) {
+      // Merged tab — append multiple sections
+      mergedKeys.forEach(i18nKey => {
+        const sec = sections[Object.keys(_SYS_SEC_MAP_FULL).find(k=>_SYS_SEC_MAP_FULL[k]===i18nKey)];
+        if(!sec) return;
+        tab.appendChild(sec.label.cloneNode(true));
+        sec.nodes.forEach(n=>tab.appendChild(n));
+      });
+    } else {
+      const sec = sections[t.id];
+      if(!sec) return;
+      tab.appendChild(sec.label.cloneNode(true));
+      sec.nodes.forEach(n=>tab.appendChild(n));
+    }
   });
 
-  sysTab('quickcmds');
+  sysTab('ops');
   applyLang();
 }
 
