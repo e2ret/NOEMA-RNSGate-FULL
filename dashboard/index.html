@@ -1154,6 +1154,8 @@ function chatShowMessages(){
           <div id="metric-popup-body" style="font-size:13px;color:var(--tx);line-height:1.6"></div>
         </div>
       </div>
+
+
     </div>
 
     <!-- NODE TRACKER -->
@@ -1168,6 +1170,12 @@ function chatShowMessages(){
       </div>
 
       <!-- Type filter pills -->
+      <div style="margin-bottom:10px">
+        <input id="nodes-search" type="text" placeholder="Search by name, hash or type…" oninput="_renderNodesTable()"
+          style="width:100%;box-sizing:border-box;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:7px 12px;outline:none"
+          data-i18n-placeholder="ph_nodes_search">
+      </div>
+
       <div id="nodes-filter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
         <button class="sys-btn active" style="border-radius:20px" onclick="setNodeFilter('all',this)" data-i18n="filter_all">All</button>
         <button class="sys-btn" style="border-radius:20px;color:var(--pink)" onclick="setNodeFilter('LXMF',this)">LXMF</button>
@@ -1214,7 +1222,10 @@ function chatShowMessages(){
                 <th style="padding:6px 8px;font-weight:600" data-i18n="col_type">Type</th>
                 <th style="padding:6px 8px;font-weight:600" data-i18n="col_hash">Address</th>
                 <th style="padding:6px 8px;font-weight:600" data-i18n="col_name">Name</th>
+                <th style="padding:6px 8px;font-weight:600" data-i18n="col_region">Region</th>
+                <th style="padding:6px 8px;font-weight:600" data-i18n="col_tcp">TCP</th>
                 <th style="padding:6px 8px;font-weight:600" data-i18n="col_hops">Hops</th>
+                <th style="padding:6px 8px;font-weight:600" data-i18n="col_first_seen">First seen</th>
                 <th style="padding:6px 8px;font-weight:600" data-i18n="col_last_seen">Last seen</th>
               </tr>
             </thead>
@@ -1557,6 +1568,8 @@ const I18N = {
     sys_tab_ops: "Operations", sys_tab_access: "Chat & Access",
     sec_telegram: "Telegram Notifications",
     col_type: "Type", col_hash: "Address", col_name: "Name", col_hops: "Hops", col_last_seen: "Last seen",
+    col_region: "Region", col_tcp: "TCP", col_first_seen: "First seen",
+    ph_nodes_search: "Search by name, hash or type…",
     filter_all: "All", txt_nodes_loading: "Loading…",
     sec_interference: "⚡ Interference Events", txt_interference_empty: "No interference events detected.",
     sec_rf_activity: "📡 RF Activity (LoRa)", txt_rf_activity_empty: "No LoRa packets received yet.",
@@ -1654,6 +1667,8 @@ const I18N = {
     sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ",
     sec_telegram: "Уведомления Telegram",
     col_type: "Тип", col_hash: "Адрес", col_name: "Имя", col_hops: "Хопы", col_last_seen: "Последний раз",
+    col_region: "Регион", col_tcp: "TCP", col_first_seen: "Первый раз",
+    ph_nodes_search: "Поиск по имени, хешу или типу…",
     filter_all: "Все", txt_nodes_loading: "Загрузка…",
     sec_interference: "⚡ События помех", txt_interference_empty: "Событий помех не обнаружено.",
     sec_rf_activity: "📡 RF Активность (LoRa)", txt_rf_activity_empty: "Пакеты LoRa ещё не получены.",
@@ -3796,9 +3811,17 @@ function _renderDartboard(nodes) {
 function _renderNodesTable(){
   const tbody = document.getElementById('nodes-tbody');
   if(!tbody) return;
-  const rows = _nodesFilter === 'all'
-    ? _nodesData
-    : _nodesData.filter(n => n.app_type === _nodesFilter);
+  const searchEl = document.getElementById('nodes-search');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  const rows = (_nodesFilter === 'all' ? _nodesData : _nodesData.filter(n => n.app_type === _nodesFilter))
+    .filter(n => !q ||
+      (n.hash && n.hash.includes(q)) ||
+      (n.name && n.name.toLowerCase().includes(q)) ||
+      (n.app_type && n.app_type.toLowerCase().includes(q)) ||
+      (n.region && n.region.toLowerCase().includes(q)) ||
+      (n.tcp_addr && n.tcp_addr.toLowerCase().includes(q))
+    );
 
   document.getElementById('nodes-count').textContent =
     _nodesFilter === 'all'
@@ -3809,7 +3832,7 @@ function _renderNodesTable(){
   _renderDartboard(_nodesData);
 
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--mu)">No nodes seen yet — waiting for announces…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--mu)">No nodes seen yet — waiting for announces…</td></tr>`;
     return;
   }
 
@@ -3819,18 +3842,24 @@ function _renderNodesTable(){
     const hashShort = n.hash ? n.hash.substring(0,16)+'…' : '—';
     const fullHash  = esc(n.hash||'');
     const name  = n.name ? esc(n.name) : `<span style="color:var(--mu)">—</span>`;
+    const region = n.region ? `<span style="font-size:10px;color:var(--mu)">${esc(n.region)}</span>` : '—';
+    const tcp = n.tcp_addr ? `<span style="font-family:var(--mono);font-size:10px;color:var(--bl)">${esc(n.tcp_addr)}</span>` : '—';
     const hops  = (n.hops !== null && n.hops !== undefined) ? n.hops : '?';
+    const first = n.first_seen ? _fmtRelTime(n.first_seen) : '—';
     const last  = _fmtRelTime(n.last_seen);
     const isNomad = n.app_type === 'Nomadnet';
     const rbuUrl  = `http://${location.hostname}:5000/?url=${encodeURIComponent(fullHash+':/page/index.mu')}`;
     const hashTd  = isNomad
       ? `<a href="${rbuUrl}" target="_blank" style="color:var(--sky);font-family:var(--fn);font-size:11px;text-decoration:none;cursor:pointer" title="Open in rBrowser">${hashShort}</a>`
-      : `<span style="color:var(--teal);font-family:var(--fn);font-size:11px;cursor:pointer" onclick="_copyHash('${fullHash}')" title="Copy full address">${hashShort}</span>`;
+      : `<span style="color:var(--teal);font-family:var(--fn);font-size:11px;cursor:pointer" onclick="_showRnpath('${fullHash}')" title="Show path">${hashShort}</span>`;
     return `<tr style="border-bottom:1px solid var(--bd);transition:background .15s" onmouseover="this.style.background='var(--s1)'" onmouseout="this.style.background=''">
       <td style="padding:8px 8px">${badge}</td>
       <td style="padding:8px 8px;white-space:nowrap">${hashTd}</td>
       <td style="padding:8px 8px;color:var(--tx)">${name}</td>
+      <td style="padding:8px 8px">${region}</td>
+      <td style="padding:8px 8px">${tcp}</td>
       <td style="padding:8px 8px;text-align:center;color:var(--mu)">${hops}</td>
+      <td style="padding:8px 8px;color:var(--mu);white-space:nowrap">${first}</td>
       <td style="padding:8px 8px;color:var(--mu);white-space:nowrap">${last}</td>
     </tr>`;
   }).join('');
@@ -3841,6 +3870,48 @@ function _copyHash(hash){
     const el=document.createElement('textarea');el.value=hash;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('Copied!');
   });
 }
+
+function _copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied!')).catch(()=>{
+    const el=document.createElement('textarea');el.value=text;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('Copied!');
+  });
+}
+
+async function _showRnpath(hash){
+  const popup  = document.getElementById('rnpath-popup');
+  const body   = document.getElementById('rnpath-body');
+  const hashEl = document.getElementById('rnpath-hash');
+  if(!popup) return;
+  hashEl.textContent = hash;
+  body.textContent = 'Looking up path…';
+  popup.style.display = 'flex';
+  try {
+    const r = await fetch(API + '/api/rnpath?hash=' + hash);
+    const d = await r.json();
+    if(d.error) {
+      body.textContent = '❌ ' + d.error;
+    } else {
+      const hops  = d.hops !== null && d.hops !== undefined ? d.hops : '?';
+      const iface = d.interface || '—';
+      const next  = d.next_hop  || '—';
+      body.textContent =
+        `Hops     : ${hops}\n` +
+        `Interface: ${iface}\n` +
+        `Next hop : ${next}` +
+        (d.raw ? '\n\n' + d.raw : '');
+    }
+  } catch(e) {
+    body.textContent = '❌ ' + e.message;
+  }
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') {
+    ['rnpath-popup','metric-popup'].forEach(id => {
+      const p = document.getElementById(id);
+      if(p) p.style.display = 'none';
+    });
+  }
+});
 
 function setNodeFilter(type, btn){
   _nodesFilter = type;
@@ -4747,5 +4818,15 @@ function sysTab(id) {
   });
 }
 </script>
+<div id="rnpath-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#0009;z-index:99999;align-items:center;justify-content:center">
+  <div style="background:var(--s2);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:480px;width:90%;position:relative;box-shadow:0 8px 32px #000a">
+    <button onclick="document.getElementById('rnpath-popup').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;line-height:1">✕</button>
+    <div id="rnpath-hash" style="font-size:11px;font-family:var(--mono);color:var(--mu);margin-bottom:8px;word-break:break-all"></div>
+    <div id="rnpath-body" style="font-size:12px;color:var(--tx);line-height:1.8;font-family:var(--mono);white-space:pre-wrap">Loading…</div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="sys-btn" onclick="_copyToClipboard(document.getElementById('rnpath-hash').textContent)" style="font-size:11px;padding:4px 10px">Copy address</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

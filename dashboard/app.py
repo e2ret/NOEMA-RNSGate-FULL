@@ -600,6 +600,8 @@ class _NodeAnnounceHandler:
 
             # Try to extract human-readable name from app_data
             name = None
+            tcp_addr = None
+            region = None
             if app_data:
                 try:
                     raw_str = app_data.decode("utf-8", errors="replace").strip()
@@ -610,14 +612,16 @@ class _NodeAnnounceHandler:
                         if isinstance(jd, dict):
                             # Priority: name > n > kind+region > h:p
                             name = jd.get("name") or jd.get("n") or ""
+                            region = jd.get("region", "") or jd.get("r", "")
                             if not name:
                                 kind = jd.get("kind", "")
                                 if kind:
-                                    region = jd.get("region", "")
                                     name = f"{kind}/{region}" if region else kind
                                     app_type = kind  # upgrade type
                             if not name and "h" in jd and "p" in jd:
                                 name = f"{jd['h']}:{jd['p']}"
+                            if "h" in jd and "p" in jd:
+                                tcp_addr = f"{jd['h']}:{jd['p']}"
                             name = name or None
                     except Exception:
                         # Plain string
@@ -636,7 +640,14 @@ class _NodeAnnounceHandler:
             with _node_tracker_lock:
                 existing = _node_tracker.get(hex_hash)
                 if existing is None:
-                    if len(_node_tracker) < 500:  # hard cap — don't add beyond limit
+                    # Priority: always add typed/named nodes; only add bare RNS if space allows
+                    _NODE_MAX_TOTAL = 1000
+                    _NODE_MAX_RNS   = 400  # cap on unnamed RNS to leave room for others
+                    rns_count = sum(1 for v in _node_tracker.values() if v.get("app_type") == "RNS" and not v.get("name"))
+                    is_bare_rns = app_type == "RNS" and not name
+                    can_add = (len(_node_tracker) < _NODE_MAX_TOTAL and
+                               (not is_bare_rns or rns_count < _NODE_MAX_RNS))
+                    if can_add:
                         _node_tracker[hex_hash] = {
                             "hash": hex_hash,
                             "name": name or "",
@@ -645,12 +656,18 @@ class _NodeAnnounceHandler:
                             "hops": hops,
                             "first_seen": ts,
                             "last_seen": ts,
+                            "tcp_addr": tcp_addr,
+                            "region": region or "",
                         }
                 else:
                     existing["last_seen"] = ts
                     existing["hops"] = hops
                     if name:
                         existing["name"] = name
+                    if tcp_addr:
+                        existing["tcp_addr"] = tcp_addr
+                    if region:
+                        existing["region"] = region
                     if app_name and app_name != existing.get("app_name"):
                         existing["app_name"] = app_name
                         existing["app_type"] = app_type
@@ -736,6 +753,38 @@ def _nt_register():
 
 threading.Thread(target=_nt_register, daemon=True).start()
 
+
+@app.route("/api/rnpath")
+def api_rnpath():
+    import RNS as _rns
+    h = request.args.get("hash","").strip().lower()
+    if not h or len(h) not in (32, 64):
+        return jsonify({"error": "Invalid hash — must be 64 hex chars"})
+    try:
+        dest_hash = bytes.fromhex(h)
+        hops = _rns.Transport.hops_to(dest_hash)
+        # Get next hop interface
+        path_table = _rns.Transport.path_table
+        entry = None
+        for k, v in path_table.items():
+            if k == dest_hash:
+                entry = v
+                break
+        iface_name = None
+        next_hop   = None
+        if entry:
+            # path_table entry structure varies by RNS version
+            # Try to find interface object and next hop hash
+            for item in (entry if hasattr(entry, '__iter__') else []):
+                try:
+                    if hasattr(item, 'name') and isinstance(item.name, str):
+                        iface_name = item.name
+                    elif isinstance(item, bytes) and len(item) in (16, 32):
+                        next_hop = item.hex()
+                except: pass
+        return jsonify({"hash": h, "hops": hops, "interface": iface_name, "next_hop": next_hop})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 @app.route("/api/nodes")
 def api_nodes():
