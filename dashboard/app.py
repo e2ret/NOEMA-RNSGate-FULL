@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -753,6 +753,45 @@ def _nt_register():
 
 threading.Thread(target=_nt_register, daemon=True).start()
 
+
+@app.route("/api/announce", methods=["POST"])
+def api_announce():
+    """Trigger manual announce for LXMF Bridge and Nomadnet node."""
+    import subprocess as _sub
+    results = {}
+
+    # Nomadnet: send SIGUSR1 via systemctl kill
+    try:
+        out = _sub.run(["sudo", "systemctl", "kill", "-s", "SIGUSR1", "nomadnet"],
+                       capture_output=True, timeout=5)
+        results["nomadnet"] = "signal sent" if out.returncode == 0 else f"err({out.returncode})"
+    except Exception as e:
+        results["nomadnet"] = str(e)
+
+    # LXMF bridge: restart to trigger announce
+    try:
+        out = _sub.run(["sudo", "systemctl", "kill", "-s", "SIGUSR1", "noema_lxmf_bridge"],
+                       capture_output=True, timeout=5)
+        results["lxmf"] = "signal sent" if out.returncode == 0 else "not supported"
+    except Exception as e:
+        results["lxmf"] = str(e)
+
+    # RNS destinations in this process
+    try:
+        import RNS as _rns
+        count = 0
+        dests = getattr(_rns.Transport, 'destinations', [])
+        dests = dests if isinstance(dests, dict) else {}
+        for dest in dests.values():
+            try:
+                dest.announce()
+                count += 1
+            except: pass
+        results["rns"] = f"{count} destinations"
+    except Exception as e:
+        results["rns"] = str(e)
+
+    return jsonify({"ok": True, "results": results})
 
 @app.route("/api/rnpath")
 def api_rnpath():

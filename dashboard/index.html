@@ -453,6 +453,7 @@ function chatShowMessages(){
           <div id="svc-list-left"></div>
           <div class="brow">
             <button class="sys-btn am" onclick="restartAll()" data-i18n="btn_restart_all">restart all</button>
+            <button class="sys-btn teal" onclick="announceAll()" data-i18n="btn_announce">📡 Announce</button>
           </div>
         </div>
         <div class="svc-arch-diagram">
@@ -630,6 +631,7 @@ function chatShowMessages(){
         <div id="svc-list-mobile"></div>
         <div class="brow">
           <button class="sys-btn am" onclick="restartAll()" data-i18n="btn_restart_all">restart all</button>
+          <button class="sys-btn teal" onclick="announceAll()" data-i18n="btn_announce">📡 Announce</button>
         </div>
       </div>
       <div style="display:none">
@@ -903,10 +905,9 @@ function chatShowMessages(){
         <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
           <div class="log-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
             <select id="log-unit" onchange="loadLogs()" style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;color:var(--tx);padding:4px 8px;font-family:var(--fn);font-size:12px">
-              <option value="noema_lxmf_bridge">noema_lxmf_bridge</option>
-              <option value="rnsd">rnsd</option>
-              <option value="nomadnet">nomadnet</option>
               <option value="dashboard">dashboard</option>
+              <option value="noema_lxmf_bridge">noema_lxmf_bridge</option>
+              <option value="nomadnet">nomadnet</option>
               <option value="rbrowser">rbrowser</option>
             </select>
             <button class="sys-btn" onclick="loadLogs()" data-i18n="btn_log_refresh">↻ Refresh</button>
@@ -1601,7 +1602,7 @@ const I18N = {
     txt_bridge_restart_note: "Changes automatically restart the LXMF Bridge.",
     txt_chat_applies_note: "Applies immediately, no restart needed.",
     txt_max_msgs: "Max messages per contact", txt_max_files_mb: "Max files folder size (MB)",
-    sec_arch_live: "System architecture — live", btn_restart_all: "restart all",
+    sec_arch_live: "System architecture — live", btn_restart_all: "restart all", btn_announce: "📡 Announce",
     btn_start: "start", btn_stop: "stop", btn_restart: "restart",
     btn_cfg_text: "TEXT", btn_cfg_form: "RETICULUM FORM", btn_save: "Save",
     btn_load: "↻ LOAD", btn_save_restart: "SAVE & RESTART", btn_add_interface: "+ ADD INTERFACE",
@@ -1700,7 +1701,7 @@ const I18N = {
     txt_bridge_restart_note: "Изменения автоматически перезапускают LXMF Bridge.",
     txt_chat_applies_note: "Применяется сразу, без перезапуска.",
     txt_max_msgs: "Макс. сообщений на контакт", txt_max_files_mb: "Макс. размер папки файлов (МБ)",
-    sec_arch_live: "Архитектура системы — live", btn_restart_all: "перезапустить все",
+    sec_arch_live: "Архитектура системы — live", btn_restart_all: "перезапустить все", btn_announce: "📡 Анонс",
     btn_start: "запуск", btn_stop: "стоп", btn_restart: "рестарт",
     btn_cfg_text: "ТЕКСТ", btn_cfg_form: "ФОРМА RETICULUM", btn_save: "Сохранить",
     btn_load: "↻ ЗАГРУЗИТЬ", btn_save_restart: "СОХРАНИТЬ И ПЕРЕЗАПУСТИТЬ", btn_add_interface: "+ ДОБАВИТЬ ИНТЕРФЕЙС",
@@ -1909,6 +1910,18 @@ async function restartAll(){
   }
   toast(t("toast_all_restarted"));
   loadServices();
+}
+
+async function announceAll(){
+  try {
+    const r = await fetch(API+"/api/announce", {method:"POST"});
+    const d = await r.json();
+    const res = d.results || {};
+    const msg = Object.entries(res).map(([k,v])=>`${k}: ${v}`).join(", ");
+    showToast("📡 " + msg);
+  } catch(e) {
+    showToast("❌ " + e.message);
+  }
 }
 
 // Modals
