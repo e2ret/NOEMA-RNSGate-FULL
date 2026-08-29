@@ -167,12 +167,22 @@ body{
   .ctab{font-size:12px;padding:6px 12px}
   .two-col{grid-template-columns:1fr!important}
   #logs-split{grid-template-columns:1fr!important;grid-template-rows:auto auto!important}
-  #logs-split>div{min-height:280px}
+  #logs-split>div{min-height:280px;max-height:280px}
+  .log-box{max-height:280px}
+  #pty-container{max-height:280px}
   #rnode-metrics{grid-template-columns:repeat(4,1fr)!important}
-  #rnode-charts-grid{grid-template-columns:repeat(2,1fr)!important}
+  #rnode-charts-all > div{min-height:0;display:flex;flex-direction:column}
+#rnode-charts-all canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+  #rnode-charts-all{grid-template-columns:1fr!important;grid-template-rows:none!important}
+  #rnode-charts-all > div{min-height:120px!important}
+  #rnode-main-cols{grid-template-columns:1fr!important}
+  #rnode-left-split{grid-template-columns:1fr!important}
+  #rnode-left-split>div{min-height:0}
+  #rf-activity-log,#interference-log{max-height:220px}
   #nodes-grid{grid-template-columns:1fr!important}
   #nodes-dartboard{max-width:260px;margin:0 auto;display:block!important}
-  #nodes-table-wrap{height:auto!important;max-height:420px}
+  #nodes-table-wrap{height:auto!important;max-height:420px;overflow-x:auto!important}
+  #nodes-table{min-width:640px}
   #cfg-main-grid{grid-template-columns:1fr!important}
   #rns-iface-toggles{max-height:none!important}
 }
@@ -201,6 +211,7 @@ body{
 .main{overflow-y:auto;padding:20px 20px;background:transparent;display:flex;flex-direction:column;flex:1;min-height:0}
 .main:has(#panel-nodes.active){overflow-y:hidden}
 .main:has(#panel-system.active){overflow-y:hidden}
+.main:has(#panel-rnode.active){overflow-y:hidden}
 .panel{display:none}
 .panel.active{display:flex;flex-direction:column;flex:1;min-height:0;animation:panel-in .18s var(--ease)}
 @keyframes panel-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
@@ -254,11 +265,11 @@ body{
 .log-box{
   background:var(--s1);
   border:1px solid var(--bd);border-radius:var(--radius);
-  padding:14px 16px;flex:1;min-height:0;overflow-y:auto;
+  padding:14px 16px;flex:1;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;
   line-height:1.8;font-size:12px;font-family:var(--mono);
   box-shadow:var(--shadow)
 }
-.ll{color:var(--tx)}.ll.err{color:var(--rd)}.ll.warn{color:var(--am)}.ll.ok{color:var(--gr)}
+.ll{color:var(--tx);overflow-wrap:anywhere;white-space:pre-wrap}.ll.err{color:var(--rd)}.ll.warn{color:var(--am)}.ll.ok{color:var(--gr)}
 
 select{
   font-family:var(--mono);font-size:12px;padding:7px 12px;
@@ -362,6 +373,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
   .main{flex:none;overflow-y:visible}
   .main:has(#panel-nodes.active){overflow-y:visible}
   .main:has(#panel-system.active){overflow-y:visible}
+  .main:has(#panel-rnode.active){overflow-y:visible}
 }
 </style>
 
@@ -888,7 +900,7 @@ function chatShowMessages(){
     <!-- LOGS -->
     <div class="panel" id="panel-logs">
       <div id="logs-split" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0">
-        <div style="display:flex;flex-direction:column;min-height:0">
+        <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
           <div class="log-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
             <select id="log-unit" onchange="loadLogs()" style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;color:var(--tx);padding:4px 8px;font-family:var(--fn);font-size:12px">
               <option value="noema_lxmf_bridge">noema_lxmf_bridge</option>
@@ -905,7 +917,7 @@ function chatShowMessages(){
           </div>
           <div class="log-box" id="log-box" style="flex:1"></div>
         </div>
-        <div style="display:flex;flex-direction:column;background:#0a0e0c;border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:0">
+        <div style="display:flex;flex-direction:column;background:#0a0e0c;border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:0;min-width:0">
           <div style="padding:6px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
             <span style="font-family:var(--mono);font-size:11px;color:var(--gr);letter-spacing:.05em">TERMINAL</span>
             <div style="display:flex;gap:6px">
@@ -1056,95 +1068,100 @@ function chatShowMessages(){
 
     <!-- RNODE -->
     <div class="panel" id="panel-rnode">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div class="section-lbl" style="margin:0">RNode</div>
         <button class="sys-btn teal" onclick="loadRnodePanel()" data-i18n="btn_refresh">REFRESH</button>
       </div>
-      <div id="rnode-status" style="margin-bottom:12px"></div>
-      <div id="rnode-metrics" style="display:flex;gap:8px;margin-bottom:16px;align-items:stretch;flex-wrap:wrap"></div>
-      <!-- RF Activity + Interference in two columns -->
-      <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div class="section-lbl" style="margin:0;color:var(--teal)" data-i18n="sec_rf_activity">📡 RF Activity (LoRa)</div>
-            <div style="display:flex;gap:6px;align-items:center">
-              <span id="rf-activity-count" style="font-size:11px;color:var(--mu)"></span>
-              <button class="sys-btn teal" style="padding:2px 8px;font-size:11px" onclick="loadRfActivity()">↻</button>
-              <button class="sys-btn rd" style="padding:2px 8px;font-size:11px" onclick="clearRfActivity()">Clear</button>
-            </div>
-          </div>
-          <div id="rf-activity-log" style="font-family:var(--fn);font-size:11px;max-height:180px;overflow-y:auto">
-            <span style="color:var(--mu)" data-i18n="txt_rf_activity_empty">No LoRa packets received yet.</span>
-          </div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div class="section-lbl" style="margin:0;color:var(--am);cursor:pointer" data-i18n="sec_interference" onclick="_showInterferenceInfo()">⚡ Interference Events</div>
-            <div style="display:flex;gap:6px;align-items:center">
-              <span id="interference-threshold" style="font-size:11px;color:var(--mu)"></span>
-              <button class="sys-btn rd" style="padding:2px 8px;font-size:11px" onclick="clearInterference()">Clear</button>
-            </div>
-          </div>
-          <div id="interference-log" style="font-family:var(--fn);font-size:11px;max-height:180px;overflow-y:auto">
-            <span style="color:var(--mu)" data-i18n="txt_interference_empty">No interference events detected.</span>
-          </div>
-        </div>
-      </div>
-      <div id="rnode-charts-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('airtime')">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px" data-i18n="sec_airtime">Airtime % (15s)</div>
-            <div id="rnode-val-airtime" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--teal)">—</div>
-          </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-airtime"></canvas></div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('noise')">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px" data-i18n="sec_noise">Noise dBm</div>
-            <div id="rnode-val-noise" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--purple)">—</div>
-          </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-noise"></canvas></div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('rssi')">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px" data-i18n="sec_rssi">RSSI dBm</div>
-            <div id="rnode-val-rssi" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--gr)">—</div>
-          </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-rssi"></canvas></div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer" onclick="_showMetricInfo('snr')">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px" data-i18n="sec_snr">SNR dB</div>
-            <div id="rnode-val-snr" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--am)">—</div>
-          </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-snr"></canvas></div>
-        </div>
-      </div>
+      <div id="rnode-status" style="margin-bottom:8px"></div>
+      <div id="rnode-metrics" style="display:flex;gap:8px;margin-bottom:10px;align-items:stretch;flex-wrap:wrap"></div>
 
-      <!-- Extra RNode charts: Battery, Ch.Load, Rate, CPU Temp -->
-      <div id="rnode-charts-grid2" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-        <div id="rnode-chart-chload-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px">📶 Ch. Load %</div>
-            <div id="rnode-val-chload" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--sky)">—</div>
+      <!-- Two-column layout: left=logs, right=charts -->
+      <div id="rnode-main-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0">
+
+        <!-- LEFT: Activity + Interference side by side -->
+        <div id="rnode-left-split" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0">
+          <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:0;display:flex;flex-direction:column;flex:1;min-height:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">
+              <div class="section-lbl" style="margin:0;color:var(--teal);cursor:pointer" data-i18n="sec_rf_activity" onclick="_showMetricInfo('rf_activity')">📡 RF Activity (LoRa)</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span id="rf-activity-count" style="font-size:11px;color:var(--mu)"></span>
+                <button class="sys-btn teal" style="padding:2px 8px;font-size:11px" onclick="loadRfActivity()">↻</button>
+                <button class="sys-btn rd" style="padding:2px 8px;font-size:11px" onclick="clearRfActivity()">Clear</button>
+              </div>
+            </div>
+            <div id="rf-activity-log" style="font-family:var(--fn);font-size:11px;overflow-y:auto;flex:1">
+              <span style="color:var(--mu)" data-i18n="txt_rf_activity_empty">No LoRa packets received yet.</span>
+            </div>
           </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-chload"></canvas></div>
-        </div>
-        <div id="rnode-chart-rate-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px">⚡ Rate</div>
-            <div id="rnode-val-rate" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--am)">—</div>
+          <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:0;display:flex;flex-direction:column;flex:1;min-height:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">
+              <div class="section-lbl" style="margin:0;color:var(--am);cursor:pointer" data-i18n="sec_interference" onclick="_showInterferenceInfo()">⚡ Interference Events</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span id="interference-threshold" style="font-size:11px;color:var(--mu)"></span>
+                <button class="sys-btn rd" style="padding:2px 8px;font-size:11px" onclick="clearInterference()">Clear</button>
+              </div>
+            </div>
+            <div id="interference-log" style="font-family:var(--fn);font-size:11px;overflow-y:auto;flex:1">
+              <span style="color:var(--mu)" data-i18n="txt_interference_empty">No interference events detected.</span>
+            </div>
           </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-rate"></canvas></div>
         </div>
-        <div id="rnode-chart-traffic-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-            <div class="section-lbl" style="font-size:9px">↕ TX bps</div>
-            <div id="rnode-val-traffic" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--teal)">—</div>
-          </div>
-          <div style="position:relative;height:100px"><canvas id="rnode-chart-traffic"></canvas></div>
+
+        <!-- RIGHT: Charts stacked -->
+        <div id="rnode-charts-all" style="display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);gap:8px;min-height:0">
+            <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer;display:flex;flex-direction:column" onclick="_showMetricInfo('airtime')">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px" data-i18n="sec_airtime">Airtime % (15s)</div>
+                <div id="rnode-val-airtime" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--teal)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-airtime"></canvas></div>
+            </div>
+            <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer;display:flex;flex-direction:column" onclick="_showMetricInfo('noise')">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px" data-i18n="sec_noise">Noise dBm</div>
+                <div id="rnode-val-noise" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--purple)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-noise"></canvas></div>
+            </div>
+            <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer;display:flex;flex-direction:column" onclick="_showMetricInfo('rssi')">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px" data-i18n="sec_rssi">RSSI dBm</div>
+                <div id="rnode-val-rssi" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--gr)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-rssi"></canvas></div>
+            </div>
+            <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;cursor:pointer;display:flex;flex-direction:column" onclick="_showMetricInfo('snr')">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px" data-i18n="sec_snr">SNR dB</div>
+                <div id="rnode-val-snr" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--am)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-snr"></canvas></div>
+            </div>
+
+            <div id="rnode-chart-chload-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none;cursor:pointer;display:flex;flex-direction:column" onclick="_showMetricInfo('ch_load')">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px">Ch. Load %</div>
+                <div id="rnode-val-chload" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--sky)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-chload"></canvas></div>
+            </div>
+            <div id="rnode-chart-rate-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none;flex-direction:column">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px">Rate</div>
+                <div id="rnode-val-rate" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--am)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-rate"></canvas></div>
+            </div>
+            <div id="rnode-chart-traffic-wrap" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden;display:none;cursor:pointer;display:flex;flex-direction:column" onclick="_showMetricInfo('tx_bps')">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;flex-shrink:0">
+                <div class="section-lbl" style="font-size:9px">TX bps</div>
+                <div id="rnode-val-traffic" style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--teal)">—</div>
+              </div>
+              <div style="position:relative;flex:1;min-height:40px"><canvas id="rnode-chart-traffic"></canvas></div>
+            </div>
         </div>
-      </div>
+
+      </div><!-- /rnode-main-cols -->
 
       <!-- Metric info popup -->
       <div id="metric-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center">
@@ -1154,7 +1171,6 @@ function chatShowMessages(){
           <div id="metric-popup-body" style="font-size:13px;color:var(--tx);line-height:1.6"></div>
         </div>
       </div>
-
 
     </div>
 
@@ -3323,7 +3339,7 @@ async function loadRnodeCharts(rnodeName){
       const hasData = vals.some(v => v !== null);
       const wrap = document.getElementById(wrapId);
       if(!wrap) return;
-      wrap.style.display = (alwaysShow || hasData) ? "" : "none";
+      wrap.style.display = (alwaysShow || hasData) ? "flex" : "none";
       if(!hasData) return;
       const ctx = document.getElementById(canvasId);
       if(!ctx) return;
@@ -3483,7 +3499,19 @@ const _METRIC_INFO = {
   snr: {
     en: { title: "SNR (dB)", body: "Signal-to-Noise Ratio — how much stronger the signal is compared to background noise.\n\nHigher = better:\n• +10 dB — excellent\n• 0 dB — signal equals noise\n• −10 dB — signal is below noise, but LoRa can still decode it!\n\nThis is the key advantage of LoRa spread spectrum: it can receive packets even at negative SNR, where conventional radio would hear only noise." },
     ru: { title: "SNR (dB)", body: "Отношение сигнал/шум — насколько сигнал сильнее фонового шума.\n\nВыше = лучше:\n• +10 dB — отлично\n• 0 dB — сигнал равен шуму\n• −10 dB — сигнал ниже шума, но LoRa всё равно декодирует!\n\nЭто ключевое преимущество технологии LoRa: она принимает пакеты даже при отрицательном SNR, где обычное радио слышит только шум." }
-  }
+  },
+  rf_activity: {
+    en: { title: "📡 RF Activity (LoRa)", body: "Real-time log of all LoRa radio events from RNode.\n\nPacket entries show:\n• RSSI — received signal strength\n• SNR — signal-to-noise ratio\n• Signal bar — visual strength indicator\n\nNoise entries show the current noise floor level — recorded periodically even without packets.\n\nAll timestamps are local time. Newest events appear at the top." },
+    ru: { title: "📡 RF Активность (LoRa)", body: "Лог всех радиособытий LoRa от RNode в реальном времени.\n\nЗаписи пакетов показывают:\n• RSSI — мощность принятого сигнала\n• SNR — отношение сигнал/шум\n• Бар сигнала — визуальный индикатор мощности\n\nЗаписи шума показывают текущий уровень фонового шума — фиксируется периодически даже без пакетов.\n\nВсе временные метки — местное время. Новые события вверху." }
+  },
+  ch_load: {
+    en: { title: "Ch. Load %", body: "Channel Load — the percentage of time the channel is occupied by any transmissions, measured over the last 15 seconds and the last hour.\n\nDiffers from Airtime: Airtime counts only your own node's transmissions, while Channel Load counts all traffic on the frequency, including other nodes.\n\nHigh channel load means the frequency is congested — expect increased collisions and retries." },
+    ru: { title: "Ch. Load % — Загрузка канала", body: "Процент времени за который канал был занят любыми передачами за последние 15 секунд и последний час.\n\nОтличие от Airtime: Airtime считает только передачи вашей ноды, Ch. Load — весь трафик на частоте, включая другие ноды.\n\nВысокая загрузка канала = частота перегружена, больше коллизий и повторных передач." }
+  },
+  tx_bps: {
+    en: { title: "TX BPS — Transmit rate", body: "Current transmit rate of this RNode interface in bits per second.\n\nThe value shows how fast data is being sent over LoRa at this moment.\n\nThe header shows total TX bytes transferred since the interface started.\n\nTypical values depend on spreading factor and bandwidth:\n• SF9 / BW125 — ~1.1 kbps\n• SF7 / BW250 — ~5.5 kbps" },
+    ru: { title: "TX BPS — Скорость передачи", body: "Текущая скорость передачи этого RNode интерфейса в битах в секунду.\n\nЗначение показывает как быстро данные передаются через LoRa прямо сейчас.\n\nВ заголовке — суммарный TX трафик с момента запуска интерфейса.\n\nТипичные значения зависят от spreading factor и полосы:\n• SF9 / BW125 — ~1.1 kbps\n• SF7 / BW250 — ~5.5 kbps" }
+  },
 };
 
 function _showMetricInfo(key) {
