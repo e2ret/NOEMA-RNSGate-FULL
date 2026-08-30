@@ -2,7 +2,7 @@
 
 **Full-featured Reticulum/LXMF gateway with Radio Observatory dashboard**
 
-[![Translate](https://img.shields.io/badge/Translate-To_Your_Language-blue)](https://translate.google.com/translate?sl=auto&u=https://github.com/e2ret/NOEMA-RNSGate-FULL)
+[![Translate](https://img.shields.io/badge/Translate-To_Your_Language-red)](https://translate.google.com/translate?sl=auto&u=https://github.com/e2ret/NOEMA-RNSGate-FULL)
 
 FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate-Lite) — the key architectural difference is that the dashboard itself owns the Reticulum instance directly, giving it real access to RF telemetry from RNode interfaces.
 
