@@ -71,7 +71,9 @@ MIT
 ## Support the project
 If you find this useful, donations are welcome.
 
-| Network | Address |
-|---------|---------|
-| **USDT TRC20** | `TD89XXL9ehwhp4WysfqHSBGJjxxdoaVsYD` |
-| **TON** | `UQCmROnKeaWIt5Uxu3MTebKUjYQHuvVeyOauWdVn6srUWKX8` |
+![USDT TRC20](https://img.shields.io/badge/USDT_(TRC20)-26A17B?style=flat&logo=tether&logoColor=white) `TD89XXL9ehwhp4WysfqHSBGJjxxdoaVsYD`
+
+![TON](https://img.shields.io/badge/TON-0098EA?style=flat&logo=ton&logoColor=white) `UQCmROnKeaWIt5Uxu3MTebKUjYQHuvVeyOauWdVn6srUWKX8`
+
+[![Boosty](https://img.shields.io/badge/Boosty-E55F2A?style=flat&logo=boosty&logoColor=E55F2A&labelColor=white&label=)](https://boosty.to/e2ret)
+
