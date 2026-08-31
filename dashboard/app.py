@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.2"
+__version__ = "1.1.1"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -1258,11 +1258,27 @@ def get_log(name):
         lines.append({"t": line, "l": lvl})
     return jsonify(lines)
 
+@app.route("/api/chat/display_name")
+def chat_display_name_get():
+    return jsonify({"display_name": _chat_get_display_name()})
+
 @app.route("/api/chat/settings", methods=["POST"])
 def chat_settings():
     data = request.get_json(silent=True) or {}
     max_msgs = int(data.get("max_msgs", 200))
     max_files_mb = int(data.get("max_files_mb", CHAT_FILES_MAX_MB))
+
+    # Update display name if provided
+    if "display_name" in data:
+        new_name = str(data["display_name"]).strip()[:64]
+        if new_name:
+            _chat_set_display_name(new_name)
+            # Apply to running router
+            if _chat_router and _chat_dest:
+                try: _chat_router.set_display_name(_chat_dest.hash, new_name)
+                except: pass
+                try: _chat_router.announce(destination_hash=_chat_dest.hash)
+                except: pass
     # Apply message limit
     with _chat_lock:
         try:
@@ -1643,6 +1659,18 @@ def _chat_is_duplicate(message, src):
             return True
         _chat_seen_messages[msg_id] = now
         return False
+CHAT_DISPLAY_NAME_FILE = f"{_HOME}/dashboard/chat_lxmf/display_name"
+
+def _chat_get_display_name():
+    try:
+        n = open(CHAT_DISPLAY_NAME_FILE).read().strip()
+        return n if n else "NOEMA Chat"
+    except: return "NOEMA Chat"
+
+def _chat_set_display_name(name):
+    try: open(CHAT_DISPLAY_NAME_FILE, "w").write(name.strip())
+    except: pass
+
 CONTACTS_FILE = f"{_HOME}/dashboard/chat_contacts.json"
 
 _chat_lock = _chat_th.Lock()
@@ -1676,7 +1704,7 @@ def _chat_init():
         identity.to_file(identity_file)
     router = LXMF.LXMRouter(identity=identity, storagepath=CHAT_STORAGE)
     try:
-        dest = router.register_delivery_identity(identity, display_name="NOEMA Chat")
+        dest = router.register_delivery_identity(identity, display_name=_chat_get_display_name())
     except Exception as _reg_e:
         if "already registered" in str(_reg_e).lower():
             # Get existing destination

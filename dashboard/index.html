@@ -164,9 +164,9 @@ body{
   .svc>div:first-child{flex-wrap:wrap;row-gap:6px}
   .svc-btns{display:flex;flex-wrap:wrap;gap:6px;width:100%}
   .svc-btns .sys-btn{flex:1 1 0;min-width:88px;justify-content:center;font-size:11px;padding:7px 8px}
-  .ctab{font-size:12px;padding:6px 12px}
+  .ctab{font-size:10px;padding:5px 8px;letter-spacing:.04em}
   .two-col{grid-template-columns:1fr!important}
-  #logs-split{grid-template-columns:1fr!important;grid-template-rows:auto auto!important}
+  #logs-split{grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important}
   #logs-split>div{min-height:280px;max-height:280px}
   .log-box{max-height:280px}
   #pty-container{max-height:280px}
@@ -183,9 +183,30 @@ body{
   #nodes-dartboard{max-width:260px;margin:0 auto;display:block!important}
   #nodes-table-wrap{height:auto!important;max-height:420px;overflow-x:auto!important}
   #nodes-table{min-width:640px}
-  #cfg-main-grid{grid-template-columns:1fr!important}
-  #rns-iface-toggles{max-height:none!important}
+  #cfg-main-grid{grid-template-columns:1fr!important;grid-template-rows:auto auto}
+  #cfg-area{min-height:280px!important}
+  .rns-iface-scroll{flex:none!important;max-height:360px!important}
 }
+
+/* Между планшетом и широким десктопом: правая колонка уже половины,
+   чтобы редактор конфига оставался читаемым */
+@media(min-width:769px) and (max-width:1250px){
+  #cfg-main-grid{grid-template-columns:minmax(0,1fr) 340px!important}
+}
+
+.rns-iface-scroll{
+  display:flex;flex-direction:column;gap:6px;
+  flex:1 1 0;min-height:0;
+  overflow-y:scroll;overflow-x:hidden;
+  padding-right:6px;
+  scrollbar-gutter:stable;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(61,220,132,.28) transparent;
+}
+.rns-iface-scroll::-webkit-scrollbar{width:7px}
+.rns-iface-scroll::-webkit-scrollbar-track{background:rgba(61,220,132,.05);border-radius:8px}
+.rns-iface-scroll::-webkit-scrollbar-thumb{background:rgba(61,220,132,.28);border-radius:8px}
+.rns-iface-scroll::-webkit-scrollbar-thumb:hover{background:rgba(61,220,132,.5)}
 
 .sys-btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -277,7 +298,7 @@ select{
   border-radius:var(--radius);color:var(--tx)
 }
 
-.cfg-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+.cfg-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%)}
 .cfg-tabs::-webkit-scrollbar{display:none}
 .ctab{font-size:12px;padding:8px 15px;cursor:pointer;color:var(--mu);border-radius:var(--radius);border:1px solid var(--bd);background:var(--s2);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:.15s;white-space:nowrap;flex-shrink:0}
 .ctab:hover{color:var(--tx);border-color:var(--mu)}
@@ -352,7 +373,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
 .hub-pill-ic{
   width:32px;height:32px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  background:var(--s2)
+  background:var(--s2);overflow:visible
 }
 .hub-pill span{
   font-size:11.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--tx);
@@ -436,11 +457,10 @@ function chatShowMessages(){
       <div class="hub-pill" onclick="nav('nodes',this);loadNodesPanel();"><div class="hub-pill-ic" style="color:var(--indigo)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 12h4m2-5.3L9.5 11M13 17.3L9.5 13"/></svg></div><span data-i18n="nav_nodes">Nodes</span></div>
       <div class="hub-pill" onclick="nav('i2p',this)"><div class="hub-pill-ic" style="color:var(--i2ptl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z"/></svg></div><span data-i18n="nav_i2p">I2P</span></div>
       <div class="hub-pill" onclick="nav('nomadnet',this);loadNomadnet();"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6 6-2Z"/></svg></div><span data-i18n="nav_nomadnet">Nomadnet</span></div>
-      <div class="hub-pill" onclick="nav('monitor',this)"><div class="hub-pill-ic" style="color:var(--gr)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-7 4 14L16 12h5"/></svg></div><span data-i18n="nav_monitor">Monitor</span></div>
       <div class="hub-pill" onclick="nav('logs',this)"><div class="hub-pill-ic" style="color:var(--slate)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><span data-i18n="nav_logs">Logs</span></div>
-      <div class="hub-pill" onclick="nav('chat',this);loadChatPanel();"><div class="hub-pill-ic" style="color:var(--pink)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span data-i18n="nav_chat">Chat</span><span id="chat-badge" style="display:none;background:#f87171;color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:700"></span></div>
+      <div class="hub-pill" onclick="nav('chat',this);loadChatPanel();" id="chat-pill"><div class="hub-pill-ic" style="color:var(--pink)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span data-i18n="nav_chat">Chat</span></div>
       <div class="hub-pill" onclick="nav('configs',this)"><div class="hub-pill-ic" style="color:var(--bl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="4" x2="5" y2="20"/><circle cx="5" cy="10" r="2.2"/><line x1="12" y1="4" x2="12" y2="20"/><circle cx="12" cy="16" r="2.2"/><line x1="19" y1="4" x2="19" y2="20"/><circle cx="19" cy="7" r="2.2"/></svg></div><span data-i18n="nav_configs">Configs</span></div>
-      <div class="hub-pill" onclick="nav('system',this)"><div class="hub-pill-ic" style="color:var(--slate2)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/><line x1="9" y1="18" x2="9" y2="22"/><line x1="15" y1="18" x2="15" y2="22"/><line x1="2" y1="9" x2="6" y2="9"/><line x1="2" y1="15" x2="6" y2="15"/><line x1="18" y1="9" x2="22" y2="9"/><line x1="18" y1="15" x2="22" y2="15"/></svg></div><span data-i18n="nav_system">System</span><span id="update-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--am);color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:700"></span></div>
+      <div class="hub-pill" onclick="nav('system',this)" id="system-pill"><div class="hub-pill-ic" style="color:var(--slate2)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/><line x1="9" y1="18" x2="9" y2="22"/><line x1="15" y1="18" x2="15" y2="22"/><line x1="2" y1="9" x2="6" y2="9"/><line x1="2" y1="15" x2="6" y2="15"/><line x1="18" y1="9" x2="22" y2="9"/><line x1="18" y1="15" x2="22" y2="15"/></svg></div><span data-i18n="nav_system">System</span></div>
     </div>
     <div class="main">
 
@@ -643,26 +663,6 @@ function chatShowMessages(){
     </div>
 
     <!-- MONITOR -->
-    <div class="panel" id="panel-monitor">
-      <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0">
-        <div style="display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden">
-          <div style="padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
-            <div class="section-lbl" style="margin:0" data-i18n="sec_lxmf_messages">LXMF Messages</div>
-            <button class="sys-btn" onclick="clearLxmf()" data-i18n="btn_clear">CLEAR</button>
-          </div>
-          <div class="lxmf-box" id="lxmf-box" style="flex:1;height:auto;border-radius:0;border:none"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden">
-          <div style="padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
-            <div class="section-lbl" style="margin:0" data-i18n="sec_rns_interfaces">RNS interfaces</div>
-            <button class="sys-btn teal" onclick="loadRns()" data-i18n="btn_refresh">REFRESH</button>
-          </div>
-          <div id="rns-list" style="font-size:12px;line-height:2;padding:10px 12px;overflow-y:auto;flex:1"></div>
-        </div>
-      </div>
-
-    </div>
-
     <!-- I2P -->
     <div class="panel" id="panel-i2p">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
@@ -866,7 +866,15 @@ function chatShowMessages(){
             <button class="sys-btn teal" style="padding:4px 8px;font-size:11px" onclick="chatAddContact()">+</button>
           </div>
           <div id="chat-contacts-list" style="flex:1;overflow-y:auto"></div>
-          <div style="padding:8px 12px;border-top:1px solid var(--bd);font-size:10px;color:var(--mu);font-family:var(--fn)" id="chat-my-addr">My address: —</div>
+          <div style="padding:8px 12px;border-top:1px solid var(--bd)">
+            <div style="font-size:10px;color:var(--mu);font-family:var(--fn);margin-bottom:4px" id="chat-my-addr">My address: —</div>
+            <div style="display:flex;gap:4px">
+              <input id="chat-display-name" type="text" placeholder="My name…" maxlength="64"
+                style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fn);font-size:10px;padding:3px 6px"
+                onkeydown="if(event.key==='Enter')saveChatDisplayName()">
+              <button class="sys-btn teal" style="padding:2px 6px;font-size:10px" onclick="saveChatDisplayName()">✓</button>
+            </div>
+          </div>
         </div>
         <!-- Messages -->
         <div id="chat-msgs-pane" style="display:flex;flex-direction:column;min-height:0">
@@ -901,7 +909,8 @@ function chatShowMessages(){
 
     <!-- LOGS -->
     <div class="panel" id="panel-logs">
-      <div id="logs-split" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0">
+      <div id="logs-split" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;flex:1;min-height:0">
+        <!-- System Log -->
         <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
           <div class="log-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
             <select id="log-unit" onchange="loadLogs()" style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;color:var(--tx);padding:4px 8px;font-family:var(--fn);font-size:12px">
@@ -918,6 +927,7 @@ function chatShowMessages(){
           </div>
           <div class="log-box" id="log-box" style="flex:1"></div>
         </div>
+        <!-- Terminal -->
         <div style="display:flex;flex-direction:column;background:#0a0e0c;border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:0;min-width:0">
           <div style="padding:6px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
             <span style="font-family:var(--mono);font-size:11px;color:var(--gr);letter-spacing:.05em">TERMINAL</span>
@@ -928,142 +938,116 @@ function chatShowMessages(){
           </div>
           <div id="pty-container" style="flex:1;min-height:0;overflow:hidden;padding:4px"></div>
         </div>
+        <!-- LXMF Messages -->
+        <div style="display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:0;min-width:0">
+          <div style="padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <div class="section-lbl" style="margin:0" data-i18n="sec_lxmf_messages">LXMF Messages</div>
+            <button class="sys-btn" onclick="clearLxmf()" data-i18n="btn_clear">CLEAR</button>
+          </div>
+          <div class="lxmf-box" id="lxmf-box" style="flex:1;height:auto;border-radius:0;border:none"></div>
+        </div>
       </div>
     </div>
 
     <!-- CONFIGS -->
     <div class="panel" id="panel-configs">
-      <div id="cfg-main-grid" style="display:grid;grid-template-columns:1fr 260px;gap:16px;flex:1;min-height:0">
+      <div id="cfg-main-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:16px;flex:1;min-height:0;overflow:hidden">
 
-        <!-- LEFT: config editor -->
-        <div style="min-width:0;display:flex;flex-direction:column">
-          <div style="display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--bd);padding-bottom:8px">
-            <button class="sys-btn teal" id="cfg-mode-text" onclick="cfgMode('text')" data-i18n="btn_cfg_text">TEXT</button>
-            <button class="sys-btn" id="cfg-mode-form" onclick="cfgMode('form')" data-i18n="btn_cfg_form">RETICULUM FORM</button>
-          </div>
-
-      <!-- Text editor -->
-      <div id="cfg-text-panel" style="display:flex;flex-direction:column;flex:1;min-height:0">
-        <div class="cfg-tabs" id="cfg-tabs"></div>
-        <div class="cfg-path" id="cfg-path"></div>
-        <textarea id="cfg-area" spellcheck="false"></textarea>
-        <div class="brow">
-          <button class="sys-btn teal" onclick="saveConfig()" data-i18n="btn_save">Save</button>
-        </div>
-      </div>
-
-      <!-- Reticulum form -->
-      <div id="cfg-form-panel" style="display:none">
-        <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
-          <button class="sys-btn teal" onclick="loadRnsConfig()" data-i18n="btn_load">↻ LOAD</button>
-          <button class="sys-btn teal" onclick="saveRnsConfig()" data-i18n="btn_save_restart">SAVE & RESTART</button>
-          <button class="sys-btn" onclick="showAddIfaceModal()" data-i18n="btn_add_interface">+ ADD INTERFACE</button>
-          <div id="rns-cfg-status" style="margin-left:8px;font-size:12px;color:var(--teal);display:none"></div>
-        </div>
-
-        <!-- [reticulum] section -->
-        <div class="section-lbl" data-i18n="sec_reticulum">Reticulum</div>
-        <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:16px">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-            <div>
-              <div style="font-size:11px;color:var(--mu);margin-bottom:3px">enable_transport</div>
-              <select id="rns-main-transport" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
-                <option value="Yes">Yes</option><option value="No">No</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--mu);margin-bottom:3px">share_instance</div>
-              <select id="rns-main-share" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
-                <option value="Yes">Yes</option><option value="No">No</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--mu);margin-bottom:3px">shared_instance_port</div>
-              <input id="rns-main-siport" value="37428" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--mu);margin-bottom:3px">instance_control_port</div>
-              <input id="rns-main-icport" value="37429" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--mu);margin-bottom:3px">panic_on_interface_error</div>
-              <select id="rns-main-panic" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
-                <option value="No">No</option><option value="Yes">Yes</option>
-              </select>
+        <!-- LEFT: config text editor -->
+        <div style="min-width:0;min-height:0;display:flex;flex-direction:column">
+          <div id="cfg-text-panel" style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="cfg-tabs" id="cfg-tabs"></div>
+            <div class="cfg-path" id="cfg-path"></div>
+            <textarea id="cfg-area" spellcheck="false"></textarea>
+            <div class="brow">
+              <button class="sys-btn teal" onclick="saveConfig()" data-i18n="btn_save">Save</button>
             </div>
           </div>
-        </div>
-
-        <!-- Interfaces -->
-        <div class="section-lbl" style="margin-bottom:8px" data-i18n="sec_interfaces">Interfaces</div>
-        <div id="rns-cfg-ifaces" style="border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:200px">
-          <div style="display:grid;grid-template-columns:200px 1fr" id="rns-ifaces-split">
-            <div id="rns-iface-list" style="border-right:1px solid var(--bd);overflow-y:auto"></div>
-            <div id="rns-iface-detail" style="padding:16px;overflow-y:auto"><div style="color:var(--mu);font-size:12px;margin-top:40px;text-align:center" data-i18n="txt_select_interface">Select an interface</div></div>
-          </div>
-        </div>
-        <style>
-          @media(max-width:600px){
-            #rns-ifaces-split{grid-template-columns:1fr!important;grid-template-rows:auto auto}
-            #rns-iface-list{border-right:none!important;border-bottom:1px solid var(--bd)}
-          }
-        </style>
-
-      </div>
         </div><!-- /left col -->
 
-        <!-- RIGHT: RNS interface toggles -->
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div class="section-lbl" style="margin:0">RNS Interfaces</div>
-            <button class="sys-btn" style="padding:2px 8px;font-size:10px" onclick="_rnsTogglesLoad()">↻</button>
-          </div>
-          <!-- enable_transport -->
-          <div style="background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:8px 10px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div id="rns-transport-dot" style="width:8px;height:8px;border-radius:50%;background:var(--mu);flex-shrink:0"></div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:9px;color:var(--mu);font-family:var(--mono)">enable_transport</div>
-                <div id="rns-transport-val" style="font-size:11px;font-weight:600;color:var(--tx)">—</div>
-              </div>
-              <button id="rns-transport-btn" class="sys-btn" style="padding:2px 8px;font-size:10px;flex-shrink:0" onclick="_rnsToggleTransport()">…</button>
+        <!-- RIGHT: RNS Network Interfaces panel -->
+        <div style="display:flex;flex-direction:column;gap:0;min-height:0;min-width:0;overflow:hidden">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
+            <div class="section-lbl" style="margin:0" data-i18n="sec_rns_interfaces">RNS Interfaces</div>
+            <div style="display:flex;gap:4px">
+              <button class="sys-btn" style="padding:3px 9px;font-size:10px" onclick="_rnsIfacesLoad()" title="Refresh">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </button>
+              <button class="sys-btn teal" style="padding:3px 10px;font-size:10px;font-weight:600" onclick="_rnsIfaceShowAdd()">+ ADD</button>
             </div>
           </div>
-          <!-- Interface cards -->
-          <div id="rns-iface-toggles" style="display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:calc(100vh - 320px)"></div>
-          <div id="rns-toggle-status" style="font-size:11px;color:var(--teal);display:none;padding:4px 0;text-align:center"></div>
+
+          <!-- enable_transport pill -->
+          <div id="rns-transport-pill" style="background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:8px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div id="rns-transport-dot" style="width:7px;height:7px;border-radius:50%;background:var(--mu);flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:9px;color:var(--mu);font-family:var(--mono);letter-spacing:.04em">enable_transport</div>
+                <div id="rns-transport-val" style="font-size:12px;font-weight:600;color:var(--tx)">—</div>
+              </div>
+              <button id="rns-transport-btn" class="sys-btn" style="padding:3px 10px;font-size:10px;flex-shrink:0" onclick="_rnsToggleTransport()">…</button>
+            </div>
+          </div>
+
+          <!-- Pending restart banner -->
+          <div id="rns-pending-bar" style="display:none;align-items:center;gap:8px;background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.35);border-radius:10px;padding:8px 10px;margin-bottom:8px;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--am)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div style="flex:1;min-width:0;font-size:10px;color:var(--am);line-height:1.35">Config differs from the running instance — restart to apply</div>
+            <button class="sys-btn" style="padding:3px 10px;font-size:10px;border-color:rgba(232,163,61,.5);color:var(--am);flex-shrink:0" onclick="_rnsRestartDaemon()">RESTART</button>
+          </div>
+
+          <!-- Add-interface form (inline, hidden by default) -->
+          <div id="rns-add-form" style="display:none;background:var(--s2);border:1px solid var(--bd-hi);border-radius:12px;padding:12px;margin-bottom:8px;overflow-y:auto;flex-shrink:1;min-height:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <button class="sys-btn" style="padding:2px 8px;font-size:10px" onclick="_rnsIfaceHideAdd()">← Back</button>
+              <span style="font-size:12px;font-weight:600;color:var(--teal)">New Interface</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div style="grid-column:span 2">
+                <div style="font-size:10px;color:var(--mu);margin-bottom:3px">Name</div>
+                <input id="new-iface-name" placeholder="My Interface" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 9px">
+              </div>
+              <div style="grid-column:span 2">
+                <div style="font-size:10px;color:var(--mu);margin-bottom:3px">Type</div>
+                <select id="new-iface-type" onchange="renderNewIfaceFields()" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 9px">
+                  <option value="AutoInterface">AutoInterface</option>
+                  <option value="TCPClientInterface">TCPClientInterface</option>
+                  <option value="TCPServerInterface">TCPServerInterface</option>
+                  <option value="BackboneInterface">BackboneInterface</option>
+                  <option value="RNodeInterface">RNodeInterface</option>
+                  <option value="I2PInterface">I2PInterface</option>
+                  <option value="UDPInterface">UDPInterface</option>
+                  <option value="SerialInterface">SerialInterface</option>
+                </select>
+              </div>
+            </div>
+            <div id="new-iface-hint" style="font-size:10px;color:var(--mu);margin-bottom:8px;display:none"></div>
+            <div id="new-iface-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"></div>
+            <div style="display:flex;gap:6px">
+              <button class="sys-btn teal" style="font-size:11px;padding:4px 14px" onclick="confirmAddIface()">ADD</button>
+              <button class="sys-btn" style="font-size:11px;padding:4px 12px" onclick="_rnsIfaceHideAdd()">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Interface cards list -->
+          <div id="rns-iface-toggles" class="rns-iface-scroll"></div>
+          <div id="rns-toggle-status" style="font-size:11px;color:var(--teal);display:none;padding:6px 2px 0;text-align:center;flex-shrink:0;word-break:break-word;line-height:1.4"></div>
         </div><!-- /right col -->
 
       </div><!-- /grid -->
 
-      <!-- Add Interface Modal -->
-      <div id="add-iface-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
-        <div style="background:var(--s3);border:1px solid var(--bd);border-radius:12px;padding:20px;width:90%;max-width:400px;max-height:85vh;overflow-y:auto">
-          <div style="font-size:14px;font-weight:600;margin-bottom:16px" data-i18n="txt_add_interface_title">Add Interface</div>
-          <div style="margin-bottom:12px">
-            <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_interface_name">Interface Name</div>
-            <input id="new-iface-name" placeholder="My Interface" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:6px 10px">
-          </div>
-          <div style="margin-bottom:16px">
-            <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_type">Type</div>
-            <select id="new-iface-type" onchange="renderNewIfaceFields()" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:6px 10px">
-              <option value="AutoInterface">AutoInterface — local LAN/WiFi discovery</option>
-              <option value="TCPClientInterface">TCPClientInterface — connect to TCP server</option>
-              <option value="TCPServerInterface">TCPServerInterface — listen for connections</option>
-              <option value="BackboneInterface">BackboneInterface — high-performance TCP</option>
-              <option value="RNodeInterface">RNodeInterface — LoRa radio</option>
-              <option value="I2PInterface">I2PInterface — I2P anonymous network</option>
-              <option value="UDPInterface">UDPInterface — UDP broadcast</option>
-              <option value="SerialInterface">SerialInterface — serial port</option>
-            </select>
-          </div>
-          <div id="new-iface-hint" style="font-size:11px;color:var(--mu);margin-bottom:16px;padding:8px;background:var(--bg);border-radius:12px"></div>
-          <div id="new-iface-fields"></div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="sys-btn teal" onclick="confirmAddIface()" data-i18n="btn_add">ADD</button>
-            <button class="sys-btn" onclick="hideAddIfaceModal()" data-i18n="btn_cancel">CANCEL</button>
-          </div>
-        </div>
+      <!-- hidden stubs для совместимости со старым JS -->
+      <div style="display:none">
+        <div id="cfg-form-panel"></div>
+        <div id="rns-cfg-status"></div>
+        <div id="rns-cfg-ifaces"><div id="rns-ifaces-split"><div id="rns-iface-list"></div><div id="rns-iface-detail"></div></div></div>
+        <select id="rns-main-transport"><option value="Yes">Yes</option><option value="No">No</option></select>
+        <select id="rns-main-share"><option value="Yes">Yes</option><option value="No">No</option></select>
+        <input id="rns-main-siport" value="37428">
+        <input id="rns-main-icport" value="37429">
+        <select id="rns-main-panic"><option value="No">No</option><option value="Yes">Yes</option></select>
       </div>
     </div>
 
@@ -1264,7 +1248,6 @@ function chatShowMessages(){
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           <button class="sys-btn" onclick="runCmd('find_ports')" data-i18n="btn_ports">Ports</button>
           <button class="sys-btn" onclick="runCmd('rnstatus')" data-i18n="btn_rnstatus">RNStatus</button>
-          <button class="sys-btn am" onclick="runCmd('restart_rnsd')" data-i18n="btn_restart_rnsd">Restart RNSD</button>
           <button class="sys-btn am" onclick="runCmd('restart_lxmf')" data-i18n="btn_restart_lxmf">Restart LXMF</button>
           <button class="sys-btn" onclick="runCmd('free_mem')" data-i18n="btn_memory">Memory</button>
           <button class="sys-btn" onclick="runCmd('uptime')" data-i18n="btn_uptime">Uptime</button>
@@ -1345,6 +1328,14 @@ function chatShowMessages(){
 
       <div class="section-lbl" data-i18n="sec_chat_settings">Chat Settings</div>
       <div style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:20px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_chat_display_name">Chat display name</div>
+          <div style="display:flex;gap:8px">
+            <input id="chat-display-name" type="text" placeholder="NOEMA Chat" maxlength="64" style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
+            <button class="sys-btn teal" onclick="saveChatDisplayName()" data-i18n="btn_save">Save</button>
+          </div>
+          <div style="font-size:10px;color:var(--mu);margin-top:4px" data-i18n="txt_chat_display_name_hint">Visible to others in Sideband / Crosstalk as your gateway name</div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div>
             <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_max_msgs">Max messages per contact</div>
@@ -1477,6 +1468,8 @@ function chatShowMessages(){
 </div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="chat-badge" style="display:none;position:fixed;min-width:16px;height:16px;background:#f87171;color:#fff;border-radius:8px;padding:0 4px;font-size:9px;font-weight:700;z-index:99999;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none"></div>
+<div id="update-badge" style="display:none;position:fixed;min-width:16px;height:16px;background:var(--am);color:#fff;border-radius:8px;padding:0 4px;font-size:9px;font-weight:700;z-index:99999;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none"></div>
 
 
 
@@ -1552,12 +1545,12 @@ function nav(id,el){
   if(id==="logs") { loadLogs(); setTimeout(_ptyInit, 150); }
   if(id==="monitor"){ loadLxmf(); loadRns(); }
   if(id==="system") checkRnsVersion();
-  if(id==="configs") { loadConfigs(); _rnsTogglesLoad(); }
+  if(id==="configs") { loadConfigs(); _rnsIfacesLoad(); }
 
   if(id==="rnode") { loadRnodePanel(); loadInterference(); loadRfActivity(); }
   if(id==="nodes") loadNodesPanel();
   if(id==="i2p") loadI2pStatus();
-  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; _initSysPanel(); }
+  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; _initSysPanel(); }
 }
 
 function toast(msg,ok=true){
@@ -1581,6 +1574,7 @@ const I18N = {
     nav_group_apps: "Apps", nav_group_settings: "Settings",
     sec_quick_commands: "Quick Commands", sec_maintenance: "Maintenance", sec_system: "System",
     sec_backup_restore: "Backup & Restore", sec_versions: "Versions", sec_chat_settings: "Chat Settings",
+    txt_chat_display_name: "Chat display name", txt_chat_display_name_hint: "Visible to others in Sideband / Crosstalk as your gateway name",
     sec_bridge_access: "Bridge Access Control", sec_chat_access: "Chat Access Control",
     sys_tab_ops: "Operations", sys_tab_access: "Chat & Access",
     sec_telegram: "Telegram Notifications",
@@ -1680,6 +1674,7 @@ const I18N = {
     nav_chat: "Чат", nav_logs: "Логи", nav_system: "Система",
     sec_quick_commands: "Быстрые команды", sec_maintenance: "Обслуживание", sec_system: "Система",
     sec_backup_restore: "Резервная копия", sec_versions: "Версии", sec_chat_settings: "Настройки чата",
+    txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в Sideband / Crosstalk как имя вашего шлюза",
     sec_bridge_access: "Доступ к мосту", sec_chat_access: "Доступ к чату",
     sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ",
     sec_telegram: "Уведомления Telegram",
@@ -1899,7 +1894,15 @@ async function loadServices(){
 }
 
 async function svcAction(name,action){
-  await fetch(API+`/api/services/${name}/${action}`,{method:"POST"});
+  await fetch(API+`/api/services/${name}/${action}`,{method:"POST"}).catch(()=>{});
+  if(name === "dashboard" && action === "restart"){
+    toast("Dashboard restarting…");
+    const tryReload = (n) => {
+      fetch(API+"/api/system?_="+Date.now()).then(r=>{ if(r.ok) location.reload(); else if(n>0) setTimeout(()=>tryReload(n-1),1500); }).catch(()=>{ if(n>0) setTimeout(()=>tryReload(n-1),1500); });
+    };
+    setTimeout(()=>tryReload(20), 2500);
+    return;
+  }
   toast(name+" "+action);
   loadServices();
 }
@@ -1928,6 +1931,28 @@ async function announceAll(){
 function showBackupModal(){const m=document.getElementById("backup-modal");m.style.display="flex";}
 function showRestoreModal(){const m=document.getElementById("restore-modal");m.style.display="flex";}
 function showResetModal(){const m=document.getElementById("reset-modal");m.style.display="flex";}
+async function _loadChatDisplayName(){
+  try {
+    const r = await fetch(API+"/api/chat/display_name");
+    const d = await r.json();
+    const el = document.getElementById("chat-display-name");
+    if(el && d.display_name) el.value = d.display_name;
+  } catch(e){}
+}
+
+async function saveChatDisplayName(){
+  const name = document.getElementById("chat-display-name")?.value?.trim();
+  if(!name){ showToast("Enter a name"); return; }
+  const r = await fetch(API+"/api/chat/settings", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({display_name: name})});
+  const d = await r.json();
+  if(d.ok){
+    showToast("✓ Saved — restarting…");
+    setTimeout(async()=>{
+      await fetch(API+"/api/services/dashboard/restart", {method:"POST"});
+    }, 800);
+  }
+}
+
 async function saveChatSettings(){
   const msgs = parseInt(document.getElementById("chat-limit-msgs").value)||200;
   const files = parseInt(document.getElementById("chat-limit-files").value)||50;
@@ -2027,8 +2052,17 @@ async function checkRnsVersion(){
     }
     const badge = document.getElementById("update-badge");
     if(badge){
-      if(updCount>0){ badge.textContent = updCount; badge.style.display="inline-block"; }
-      else badge.style.display="none";
+      if(updCount>0){
+        badge.textContent = updCount;
+        badge.style.display = "block";
+        const pill = document.getElementById("system-pill");
+        if(pill){
+          const ic = pill.querySelector(".hub-pill-ic");
+          const r = (ic||pill).getBoundingClientRect();
+          badge.style.left = (r.right - 10) + "px";
+          badge.style.top  = (r.top - 6) + "px";
+        }
+      } else badge.style.display="none";
     }
   }catch(e){}
 }
@@ -2284,44 +2318,7 @@ function toggleLogAuto(){
 // Configs
 let _rnsCfgCache = null;
 
-async function _rnsTogglesLoad() {
-  try {
-    const d = await fetch(API+"/api/rns_config_parsed").then(r=>r.json());
-    _rnsCfgCache = d;
-
-    // enable_transport
-    const transport = d.reticulum?.enable_transport || "No";
-    const isOn = transport === "Yes";
-    const dot = document.getElementById("rns-transport-dot");
-    const val = document.getElementById("rns-transport-val");
-    const btn = document.getElementById("rns-transport-btn");
-    if(dot) dot.style.background = isOn ? "#4ade9a" : "#6b7280";
-    if(val) val.textContent = transport;
-    if(btn) { btn.textContent = isOn ? "Off" : "On"; btn.className = "sys-btn"; }
-
-    // interfaces
-    const el = document.getElementById("rns-iface-toggles");
-    if(!el) return;
-    el.innerHTML = (d.interfaces||[]).map((iface, i) => {
-      const type = iface.params?.type || "Unknown";
-      const enabled = (iface.params?.enabled || "yes").toLowerCase() !== "no";
-      const col = type.includes("RNode") ? "var(--teal)" : type.includes("TCP") ? "var(--bl)" : type.includes("I2P") ? "var(--am)" : "var(--mu)";
-      return `<div style="background:var(--s1);border:1px solid ${enabled?"var(--bd)":"#6b728044"};border-radius:10px;padding:8px 10px;opacity:${enabled?1:0.6}">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:8px;height:8px;border-radius:50%;background:${enabled?"#4ade9a":"#6b7280"};flex-shrink:0"></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(iface.name)}</div>
-            <div style="font-size:9px;color:${enabled?"var(--gr)":"var(--mu)"}">${enabled?"enabled":"disabled"}</div>
-          </div>
-          <button class="sys-btn" style="padding:2px 8px;font-size:10px;flex-shrink:0" onclick="_rnsToggleIface(${i})">
-            ${enabled?"Off":"On"}
-          </button>
-        </div>
-      </div>`;
-    }).join("");
-  } catch(e) {}
-}
-
+// (старая _rnsTogglesLoad удалена — заменена на _rnsIfacesLoad)
 async function _rnsToggleTransport() {
   if(!_rnsCfgCache) return;
   const cur = _rnsCfgCache.reticulum?.enable_transport || "No";
@@ -2329,18 +2326,42 @@ async function _rnsToggleTransport() {
   await _rnsSaveToggle();
 }
 
+// --- Флаг включённости интерфейса ---
+// Читаем оба ключа (`enabled`, `interface_enabled`) и все формы значений.
+// Пишем всегда `enabled = yes/no`.
+function _ifaceEnabledKey(params) {
+  return 'enabled';
+}
+function _ifaceIsEnabled(params) {
+  const p = params || {};
+  const raw = p.enabled !== undefined ? p.enabled
+            : (p.interface_enabled !== undefined ? p.interface_enabled : null);
+  if (raw === null || raw === undefined || raw === '') return true; // не указано = включён
+  const v = String(raw).trim().toLowerCase();
+  return !(v === 'no' || v === 'false' || v === '0' || v === 'off' || v === 'n');
+}
+function _ifaceEnabledValue(params, on) {
+  return on ? 'yes' : 'no';
+}
+
 async function _rnsToggleIface(idx) {
   if(!_rnsCfgCache) return;
   const iface = _rnsCfgCache.interfaces[idx];
   if(!iface) return;
-  const cur = (iface.params?.enabled || "yes").toLowerCase();
-  iface.params = { ...(iface.params||{}), enabled: cur === "no" ? "yes" : "no" };
+  const p = iface.params || {};
+  const nowOn = _ifaceIsEnabled(p);
+  const key = _ifaceEnabledKey(p);
+  const next = { ...p };
+  // убираем возможный дубль второго ключа, чтобы RNS не запутался
+  delete next.enabled; delete next.interface_enabled;
+  next[key] = _ifaceEnabledValue(p, !nowOn);
+  iface.params = next;
   await _rnsSaveToggle();
 }
 
 async function _rnsSaveToggle() {
   const st = document.getElementById("rns-toggle-status");
-  if(st) { st.style.display=""; st.textContent="Saving…"; }
+  if(st) { st.style.display=""; st.style.color="var(--teal)"; st.textContent="Saving…"; }
   try {
     const r = await fetch(API+"/api/rns_config_save", {
       method:"POST", headers:{"Content-Type":"application/json"},
@@ -2348,13 +2369,13 @@ async function _rnsSaveToggle() {
     });
     const d = await r.json();
     if(d.ok || d.status==="ok") {
-      if(st) { st.textContent="✓ Saved — restart to apply"; setTimeout(()=>{ if(st) st.style.display="none"; }, 4000); }
-      _rnsTogglesLoad();
+      if(st) { st.textContent="✓ Saved — restart dashboard to apply"; setTimeout(()=>{ if(st) st.style.display="none"; }, 4000); }
+      _rnsIfacesLoad();
     } else {
-      if(st) st.textContent="❌ Error";
+      if(st) { st.style.color="var(--rd)"; st.textContent="❌ "+(d.error||"Error"); }
     }
   } catch(e) {
-    if(st) st.textContent="❌ Error";
+    if(st) { st.style.color="var(--rd)"; st.textContent="❌ "+e; }
   }
 }
 
@@ -2382,11 +2403,20 @@ async function saveConfig(){
   const d=await r.json();
   if(d.ok){
     toast(t("toast_saved"));
-    const svcMap={"noema_lxmf_bridge":"noema_lxmf_bridge","nomadnet":"nomadnet","reticulum":"rnsd"};
-    const svc=svcMap[curCfg];
-    if(svc){
-      await fetch(API+"/api/services/"+svc+"/restart",{method:"POST"});
-      toast("Restarting "+svc+"...");
+    // В FULL нет rnsd: Reticulum живёт в процессе дашборда.
+    // Для reticulum.cfg предлагаем перезапуск дашборда, остальное — как раньше.
+    if(curCfg === "reticulum"){
+      _rnsIfacesLoad();
+      const pb = document.getElementById("rns-pending-bar");
+      if(pb) pb.style.display = "flex";
+      toast("Saved — restart dashboard to apply");
+    } else {
+      const svcMap={"noema_lxmf_bridge":"noema_lxmf_bridge","nomadnet":"nomadnet"};
+      const svc=svcMap[curCfg];
+      if(svc){
+        await fetch(API+"/api/services/"+svc+"/restart",{method:"POST"});
+        toast("Restarting "+svc+"...");
+      }
     }
   } else toast("Error: "+d.error,false);
 }
@@ -2506,6 +2536,7 @@ async function loadChatPanel(){
     const el = document.getElementById("chat-my-addr");
     if(el) el.textContent = "My address: " + (d.address||"—");
   }catch(e){}
+  _loadChatDisplayName();
   await loadChatContacts();
 }
 
@@ -3130,8 +3161,7 @@ let _unread = 0;
 function addUnread(n, addr){
   _unread += n;
   if(addr){ _contactUnread[addr] = (_contactUnread[addr]||0) + n; }
-  const b = document.getElementById("chat-badge");
-  if(b){ b.textContent = _unread; b.style.display = _unread>0?"inline":"none"; }
+  _updateChatBadge();
   if(_unread>0) document.title = "("+_unread+") MeshGate";
   renderChatContacts();
 }
@@ -3144,12 +3174,41 @@ function clearUnread(addr){
     _unread = 0;
     _contactUnread = {};
   }
-  const b = document.getElementById("chat-badge");
-  if(b){ b.textContent = _unread; b.style.display = _unread>0?"inline":"none"; }
+  _updateChatBadge();
   if(_unread===0) document.title = "NOEMA RNSGate";
   else document.title = "("+_unread+") MeshGate";
   renderChatContacts();
 }
+function _updateChatBadge(){
+  const b = document.getElementById("chat-badge");
+  if(!b) return;
+  if(_unread > 0){
+    b.textContent = _unread;
+    b.style.display = "block";
+  } else {
+    b.style.display = "none";
+  }
+}
+
+// Continuously reposition badges over their pills
+function _tickBadges(){
+  const cb = document.getElementById("chat-badge");
+  const cp = document.getElementById("chat-pill");
+  if(cb && cb.style.display !== "none" && cp){
+    const ic = cp.querySelector(".hub-pill-ic");
+    const r = (ic||cp).getBoundingClientRect();
+    if(r.width > 0){ cb.style.left=(r.right-10)+"px"; cb.style.top=(r.top-6)+"px"; }
+  }
+  const ub = document.getElementById("update-badge");
+  const sp = document.getElementById("system-pill");
+  if(ub && ub.style.display !== "none" && sp){
+    const ic = sp.querySelector(".hub-pill-ic");
+    const r = (ic||sp).getBoundingClientRect();
+    if(r.width > 0){ ub.style.left=(r.right-10)+"px"; ub.style.top=(r.top-6)+"px"; }
+  }
+  requestAnimationFrame(_tickBadges);
+}
+requestAnimationFrame(_tickBadges);
 
 // RNODE PANEL
 let rnodeChartAirtime = null;
@@ -3945,6 +4004,14 @@ async function _showRnpath(hash){
     body.textContent = '❌ ' + e.message;
   }
 }
+window.addEventListener('resize', () => {
+  if(_unread > 0) _updateChatBadge();
+  const ub = document.getElementById("update-badge");
+  if(ub && ub.style.display !== "none"){
+    const pill = document.getElementById("system-pill");
+    if(pill){ const ic=pill.querySelector(".hub-pill-ic"); const r=(ic||pill).getBoundingClientRect(); ub.style.left=(r.right-10)+"px"; ub.style.top=(r.top-6)+"px"; }
+  }
+});
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape') {
     ['rnpath-popup','metric-popup'].forEach(id => {
@@ -4063,7 +4130,7 @@ async function i2pAddInterface(){
     const r = await fetch(API+"/api/i2p/add_interface",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({addr,name})});
     const d = await r.json();
     if(st) st.style.color = d.ok?"var(--gr)":"var(--rd)";
-    if(st) st.textContent = d.ok?"✓ Added to Reticulum config. Restart rnsd to apply.":("Error: "+d.error);
+    if(st) st.textContent = d.ok?"✓ Added to Reticulum config. Restart dashboard to apply.":("Error: "+d.error);
   }catch(e){
     if(st){ st.style.color="var(--rd)"; st.textContent="Error: "+e; }
   }
@@ -4345,11 +4412,9 @@ fetch(API+"/api/chat/contacts").then(r=>r.json()).then(async d=>{
 
 // CONFIGS MODE
 function cfgMode(mode) {
-  document.getElementById('cfg-text-panel').style.display = mode==='text' ? '' : 'none';
-  document.getElementById('cfg-form-panel').style.display = mode==='form' ? '' : 'none';
-  document.getElementById('cfg-mode-text').className = 'sys-btn' + (mode==='text' ? ' teal' : '');
-  document.getElementById('cfg-mode-form').className = 'sys-btn' + (mode==='form' ? ' teal' : '');
-  if(mode==='form') loadRnsConfig();
+  // кнопки режима убраны — текстовый редактор всегда виден, интерфейсы — в правой колонке
+  const tp = document.getElementById('cfg-text-panel');
+  if(tp) tp.style.display = '';
 }
 
 // RNODE CONFIG
@@ -4596,36 +4661,34 @@ function deleteRnsIface(idx) {
   renderIfacesList(_rnsCfgData.interfaces);
 }
 
-function showAddIfaceModal() {
-  const m = document.getElementById('add-iface-modal');
-  m.style.display='flex';
-  renderNewIfaceFields();
-}
-function hideAddIfaceModal() {
-  document.getElementById('add-iface-modal').style.display='none';
-}
-function updateNewIfaceHint() {
-  const type = document.getElementById('new-iface-type').value;
-  document.getElementById('new-iface-hint').textContent = IFACE_HINTS[type] || '';
-}
+function showAddIfaceModal() { _rnsIfaceShowAdd(); }
+function hideAddIfaceModal() { _rnsIfaceHideAdd(); }
 function renderNewIfaceFields() {
   updateNewIfaceHint();
   const type = document.getElementById('new-iface-type').value;
   const fields = RNS_IFACE_FIELDS[type] || [];
   const box = document.getElementById('new-iface-fields');
+  const inpSty = `width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 9px`;
   box.innerHTML = fields.map(f => {
     const id = 'new-iface-f-' + f.k;
     let input;
     if (f.type === 'select') {
-      input = `<select id="${id}" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:6px 10px">` +
+      input = `<select id="${id}" style="${inpSty}">` +
         f.opts.map(o => `<option value="${esc(o)}" ${o===f.default?'selected':''}>${esc(o)}</option>`).join('') +
         `</select>`;
     } else {
-      input = `<input id="${id}" value="${esc(f.default||'')}" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:6px 10px">`;
+      input = `<input id="${id}" value="${esc(f.default||'')}" placeholder="${esc(f.label)}" style="${inpSty}">`;
     }
-    const hint = f.hint ? `<div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(f.hint)}</div>` : '';
-    return `<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--mu);margin-bottom:4px">${esc(f.label)}</div>${input}${hint}</div>`;
+    return `<div><div style="font-size:10px;color:var(--mu);margin-bottom:3px">${esc(f.label)}</div>${input}</div>`;
   }).join('');
+}
+function updateNewIfaceHint() {
+  const type = document.getElementById('new-iface-type')?.value;
+  const el = document.getElementById('new-iface-hint');
+  if(!el) return;
+  const hint = (typeof IFACE_HINTS !== 'undefined' && IFACE_HINTS[type]) || '';
+  el.textContent = hint;
+  el.style.display = hint ? 'block' : 'none';
 }
 function confirmAddIface() {
   const name = document.getElementById('new-iface-name').value.trim();
@@ -4638,11 +4701,15 @@ function confirmAddIface() {
     const val = el ? el.value.trim() : (f.default || '');
     if (val !== '') params[f.k] = val;
   });
+  // Добавляем в оба кеша для совместимости
   if(!_rnsCfgData) _rnsCfgData = {reticulum:{}, interfaces:[]};
   _rnsCfgData.interfaces.push({name, params});
-  renderIfacesList(_rnsCfgData.interfaces);
-  hideAddIfaceModal();
-  document.getElementById('new-iface-name').value = '';
+  if(!_rnsCfgCache) _rnsCfgCache = {reticulum:{}, interfaces:[]};
+  if(!_rnsCfgCache.interfaces) _rnsCfgCache.interfaces = [];
+  _rnsCfgCache.interfaces.push({name, params});
+  _rnsIfaceHideAdd();
+  // Сохраняем и перезагружаем
+  _rnsSaveToggle();
 }
 
 async function saveRnsConfig() {
@@ -4653,9 +4720,8 @@ async function saveRnsConfig() {
     const r = await fetch(API+'/api/rns_config_save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(cfg)});
     const d = await r.json();
     if(d.ok) {
-      st.textContent = 'Saved! Restarting rnsd...';
-      await fetch(API+'/api/svc', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:'rnsd', action:'restart'})}).catch(()=>{});
-      setTimeout(()=>{ st.textContent='Done! Reload page to see effect.'; }, 3000);
+      st.textContent = 'Saved — restart dashboard to apply';
+      _rnsIfacesLoad();
     } else {
       st.style.color='var(--rd)'; st.textContent='Error: '+d.error;
     }
@@ -4762,6 +4828,297 @@ function _ptyConnect(){
 }
 function ptyReconnect(){if(_ptyTerm)_ptyTerm.clear();_ptyConnect();}
 function ptyClear(){if(_ptyTerm)_ptyTerm.clear();}
+
+// ── RNS INTERFACES v2 ─────────────────────────────────────────────────────────
+let _rnsExpandedIdx = null;
+
+// Иконки типов интерфейсов
+function _rnsIfaceIcon(type) {
+  if(type.includes("RNode")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>`;
+  if(type.includes("I2P")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`;
+  if(type.includes("TCP")||type.includes("Backbone")||type.includes("UDP")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>`;
+  if(type.includes("Auto")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><circle cx="12" cy="20" r="1"/></svg>`;
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>`;
+}
+
+function _rnsIfaceTypeColor(type) {
+  if(type.includes("RNode")) return "var(--teal)";
+  if(type.includes("TCP")||type.includes("Backbone")) return "var(--bl)";
+  if(type.includes("I2P")) return "var(--am)";
+  if(type.includes("Auto")) return "var(--gr)";
+  return "var(--mu)";
+}
+
+let _rnsHasPending = false;
+
+// rnstatus отдаёт имена вида "RNodeInterface[RNode-WiFi]", "TCPInterface[spb/rns.obomba.tech:4242]",
+// "TCPServerInterface[TCP/0.0.0.0:4242]". Нужно вытащить имя интерфейса как оно записано в конфиге.
+function _rnsStatusKey(rawName) {
+  const s = String(rawName || "");
+  const m = s.match(/\[([^\]]*)\]/);
+  if(!m) return s.trim();
+  // Внутри скобок: "<имя>" либо "<имя>/<host:port>" — берём часть до первого слэша
+  return m[1].split("/")[0].trim();
+}
+
+async function _rnsIfacesLoad() {
+  _rnsHasPending = false;
+  try {
+    const [cfgRes, statusRes] = await Promise.all([
+      fetch(API+"/api/rns_config_parsed").then(r=>r.json()),
+      fetch(API+"/api/rnstatus").then(r=>r.json()).catch(()=>({interfaces:[]}))
+    ]);
+    _rnsCfgCache = cfgRes;
+
+    // transport pill
+    const transport = cfgRes.reticulum?.enable_transport || "No";
+    const isOn = transport === "Yes";
+    const dot = document.getElementById("rns-transport-dot");
+    const val = document.getElementById("rns-transport-val");
+    const btn = document.getElementById("rns-transport-btn");
+    if(dot) dot.style.background = isOn ? "var(--gr)" : "var(--off)";
+    if(val) val.textContent = transport;
+    if(btn) { btn.textContent = isOn ? "OFF" : "ON"; btn.className = isOn ? "sys-btn rd" : "sys-btn teal"; }
+
+    // live status map: ключ = имя как в конфиге, плюс исходная строка для запасного поиска
+    const liveMap = {};
+    const liveRaw = [];
+    (statusRes.interfaces||[]).forEach(iface => {
+      const key = _rnsStatusKey(iface.name);
+      if(key) liveMap[key] = iface.fields || {};
+      liveRaw.push({raw: String(iface.name||""), fields: iface.fields || {}});
+    });
+    // Резолвер: точное совпадение → без учёта регистра → подстрока в исходной строке
+    const findLive = (cfgName) => {
+      if(!cfgName) return null;
+      if(liveMap[cfgName]) return liveMap[cfgName];
+      const lower = cfgName.toLowerCase();
+      const ciKey = Object.keys(liveMap).find(k => k.toLowerCase() === lower);
+      if(ciKey) return liveMap[ciKey];
+      const hit = liveRaw.find(r => r.raw.includes(cfgName));
+      return hit ? hit.fields : null;
+    };
+
+    const el = document.getElementById("rns-iface-toggles");
+    if(!el) return;
+    const ifaces = cfgRes.interfaces || [];
+
+    if(!ifaces.length) {
+      el.innerHTML = `<div style="color:var(--mu);font-size:12px;text-align:center;padding:24px 0">No interfaces configured</div>`;
+      return;
+    }
+
+    el.innerHTML = ifaces.map((iface, i) => {
+      const type = iface.params?.type || "Unknown";
+      const enabled = _ifaceIsEnabled(iface.params);
+      const live = findLive(iface.name);
+      const status = live?.Status || null;
+      const liveUp = status === "Up";
+      // Рассинхрон: конфиг изменён, но работающий экземпляр Reticulum ещё со старым
+      const pendingOff = !enabled && liveUp;   // выключен в конфиге, но ещё в эфире
+      const pendingOn  = enabled && status !== null && !liveUp; // включён, но не поднялся
+      const connected = enabled && liveUp;
+      // Цвет точки
+      const statusCol = pendingOff ? "var(--am)"
+                      : !enabled ? "var(--off)"
+                      : connected ? "var(--gr)"
+                      : (status ? "var(--rd)" : "var(--mu)");
+      if(pendingOff || pendingOn) _rnsHasPending = true;
+      const typeCol = _rnsIfaceTypeColor(type);
+      const icon = _rnsIfaceIcon(type);
+
+      // secondary info line
+      // Разбор полей rnstatus:
+      //   Rate     : "10.00 Mbps, MTU 16384"        -> "10.00 Mbps"
+      //   Traffic  : "↑240.57 KB  0 bps ↓44.53 MB  3.90 Kbps"
+      //   Noise Fl.: "-97 dBm, no interference"     -> "-97 dBm"
+      const brate = (live?.Rate || live?.Bitrate || "").split(",")[0].trim();
+      const peers = live?.Peers || live?.Clients || "";
+      const noise = (live?.["Noise Fl."] || live?.Noise || "").split(",")[0].trim();
+      let txb = "", rxb = "";
+      if(live?.Traffic){
+        const tr = String(live.Traffic);
+        const up = tr.match(/↑\s*([\d.]+\s*\S+)/);
+        const dn = tr.match(/↓\s*([\d.]+\s*\S+)/);
+        if(up) txb = up[1].trim();
+        if(dn) rxb = dn[1].trim();
+      }
+      const airtime = (live?.Airtime || "").split(",")[0].trim();
+
+      const parts = [
+        brate,
+        txb ? "↑"+txb : "",
+        rxb ? "↓"+rxb : "",
+        peers ? peers+" peers" : "",
+        noise ? "Noise "+noise : "",
+        airtime ? "Air "+airtime : "",
+      ].filter(Boolean);
+      const infoChips = parts.map(esc).join(" · ");
+      const infoTitle = parts.join(" · ");
+
+      const isEditing = _rnsExpandedIdx === i;
+
+      const editBlock = isEditing ? `
+        <div style="border-top:1px solid var(--bd);padding:12px;background:var(--s2)">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+            <button class="sys-btn" style="padding:2px 8px;font-size:10px" onclick="_rnsIfaceToggleExpand(null)">← Back</button>
+            <span style="font-size:11px;font-weight:600;color:var(--teal)">${esc(iface.name)}</span>
+          </div>
+          ${_rnsIfaceEditFields(iface, i)}
+          <div style="display:flex;gap:6px;margin-top:12px">
+            <button class="sys-btn teal" style="font-size:11px;padding:4px 14px" onclick="_rnsIfaceSave(${i})">Save & Restart</button>
+            <button class="sys-btn" style="font-size:11px;padding:4px 12px" onclick="_rnsIfaceToggleExpand(null)">Cancel</button>
+          </div>
+        </div>` : "";
+
+      return `<div style="background:var(--s1);border:1px solid ${isEditing?"var(--bd-hi)":(pendingOff?"rgba(232,163,61,.35)":"var(--bd)")};border-radius:10px;overflow:hidden;opacity:${(enabled||pendingOff)?1:0.55};transition:border-color .15s,opacity .15s;flex-shrink:0">
+        <!-- card header -->
+        <div style="height:56px;box-sizing:border-box;padding:0 10px 0 12px;display:flex;align-items:center;gap:9px">
+          <!-- status dot + icon -->
+          <div style="position:relative;flex-shrink:0;display:flex">
+            <span style="color:${(enabled||pendingOff)?typeCol:"var(--off)"};display:flex;align-items:center">${icon}</span>
+            <span style="position:absolute;bottom:-1px;right:-2px;width:6px;height:6px;border-radius:50%;background:${statusCol};border:1.5px solid var(--bg)"></span>
+          </div>
+          <!-- name + type + info -->
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:6px;line-height:1.25">
+              <span style="font-size:11px;font-weight:700;color:${(enabled||pendingOff)?"var(--tx)":"var(--mu)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(iface.name)}</span>
+              ${pendingOff ? `<span title="Disabled in config but still on air — restart dashboard to apply" style="font-size:8px;font-family:var(--mono);color:var(--am);border:1px solid rgba(232,163,61,.5);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em;white-space:nowrap">OFF · LIVE</span>`
+                : !enabled ? `<span style="font-size:8px;font-family:var(--mono);color:var(--off);border:1px solid var(--off);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em">OFF</span>`
+                : pendingOn ? `<span title="Enabled in config but not up — restart dashboard or check settings" style="font-size:8px;font-family:var(--mono);color:var(--rd);border:1px solid rgba(255,92,92,.5);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em;white-space:nowrap">DOWN</span>` : ""}
+            </div>
+            <div title="${esc(type)}${infoTitle?" · "+esc(infoTitle):""}" style="font-size:9px;font-family:var(--mono);line-height:1.35;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <span style="color:${(enabled||pendingOff)?typeCol:"var(--off)"}">${esc(type)}</span>${(enabled||pendingOff)&&infoChips?`<span style="color:var(--mu)"> · ${infoChips}</span>`:""}
+            </div>
+          </div>
+          <!-- action buttons -->
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+            <!-- power -->
+            <button title="${enabled?"Disable":"Enable"}" onclick="event.stopPropagation();_rnsToggleIface(${i})"
+              style="width:26px;height:26px;border-radius:6px;border:1px solid ${enabled?"rgba(61,220,132,.4)":"var(--bd)"};background:${enabled?"rgba(61,220,132,.12)":"transparent"};color:${enabled?"var(--gr)":"var(--off)"};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0"
+              onmouseenter="this.style.borderColor='var(--bd-hi)'" onmouseleave="this.style.borderColor='${enabled?"rgba(61,220,132,.4)":"var(--bd)"}'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+            </button>
+            <!-- edit -->
+            <button title="Edit" onclick="event.stopPropagation();_rnsIfaceToggleExpand(${i})"
+              style="width:26px;height:26px;border-radius:6px;border:1px solid ${isEditing?"var(--bd-hi)":"var(--bd)"};background:${isEditing?"rgba(61,220,132,.12)":"var(--s2)"};color:${isEditing?"var(--teal)":"var(--mu)"};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
+              onmouseenter="this.style.borderColor='var(--bd-hi)';this.style.color='var(--teal)'" onmouseleave="this.style.borderColor='${isEditing?"var(--bd-hi)":"var(--bd)"}'">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <!-- delete -->
+            <button title="Delete" onclick="event.stopPropagation();_rnsIfaceDelete(${i})"
+              style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
+              onmouseenter="this.style.borderColor='var(--rd)';this.style.color='var(--rd)'" onmouseleave="this.style.borderColor='var(--bd)';this.style.color='var(--mu)'">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+        ${editBlock}
+      </div>`;
+    }).join("");
+
+    // Баннер рассинхрона: конфиг изменён, но Reticulum работает со старым
+    const pb = document.getElementById("rns-pending-bar");
+    if(pb) pb.style.display = _rnsHasPending ? "flex" : "none";
+  } catch(e){ console.error(e); }
+}
+
+// В FULL Reticulum работает внутри процесса дашборда — отдельного rnsd нет.
+// Применить изменения конфига = перезапустить сервис дашборда (юнит "dashboard",
+// тот же, что дёргает кнопка Restart Dashboard в системной панели).
+const RNS_DASH_SERVICE = "dashboard";
+
+async function _rnsRestartDaemon() {
+  const st = document.getElementById("rns-toggle-status");
+  const say = (msg, col) => { if(st){ st.style.display=""; st.style.color=col||"var(--am)"; st.textContent=msg; } };
+
+  if(!confirm("Restart the dashboard to apply Reticulum config changes?\n\nThe page will reload automatically.")) return;
+
+  say("Restarting dashboard…");
+  try {
+    await fetch(API+`/api/services/${RNS_DASH_SERVICE}/restart`, {method:"POST"});
+  } catch(e) { /* обрыв соединения при рестарте — это норма */ }
+  say("Dashboard restarting, reloading…", "var(--teal)");
+  setTimeout(()=>location.reload(), 6000);
+}
+
+function _rnsIfaceToggleExpand(idx){
+  _rnsExpandedIdx = _rnsExpandedIdx === idx ? null : idx;
+  _rnsIfacesLoad();
+}
+
+function _rnsIfaceShowAdd() {
+  document.getElementById("rns-add-form").style.display = "flex";
+  document.getElementById("rns-add-form").style.flexDirection = "column";
+  document.getElementById("rns-iface-toggles").style.display = "none";
+  const pb = document.getElementById("rns-pending-bar");
+  if(pb) pb.style.display = "none";
+  renderNewIfaceFields();
+}
+function _rnsIfaceHideAdd() {
+  document.getElementById("rns-add-form").style.display = "none";
+  document.getElementById("rns-iface-toggles").style.display = "flex";
+  document.getElementById("new-iface-name").value = "";
+  // Восстанавливаем баннер если нужен
+  _rnsIfacesLoad();
+}
+
+function _rnsIfaceEditFields(iface, i){
+  const p=iface.params||{};
+  const type=p.type||"TCPClientInterface";
+  const fields=[
+    {k:"name",label:"Name",val:iface.name,full:true},
+    {k:"type",label:"Type",val:type,sel:["AutoInterface","TCPClientInterface","TCPServerInterface","RNodeInterface","I2PInterface"]},
+    {k:"enabled",label:"Enabled",val:_ifaceIsEnabled(p)?"yes":"no",sel:["yes","no"]},
+  ];
+  if(type.includes("TCPClient")){fields.push({k:"target_host",label:"Host",val:p.target_host||""},{k:"target_port",label:"Port",val:p.target_port||"4242"});}
+  if(type.includes("TCPServer")){fields.push({k:"port",label:"Port",val:p.port||"4242"},{k:"listen_ip",label:"Listen IP",val:p.listen_ip||"0.0.0.0"});}
+  if(type.includes("RNode")){fields.push(
+    {k:"port",label:"Port/TCP",val:p.port||""},{k:"frequency",label:"Frequency Hz",val:p.frequency||"869525000"},
+    {k:"bandwidth",label:"Bandwidth Hz",val:p.bandwidth||"125000"},{k:"txpower",label:"TX Power",val:p.txpower||"17"},
+    {k:"spreadingfactor",label:"SF",val:p.spreadingfactor||"9"},{k:"codingrate",label:"CR",val:p.codingrate||"8"}
+  );}
+  const mk=f=>{
+    const id=`rns-edit-${i}-${f.k}`;
+    const sty=`style="background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:4px 6px;width:100%;box-sizing:border-box"`;
+    const wrap=c=>`<div style="display:flex;flex-direction:column;gap:2px${f.full?";grid-column:span 2":""}"><label style="font-size:9px;color:var(--mu)">${f.label}</label>${c}</div>`;
+    if(f.sel) return wrap(`<select id="${id}" ${sty}>${f.sel.map(o=>`<option${o===f.val?" selected":""}>${o}</option>`).join("")}</select>`);
+    return wrap(`<input id="${id}" value="${esc(f.val||"")}" ${sty}>`);
+  };
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${fields.map(mk).join("")}</div>`;
+}
+
+async function _rnsIfaceSave(idx){
+  if(!_rnsCfgCache) return;
+  const iface=_rnsCfgCache.interfaces[idx]; if(!iface) return;
+  const get=k=>document.getElementById(`rns-edit-${idx}-${k}`)?.value?.trim();
+  const newName=get("name"); if(newName) iface.name=newName;
+  const prev = iface.params || {};
+  iface.params = { ...prev };
+
+  // Флаг включённости — всегда enabled = yes/no
+  const enSel = get("enabled");
+  if(enSel !== undefined && enSel !== null && enSel !== ""){
+    const key = _ifaceEnabledKey(prev);
+    delete iface.params.enabled; delete iface.params.interface_enabled;
+    iface.params[key] = _ifaceEnabledValue(prev, enSel.toLowerCase() === "yes");
+  }
+
+  ["type","target_host","target_port","port","listen_ip","frequency","bandwidth","txpower","spreadingfactor","codingrate"].forEach(k=>{
+    const v=get(k); if(v!==undefined&&v!==null&&v!=="") iface.params[k]=v;
+  });
+  _rnsExpandedIdx=null;
+  await _rnsSaveToggle();
+}
+
+async function _rnsIfaceDelete(idx){
+  if(!_rnsCfgCache) return;
+  const iface=_rnsCfgCache.interfaces[idx];
+  if(!iface||!confirm(`Delete "${iface.name}"?`)) return;
+  _rnsCfgCache.interfaces.splice(idx,1);
+  if(_rnsExpandedIdx===idx) _rnsExpandedIdx=null;
+  await _rnsSaveToggle();
+}
 </script>
 <style>
 .sys-side-btn{display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;border-left:2px solid transparent;color:var(--mu);font-family:var(--fn);font-size:12px;cursor:pointer;transition:all .15s}
