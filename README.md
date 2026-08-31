@@ -77,3 +77,11 @@ If you find this useful, donations are welcome.
 
 [![Boosty](https://img.shields.io/badge/Boosty-E55F2A?style=flat&logo=boosty&logoColor=E55F2A&labelColor=white&label=)](https://boosty.to/e2ret)
 
+## Contacts
+
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=2CA5E0&labelColor=white&label=)](t.me/https://t.me/reticulum_belgorod/70) 
+
+![LXMF](https://img.shields.io/badge/LXMF-222222?style=flat) `3c4d222ee3acca1b386f5c2ad7ff1c6f`
+
+[![GitHub](https://img.shields.io/badge/GitHub-121011?style=flat&logo=github&logoColor=121011&labelColor=white&label=)](https://github.com/e2ret)
+
