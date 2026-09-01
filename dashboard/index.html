@@ -1151,7 +1151,7 @@ function chatShowMessages(){
       </div><!-- /rnode-main-cols -->
 
       <!-- Metric info popup -->
-      <div id="metric-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#000d;z-index:9999;align-items:center;justify-content:center">
+      <div id="metric-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#0009;z-index:9999;align-items:center;justify-content:center">
         <div style="background:var(--s2);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:340px;width:90%;position:relative;box-shadow:0 8px 32px #000a">
           <button onclick="document.getElementById('metric-popup').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;line-height:1">✕</button>
           <div id="metric-popup-title" style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px;font-family:var(--mono);letter-spacing:.05em"></div>
@@ -2278,6 +2278,7 @@ async function loadRns(){
   _rnstatusByName = {};
   ifaces.forEach(i => { _rnstatusByName[i.name] = i.fields["Status"] || ""; });
   const el=document.getElementById("rns-list");
+  if(!el) return;
   el.innerHTML=ifaces.map(i=>{
     const status=i.fields["Status"]||"—";
     const color=status==="Up"?"var(--gr)":"var(--rd)";
@@ -3970,22 +3971,17 @@ function _renderNodesTable(){
   }).join('');
 }
 
-function _copyToClipboard(text){
-  text=(text||'').trim(); if(!text) return;
-  const _do=()=>{
-    const el=document.createElement('textarea');
-    el.value=text; el.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';
-    document.body.appendChild(el); el.focus(); el.select();
-    try{ document.execCommand('copy'); toast('Copied!'); }
-    catch(e){ toast('Copy failed',false); }
-    document.body.removeChild(el);
-  };
-  if(navigator.clipboard && window.isSecureContext){
-    navigator.clipboard.writeText(text).then(()=>toast('Copied!')).catch(_do);
-  } else { _do(); }
+function _copyHash(hash){
+  navigator.clipboard.writeText(hash).then(()=>showToast('Copied: '+hash.substring(0,16)+'…')).catch(()=>{
+    const el=document.createElement('textarea');el.value=hash;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('Copied!');
+  });
 }
 
-function _copyHash(hash){ _copyToClipboard(hash); }
+function _copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied!')).catch(()=>{
+    const el=document.createElement('textarea');el.value=text;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('Copied!');
+  });
+}
 
 async function _showRnpath(hash){
   const popup  = document.getElementById('rnpath-popup');
@@ -4399,7 +4395,7 @@ fetch(API+"/api/chat/contacts").then(r=>r.json()).then(async d=>{
 });
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="/vendor/chart.umd.min.js"></script>
 <script>
 (function(){
   const cv=document.getElementById('bg-canvas'),ctx=cv.getContext('2d');
@@ -4775,14 +4771,14 @@ async function setCronWatchdog(enabled){
   }catch(e){ st.textContent="❌ Error"; }
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js" defer></script>
+<script src="/vendor/xterm.js" defer></script>
+<script src="/vendor/xterm-addon-fit.js" defer></script>
 <script defer>
 // Load xterm CSS dynamically — avoids global .terminal class conflicts
 (function(){
   const lnk = document.createElement('link');
   lnk.rel = 'stylesheet'; lnk.type = 'text/css';
-  lnk.href = 'https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css';
+  lnk.href = '/vendor/xterm.min.css';
   document.head.appendChild(lnk);
 })();
 
@@ -5239,12 +5235,12 @@ function sysTab(id) {
   });
 }
 </script>
-<div id="rnpath-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#000d;z-index:99999;align-items:center;justify-content:center">
-  <div style="background:var(--s2);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:640px;width:92%;position:relative;box-shadow:0 8px 32px #000a">
+<div id="rnpath-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#0009;z-index:99999;align-items:center;justify-content:center">
+  <div style="background:var(--s2);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:480px;width:90%;position:relative;box-shadow:0 8px 32px #000a">
     <button onclick="document.getElementById('rnpath-popup').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;line-height:1">✕</button>
-    <div id="rnpath-hash" style="font-size:11px;font-family:var(--mono);color:var(--mu);margin-bottom:12px;word-break:break-all;line-height:1.6;padding-right:24px"></div>
+    <div id="rnpath-hash" style="font-size:11px;font-family:var(--mono);color:var(--mu);margin-bottom:8px;word-break:break-all"></div>
     <div id="rnpath-body" style="font-size:12px;color:var(--tx);line-height:1.8;font-family:var(--mono);white-space:pre-wrap">Loading…</div>
-    <div style="margin-top:14px;display:flex;gap:8px">
+    <div style="margin-top:12px;display:flex;gap:8px">
       <button class="sys-btn" onclick="_copyToClipboard(document.getElementById('rnpath-hash').textContent)" style="font-size:11px;padding:4px 10px">Copy address</button>
     </div>
   </div>
