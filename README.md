@@ -34,6 +34,8 @@ FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate
 - **I2P integration** — anonymous incoming tunnel via i2pd
 - **System panel** — services control, Reticulum config editor, backup/restore
 
+[https://github.com/e2ret/NOEMA-RNSGate-FULL/wiki](https://github.com/e2ret/NOEMA-RNSGate-Lite)
+
 ### Quick Install
 
 ```bash
