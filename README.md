@@ -1,5 +1,8 @@
 # NOEMA RNSGate FULL
 
+<img width="400" alt="NOEMA RNSGate FULL" src="https://github.com/user-attachments/assets/81fec1ae-41e7-4f3e-987a-691f9111e0ea" />
+
+
 **Full-featured Reticulum/LXMF gateway with Radio Observatory dashboard**
 
 [![Translate](https://img.shields.io/badge/Translate-To_Your_Language-red)](https://translate.google.com/translate?sl=auto&u=https://github.com/e2ret/NOEMA-RNSGate-FULL)
