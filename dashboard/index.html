@@ -225,6 +225,8 @@ body{
   white-space:nowrap;
   line-height:1;
   color:var(--tx);
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;
 }
 .sys-btn:hover{background:var(--s3);border-color:var(--bd-hi)}
 .sys-btn:active{background:rgba(61,220,132,.16);border-color:var(--teal)}
@@ -368,7 +370,9 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
   padding:8px;flex-shrink:0;
   background:var(--s1);border:1px solid var(--bd);border-radius:999px;
   box-shadow:var(--shadow);cursor:pointer;
-  transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background-color .15s var(--ease),padding .2s var(--ease)
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background-color .15s var(--ease),padding .2s var(--ease);
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;
 }
 .hub-pill:hover{border-color:var(--bd-hi);box-shadow:var(--shadow-lg)}
 .hub-pill.active{border-color:var(--teal);background:var(--s3);box-shadow:var(--glow)}
@@ -1179,12 +1183,14 @@ function chatShowMessages(){
           data-i18n-placeholder="ph_nodes_search">
       </div>
 
-      <div id="nodes-filter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <div id="nodes-filter" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
         <button class="sys-btn active" style="border-radius:20px" onclick="setNodeFilter('all',this)" data-i18n="filter_all">All</button>
         <button class="sys-btn" style="border-radius:20px;color:var(--pink)" onclick="setNodeFilter('LXMF',this)">LXMF</button>
         <button class="sys-btn" style="border-radius:20px;color:var(--sky)" onclick="setNodeFilter('Nomadnet',this)">Nomadnet</button>
         <button class="sys-btn" style="border-radius:20px;color:var(--am)" onclick="setNodeFilter('PropNode',this)">PropNode</button>
         <button class="sys-btn" style="border-radius:20px;color:var(--mu)" onclick="setNodeFilter('RNS',this)">RNS</button>
+        <span style="width:1px;height:18px;background:var(--bd);margin:0 2px"></span>
+        <button id="nodes-lora-toggle" class="sys-btn" style="border-radius:20px;color:var(--teal)" onclick="toggleLoraFilter(this)" title="Show only nodes heard directly over LoRa (RNode) — works together with the type filter above">📡 LoRa</button>
       </div>
 
       <!-- Dartboard + Table two-column layout -->
@@ -1337,6 +1343,14 @@ function chatShowMessages(){
             <button class="sys-btn teal" onclick="saveChatDisplayName()" data-i18n="btn_save">Save</button>
           </div>
           <div style="font-size:10px;color:var(--mu);margin-top:4px" data-i18n="txt_chat_display_name_hint">Visible to others in Sideband / Crosstalk as your gateway name</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_propagation_node">LXMF Propagation Node</div>
+          <div style="display:flex;gap:8px">
+            <input id="chat-propagation-node" type="text" placeholder="hex destination hash" maxlength="32" style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
+            <button class="sys-btn teal" onclick="saveChatPropagationNode()" data-i18n="btn_save">Save</button>
+          </div>
+          <div style="font-size:10px;color:var(--mu);margin-top:4px" data-i18n="txt_propagation_node_hint">Where offline messages are picked up from. Pick any node from the PropNode tab in Nodes — takes effect immediately, no restart needed.</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div>
@@ -1554,7 +1568,7 @@ function nav(id,el){
   if(id==="rnode") { loadRnodePanel(); loadInterference(); loadRfActivity(); }
   if(id==="nodes") loadNodesPanel();
   if(id==="i2p") loadI2pStatus();
-  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; _initSysPanel(); }
+  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); _loadChatPropagationNode(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; _initSysPanel(); }
 }
 
 function toast(msg,ok=true){
@@ -1579,6 +1593,7 @@ const I18N = {
     sec_quick_commands: "Quick Commands", sec_maintenance: "Maintenance", sec_system: "System",
     sec_backup_restore: "Backup & Restore", sec_versions: "Versions", sec_chat_settings: "Chat Settings",
     txt_chat_display_name: "Chat display name", txt_chat_display_name_hint: "Visible to others in Sideband / Crosstalk as your gateway name",
+    txt_propagation_node: "LXMF Propagation Node", txt_propagation_node_hint: "Where offline messages are picked up from. Pick any node from the PropNode tab in Nodes — takes effect immediately, no restart needed.",
     sec_bridge_access: "Bridge Access Control", sec_chat_access: "Chat Access Control",
     sys_tab_ops: "Operations", sys_tab_access: "Chat & Access",
     sec_telegram: "Telegram Notifications",
@@ -1679,6 +1694,7 @@ const I18N = {
     sec_quick_commands: "Быстрые команды", sec_maintenance: "Обслуживание", sec_system: "Система",
     sec_backup_restore: "Резервная копия", sec_versions: "Версии", sec_chat_settings: "Настройки чата",
     txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в Sideband / Crosstalk как имя вашего шлюза",
+    txt_propagation_node: "LXMF Propagation Node", txt_propagation_node_hint: "Откуда забираются сообщения, пришедшие пока вы были офлайн. Скопируйте любой адрес из вкладки PropNode в Nodes — применяется сразу, без перезапуска.",
     sec_bridge_access: "Доступ к мосту", sec_chat_access: "Доступ к чату",
     sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ",
     sec_telegram: "Уведомления Telegram",
@@ -1955,6 +1971,28 @@ async function saveChatDisplayName(){
       await fetch(API+"/api/services/dashboard/restart", {method:"POST"});
     }, 800);
   }
+}
+
+async function _loadChatPropagationNode(){
+  try {
+    const r = await fetch(API+"/api/chat/propagation_node");
+    const d = await r.json();
+    const el = document.getElementById("chat-propagation-node");
+    if(el && d.propagation_node) el.value = d.propagation_node;
+  } catch(e){}
+}
+
+async function saveChatPropagationNode(){
+  const hash = document.getElementById("chat-propagation-node")?.value?.trim();
+  if(!hash || hash.length !== 32 || !/^[0-9a-fA-F]+$/.test(hash)){
+    toast("Enter a 32-char hex destination hash", false); return;
+  }
+  try {
+    const r = await fetch(API+"/api/chat/propagation_node", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({propagation_node: hash})});
+    const d = await r.json();
+    if(d.ok) toast("✓ Propagation node updated");
+    else toast("❌ " + (d.error || "failed"), false);
+  } catch(e){ toast("❌ " + e.message, false); }
 }
 
 async function saveChatSettings(){
@@ -3839,6 +3877,7 @@ async function clearInterference(){
 let _nodesData = [];
 let _nodesFilter = 'all';
 let _nodesInterval = null;
+let _loraOnly = false;
 
 const _nodeTypeColor = {
   LXMF:     'var(--pink)',
@@ -3920,7 +3959,8 @@ function _renderNodesTable(){
   const searchEl = document.getElementById('nodes-search');
   const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
 
-  const rows = (_nodesFilter === 'all' ? _nodesData : _nodesData.filter(n => n.app_type === _nodesFilter))
+  let rows = (_nodesFilter === 'all' ? _nodesData : _nodesData.filter(n => n.app_type === _nodesFilter))
+    .filter(n => !_loraOnly || n.via_rnode)
     .filter(n => !q ||
       (n.hash && n.hash.includes(q)) ||
       (n.name && n.name.toLowerCase().includes(q)) ||
@@ -3929,8 +3969,11 @@ function _renderNodesTable(){
       (n.tcp_addr && n.tcp_addr.toLowerCase().includes(q))
     );
 
+  // LoRa view: most recently heard over radio first — "what's around me right now"
+  if(_loraOnly) rows = rows.slice().sort((a,b) => (b.last_via_rnode||0) - (a.last_via_rnode||0));
+
   document.getElementById('nodes-count').textContent =
-    _nodesFilter === 'all'
+    (_nodesFilter === 'all' && !_loraOnly)
       ? `${_nodesData.length} nodes`
       : `${rows.length} / ${_nodesData.length}`;
 
@@ -3945,6 +3988,9 @@ function _renderNodesTable(){
   tbody.innerHTML = rows.map(n => {
     const color = _nodeTypeColor[n.app_type] || 'var(--mu)';
     const badge = `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${color}22;color:${color}">${esc(n.app_type||'RNS')}</span>`;
+    const loraBadge = n.via_rnode
+      ? `<span title="Heard directly over LoRa (${esc(n.via_interface||'RNode')}) — last: ${_fmtRelTime(n.last_via_rnode)}" style="margin-left:5px">📡</span>`
+      : '';
     const hashShort = n.hash ? n.hash.substring(0,16)+'…' : '—';
     const fullHash  = esc(n.hash||'');
     const name  = n.name ? esc(n.name) : `<span style="color:var(--mu)">—</span>`;
@@ -3959,7 +4005,7 @@ function _renderNodesTable(){
       ? `<a href="${rbuUrl}" target="_blank" style="color:var(--sky);font-family:var(--fn);font-size:11px;text-decoration:none;cursor:pointer" title="Open in rBrowser">${hashShort}</a>`
       : `<span style="color:var(--teal);font-family:var(--fn);font-size:11px;cursor:pointer" onclick="_showRnpath('${fullHash}')" title="Show path">${hashShort}</span>`;
     return `<tr style="border-bottom:1px solid var(--bd);transition:background .15s" onmouseover="this.style.background='var(--s1)'" onmouseout="this.style.background=''">
-      <td style="padding:8px 8px">${badge}</td>
+      <td style="padding:8px 8px">${badge}${loraBadge}</td>
       <td style="padding:8px 8px;white-space:nowrap">${hashTd}</td>
       <td style="padding:8px 8px;color:var(--tx)">${name}</td>
       <td style="padding:8px 8px">${region}</td>
@@ -4031,10 +4077,38 @@ document.addEventListener('keydown', e => {
   }
 });
 
+function _setLoraBtnVisual(on){
+  const btn = document.getElementById('nodes-lora-toggle');
+  if(!btn) return;
+  btn.style.background = on ? 'rgba(61,220,132,.18)' : '';
+  btn.style.borderColor = on ? 'var(--teal)' : '';
+  btn.style.boxShadow = on ? 'var(--glow)' : '';
+}
+
+function toggleLoraFilter(btn){
+  _loraOnly = !_loraOnly;
+  _setLoraBtnVisual(_loraOnly);
+  // LoRa is a view across all types, not a modifier on top of one —
+  // combining it with a single type tab mostly yields 0-1 rows on a
+  // small radio set, which reads as a stuck/broken filter. Keep the two
+  // mutually exclusive, same as the type tabs are with each other.
+  if(_loraOnly && _nodesFilter !== 'all'){
+    _nodesFilter = 'all';
+    document.querySelectorAll('#nodes-filter .sys-btn').forEach(b=>b.classList.remove('active'));
+    const allBtn = document.querySelector('#nodes-filter .sys-btn[onclick*="\'all\'"]');
+    if(allBtn) allBtn.classList.add('active');
+  }
+  _renderNodesTable();
+}
+
 function setNodeFilter(type, btn){
   _nodesFilter = type;
   document.querySelectorAll('#nodes-filter .sys-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  if(_loraOnly){
+    _loraOnly = false;
+    _setLoraBtnVisual(false);
+  }
   _renderNodesTable();
 }
 
@@ -4451,6 +4525,7 @@ const RNS_IFACE_FIELDS = {
     {k:'group_id', label:'Group ID', type:'text', default:'', hint:'Isolate network segments on same LAN'},
     {k:'devices', label:'Devices (optional)', type:'text', default:'', hint:'e.g. wlan0,eth0'},
     {k:'ignored_devices', label:'Ignored Devices', type:'text', default:''},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
   TCPClientInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4459,6 +4534,7 @@ const RNS_IFACE_FIELDS = {
     {k:'mode', label:'Mode', type:'select', opts:['full','gateway','access_point','roaming','boundary','internal'], default:'full'},
     {k:'network_name', label:'Network Name (IFAC)', type:'text', default:''},
     {k:'passphrase', label:'Passphrase (IFAC)', type:'text', default:''},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
   TCPServerInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4467,6 +4543,7 @@ const RNS_IFACE_FIELDS = {
     {k:'mode', label:'Mode', type:'select', opts:['full','gateway','access_point','roaming','boundary','internal'], default:'full'},
     {k:'network_name', label:'Network Name (IFAC)', type:'text', default:''},
     {k:'passphrase', label:'Passphrase (IFAC)', type:'text', default:''},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
   BackboneInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4475,6 +4552,7 @@ const RNS_IFACE_FIELDS = {
     {k:'remote', label:'Remote Host', type:'text', default:'', hint:'For client connection'},
     {k:'target_port', label:'Remote Port', type:'text', default:'4242'},
     {k:'mode', label:'Mode', type:'select', opts:['full','gateway','access_point','roaming','boundary','internal'], default:'gateway'},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
   RNodeInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4492,6 +4570,7 @@ const RNS_IFACE_FIELDS = {
     {k:'airtime_limit_short', label:'Airtime Limit Short (%)', type:'text', default:'', hint:'e.g. 33'},
     {k:'network_name', label:'Network Name (IFAC)', type:'text', default:''},
     {k:'passphrase', label:'Passphrase (IFAC)', type:'text', default:''},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
   I2PInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4501,6 +4580,7 @@ const RNS_IFACE_FIELDS = {
     {k:'network_name', label:'Network Name (IFAC)', type:'text', default:''},
     {k:'passphrase', label:'Passphrase (IFAC)', type:'text', default:''},
     {k:'ifac_size', label:'IFAC Size (bits)', type:'text', default:'', hint:'Default auto, 8-512 bits'},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0). Set higher here to prefer I2P when a competing path has the same hop count.'},
   ],
   UDPInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4508,6 +4588,7 @@ const RNS_IFACE_FIELDS = {
     {k:'listen_port', label:'Listen Port', type:'text', default:'4242'},
     {k:'forward_ip', label:'Forward IP', type:'text', default:'255.255.255.255'},
     {k:'forward_port', label:'Forward Port', type:'text', default:'4242'},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
   SerialInterface: [
     {k:'enabled', label:'Enabled', type:'select', opts:['yes','no'], default:'yes'},
@@ -4516,6 +4597,7 @@ const RNS_IFACE_FIELDS = {
     {k:'databits', label:'Data Bits', type:'select', opts:['8','7'], default:'8'},
     {k:'parity', label:'Parity', type:'select', opts:['none','even','odd'], default:'none'},
     {k:'stopbits', label:'Stop Bits', type:'select', opts:['1','2'], default:'1'},
+    {k:'gravity', label:'Gravity', type:'text', default:'', hint:'Breaks ties with other interfaces on equal-hop paths — higher wins (default 0)'},
   ],
 };
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -41,6 +41,52 @@ except Exception as _boot_e:
     print("[NOEMA FULL] Dashboard will likely fail to route traffic until this is fixed.")
 
 import RNS as _RNS_global  # noqa: E402 — must be after Reticulum() init
+
+# --- LoRa announce-origin tracking -----------------------------------------
+# RNS.Transport.inbound(raw, interface) is the single choke point every
+# incoming packet — from any interface — passes through, before RNS decides
+# whether to update its path table (which only keeps the *shortest* known
+# path per destination, so it can't reliably answer "was this ever heard
+# directly over LoRa" — a later, shorter path via TCP/I2P silently replaces
+# it there). We wrap this one staticmethod and, for packets arriving on an
+# RNode interface, peek at them with RNS's own public Packet.unpack() (the
+# same class/method RNS uses internally) to record which destination just
+# came in over the radio, then hand off to the original implementation
+# unchanged. _NodeAnnounceHandler below reads this record to set a sticky
+# "seen via LoRa" flag per node that later, better paths can't erase.
+_rnode_announce_seen: dict = {}  # hex_hash -> (iface_name, ts)
+
+def _install_rnode_announce_hook():
+    import time as _hook_time
+    try:
+        _orig_inbound = _RNS_global.Transport.inbound
+        # Accept *any* call shape — different RNS releases have called this
+        # with extra keyword args (e.g. tc=, ifac_handled=) that a fixed
+        # (raw, interface=None) signature can't absorb, causing a TypeError
+        # before our body even runs, which in turn means the original
+        # inbound() never gets called either and the packet is dropped
+        # outright. Extract what we need defensively and always forward
+        # the exact original call unchanged.
+        def _hooked_inbound(*args, **kwargs):
+            try:
+                raw = args[0] if len(args) > 0 else kwargs.get("raw")
+                interface = args[1] if len(args) > 1 else kwargs.get("interface")
+                if raw is not None and interface is not None and "RNode" in str(getattr(interface, "name", "")):
+                    peek = _RNS_global.Packet(None, raw)
+                    if peek.unpack() and peek.packet_type == _RNS_global.Packet.ANNOUNCE:
+                        _rnode_announce_seen[peek.destination_hash.hex()] = (
+                            str(getattr(interface, "name", "")), _hook_time.time()
+                        )
+            except Exception:
+                pass
+            return _orig_inbound(*args, **kwargs)
+        _RNS_global.Transport.inbound = staticmethod(_hooked_inbound)
+        print("[NOEMA FULL] RNode announce-origin hook installed")
+    except Exception as _hook_e:
+        print(f"[NOEMA FULL] WARNING: failed to install RNode announce hook: {_hook_e}")
+
+_install_rnode_announce_hook()
+
 # Detect RNS binary path - support both old (rns-env) and new (MeshGate/.venv) layouts
 import shutil as _shutil
 def _find_rns_bin(name):
@@ -544,6 +590,34 @@ def _nt_save():
         pass
 
 
+_NODE_TTL = 1 * 86400  # 1 day, ordinary nodes
+_NODE_MAX = 500  # hard cap on ordinary nodes
+_NODE_MAX_RNODE = 300  # separate, smaller cap on LoRa-confirmed nodes
+
+
+def _nt_evict():
+    """Trim _node_tracker in place. Shared by startup (so a bloated
+    tracker.json from before this cap existed doesn't sit fully loaded in
+    memory for up to a minute) and the periodic maintenance loop."""
+    now = _nt_time.time()
+    with _node_tracker_lock:
+        stale = [k for k, v in _node_tracker.items()
+                 if now - v.get("last_seen", 0) > (_NODE_TTL * 7 if v.get("via_rnode") else _NODE_TTL)]
+        for k in stale:
+            del _node_tracker[k]
+        ordinary = [k for k, v in _node_tracker.items() if not v.get("via_rnode")]
+        if len(ordinary) > _NODE_MAX:
+            sorted_keys = sorted(ordinary, key=lambda k: _node_tracker[k].get("last_seen", 0))
+            for k in sorted_keys[:len(ordinary) - _NODE_MAX]:
+                del _node_tracker[k]
+        rnode = [k for k, v in _node_tracker.items() if v.get("via_rnode")]
+        if len(rnode) > _NODE_MAX_RNODE:
+            sorted_keys = sorted(rnode, key=lambda k: _node_tracker[k].get("last_via_rnode") or 0)
+            for k in sorted_keys[:len(rnode) - _NODE_MAX_RNODE]:
+                del _node_tracker[k]
+    return len(stale)
+
+
 def _classify_aspect(app_name: str, aspects) -> str:
     """Return a human-readable node type from RNS app_name / aspects."""
     if app_name == "lxmf" and aspects and "delivery" in str(aspects):
@@ -560,6 +634,11 @@ def _classify_aspect(app_name: str, aspects) -> str:
 # Load persisted data at module import time (before handler registration)
 with _node_tracker_lock:
     _node_tracker = _nt_load()
+_evicted_at_load = _nt_evict()
+if _evicted_at_load:
+    print(f"[NodeTracker] Trimmed {_evicted_at_load} stale nodes from tracker.json on load "
+          f"({len(_node_tracker)} remain)")
+    _nt_save()
 
 
 class _NodeAnnounceHandler:
@@ -637,6 +716,16 @@ class _NodeAnnounceHandler:
             except Exception:
                 hops = None
 
+            # Was this specific announce heard arriving over an RNode (LoRa)
+            # interface? See _install_rnode_announce_hook() above — sticky
+            # per-node, unaffected by later path-table races.
+            via_rnode = False
+            via_interface = ""
+            seen = _rnode_announce_seen.get(hex_hash)
+            if seen and (ts - seen[1]) <= 5.0:
+                via_rnode = True
+                via_interface = seen[0]
+
             with _node_tracker_lock:
                 existing = _node_tracker.get(hex_hash)
                 if existing is None:
@@ -658,6 +747,9 @@ class _NodeAnnounceHandler:
                             "last_seen": ts,
                             "tcp_addr": tcp_addr,
                             "region": region or "",
+                            "via_rnode": via_rnode,
+                            "via_interface": via_interface,
+                            "last_via_rnode": ts if via_rnode else None,
                         }
                 else:
                     existing["last_seen"] = ts
@@ -671,6 +763,14 @@ class _NodeAnnounceHandler:
                     if app_name and app_name != existing.get("app_name"):
                         existing["app_name"] = app_name
                         existing["app_type"] = app_type
+                    if via_rnode:
+                        existing["via_rnode"] = True
+                        existing["via_interface"] = via_interface
+                        existing["last_via_rnode"] = ts
+                    elif "via_rnode" not in existing:
+                        existing["via_rnode"] = False
+                        existing["via_interface"] = ""
+                        existing["last_via_rnode"] = None
 
         except Exception:
             pass
@@ -730,24 +830,11 @@ def _nt_register():
     except Exception as e:
         print(f"[NodeTracker] Seed error: {e}")
 
-    _NODE_TTL = 1 * 86400  # 1 day
-    _NODE_MAX = 500  # hard cap
     while True:
         _t.sleep(60)
-        # Evict stale nodes older than TTL
-        now = _nt_time.time()
-        with _node_tracker_lock:
-            stale = [k for k, v in _node_tracker.items()
-                     if now - v.get("last_seen", 0) > _NODE_TTL]
-            for k in stale:
-                del _node_tracker[k]
-            # Hard cap: keep only the most recently seen nodes
-            if len(_node_tracker) > _NODE_MAX:
-                sorted_keys = sorted(_node_tracker, key=lambda k: _node_tracker[k].get("last_seen", 0))
-                for k in sorted_keys[:len(_node_tracker) - _NODE_MAX]:
-                    del _node_tracker[k]
-        if stale:
-            print(f"[NodeTracker] Evicted {len(stale)} stale nodes")
+        evicted = _nt_evict()
+        if evicted:
+            print(f"[NodeTracker] Evicted {evicted} stale nodes")
         _nt_save()
 
 
@@ -1262,6 +1349,25 @@ def get_log(name):
 def chat_display_name_get():
     return jsonify({"display_name": _chat_get_display_name()})
 
+@app.route("/api/chat/propagation_node")
+def chat_propagation_node_get():
+    return jsonify({"propagation_node": _chat_get_propagation_node()})
+
+@app.route("/api/chat/propagation_node", methods=["POST"])
+def chat_propagation_node_set():
+    data = request.get_json(silent=True) or {}
+    hex_hash = str(data.get("propagation_node", "")).strip().lower()
+    if len(hex_hash) != 32 or not all(c in "0123456789abcdef" for c in hex_hash):
+        return jsonify({"ok": False, "error": "expected a 32-char hex destination hash"}), 400
+    if not _chat_router:
+        return jsonify({"ok": False, "error": "chat router not initialized yet"}), 503
+    try:
+        _chat_router.set_outbound_propagation_node(bytes.fromhex(hex_hash))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    _chat_set_propagation_node(hex_hash)
+    return jsonify({"ok": True})
+
 @app.route("/api/chat/settings", methods=["POST"])
 def chat_settings():
     data = request.get_json(silent=True) or {}
@@ -1671,6 +1777,19 @@ def _chat_set_display_name(name):
     try: open(CHAT_DISPLAY_NAME_FILE, "w").write(name.strip())
     except: pass
 
+CHAT_PROPAGATION_NODE_FILE = f"{_HOME}/dashboard/chat_lxmf/propagation_node"
+_DEFAULT_PROPAGATION_NODE = "6e434db107d540b24a953b5f1bfed57c"
+
+def _chat_get_propagation_node():
+    try:
+        n = open(CHAT_PROPAGATION_NODE_FILE).read().strip()
+        return n if n else _DEFAULT_PROPAGATION_NODE
+    except: return _DEFAULT_PROPAGATION_NODE
+
+def _chat_set_propagation_node(hex_hash):
+    try: open(CHAT_PROPAGATION_NODE_FILE, "w").write(hex_hash.strip())
+    except: pass
+
 CONTACTS_FILE = f"{_HOME}/dashboard/chat_contacts.json"
 
 _chat_lock = _chat_th.Lock()
@@ -1722,7 +1841,20 @@ def _chat_init():
         open(f"{CHAT_STORAGE}/address", "w").write(addr_str)
     except: pass
 
-    # Re-announce and request paths periodically
+    # Propagation node for offline message delivery — without this, LXMF
+    # messages sent while this gateway is offline are simply lost, since
+    # the router has no store-and-forward relay to check on reconnect.
+    # Address is user-configurable (System > Chat Settings) rather than
+    # fixed, so it can be switched instantly — e.g. to a LoRa-reachable
+    # node — if the interface it's currently reachable through goes away.
+    try:
+        router.set_outbound_propagation_node(bytes.fromhex(_chat_get_propagation_node()))
+    except Exception as _pn_e:
+        print(f"[Chat] Failed to set propagation node: {_pn_e}")
+
+    # Re-announce, request paths, and sync with the propagation node
+    # periodically — this is what actually retrieves messages that
+    # arrived while this gateway was offline.
     def _announce_loop():
         import time as _t
         _t.sleep(5)
@@ -1740,6 +1872,10 @@ def _chat_init():
             try:
                 router.announce(destination_hash=dest.hash)
             except: pass
+            try:
+                router.request_messages_from_propagation_node(identity)
+            except Exception as _pn_sync_e:
+                print(f"[Chat] Propagation sync failed: {_pn_sync_e}")
             _t.sleep(300)
     import threading as _ann_th
     _ann_th.Thread(target=_announce_loop, daemon=True).start()
