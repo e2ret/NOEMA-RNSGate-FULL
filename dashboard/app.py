@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.5"
+__version__ = "1.1.6"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -104,7 +104,7 @@ def _find_rns_bin(name):
     return found or name
 _RNS_BIN = os.path.dirname(_find_rns_bin("rnstatus"))
 
-SERVICES = ["dashboard", "noema_lxmf_bridge", "rnsd", "i2pd", "nomadnet", "rbrowser"]
+SERVICES = ["dashboard", "noema_lxmf_bridge", "i2pd", "nomadnet", "rbrowser"]
 
 NOMADNET_PAGE = f"{_HOME}/.nomadnetwork/storage/pages/index.mu"
 NOMADNET_PAGES_DIR = f"{_HOME}/.nomadnetwork/storage/pages"
@@ -830,6 +830,15 @@ def _nt_register():
     except Exception as e:
         print(f"[NodeTracker] Seed error: {e}")
 
+    # Seeding can add far more than the cap in one go (RNS's own
+    # destination_table routinely holds thousands of entries on a busy
+    # mesh) — evict right away instead of leaving the tracker bloated for
+    # up to a minute until the periodic loop below gets to it first.
+    evicted_after_seed = _nt_evict()
+    if evicted_after_seed:
+        print(f"[NodeTracker] Trimmed {evicted_after_seed} nodes after seeding ({len(_node_tracker)} remain)")
+    _nt_save()
+
     while True:
         _t.sleep(60)
         evicted = _nt_evict()
@@ -1320,7 +1329,7 @@ def save_config(name):
         if name == "LXMF Bridge":
             sh("sudo systemctl restart noema_lxmf_bridge")
         elif name == "reticulum":
-            sh("sudo systemctl restart rnsd")
+            sh("sudo systemctl restart noema_lxmf_bridge")
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1328,7 +1337,7 @@ def save_config(name):
 @app.route("/api/logs/<name>")
 def get_log(name):
     import re as _re
-    allowed = {"rnsd": "rnsd", "noema_lxmf_bridge": "noema_lxmf_bridge",
+    allowed = {"noema_lxmf_bridge": "noema_lxmf_bridge",
                "nomadnet": "nomadnet", "dashboard": "dashboard", "rbrowser": "rbrowser"}
     if name not in allowed:
         return jsonify({"error": "unknown"}), 400
@@ -2446,7 +2455,7 @@ def run_command():
     allowed = {
         "find_ports":      "ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || echo 'не найдено'",
         "rnstatus":        f"{_RNS_BIN}/rnstatus",
-        "restart_rnsd":    "sudo systemctl restart rnsd && sleep 2 && systemctl is-active rnsd",
+        "restart_rnsd":    "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet && sleep 2 && systemctl is-active dashboard noema_lxmf_bridge nomadnet",
         "restart_lxmf":    "sudo systemctl restart noema_lxmf_bridge && sleep 1 && systemctl is-active noema_lxmf_bridge",
         "restart_dash":    None,  # handled separately
         "free_mem":        "LC_ALL=C free -h",
@@ -2456,8 +2465,8 @@ def run_command():
         "noema_update":    (
             f"cd {_HOME}/NOEMA-RNSGate-FULL && git fetch origin 2>&1 && git checkout dashboard/index.html dashboard/app.py lxmf-tools/noema_lxmf_bridge.py 2>&1; git pull 2>&1 && "
             f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/pip install --upgrade rns lxmf lxmfy flask paho-mqtt nomadnet -q 2>&1 && "
-            "sudo systemctl restart dashboard noema_lxmf_bridge rnsd && "
-            "sleep 3 && systemctl is-active dashboard noema_lxmf_bridge rnsd"
+            "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet && "
+            "sleep 3 && systemctl is-active dashboard noema_lxmf_bridge nomadnet"
         ),
         "log_cleanup":     (
             "journalctl --vacuum-size=50M 2>&1 && "
@@ -3041,7 +3050,7 @@ def reset_identity():
         import threading as _thr
         _thr.Thread(target=_recalc_nn, daemon=True).start()
         # Restart all services in background - dashboard last
-        _sp.Popen(f"sleep 1 && sudo systemctl restart i2pd rnsd noema_lxmf_bridge nomadnet && sleep 8 && {_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3 {_HOME}/NOEMA-RNSGate-FULL/recalc_nn_addr.py && sleep 2 && sudo systemctl restart dashboard", shell=True)
+        _sp.Popen(f"sleep 1 && sudo systemctl restart i2pd noema_lxmf_bridge nomadnet && sleep 8 && {_HOME}/NOEMA-RNSGate-FULL/.venv/bin/python3 {_HOME}/NOEMA-RNSGate-FULL/recalc_nn_addr.py && sleep 2 && sudo systemctl restart dashboard", shell=True)
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
@@ -3051,7 +3060,7 @@ def reset_identity():
 
 @app.route("/api/cron/rnsd", methods=["GET", "POST"])
 def cron_rnsd():
-    cron_line = "0 4 * * * systemctl restart rnsd"
+    cron_line = "0 4 * * * systemctl restart dashboard noema_lxmf_bridge nomadnet"
     def get_crontab():
         try:
             r = subprocess.run(["crontab", "-l"], capture_output=True, text=True)

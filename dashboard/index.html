@@ -1269,14 +1269,14 @@ function chatShowMessages(){
       <div style="margin-bottom:12px">
         <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--tx)">
           <input type="checkbox" id="cron-rnsd-toggle" onchange="setCronRnsd(this.checked)" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;margin-top:1px">
-          <span style="flex:1" data-i18n="txt_restart_rnsd_night">Restart rnsd every night at 04:00 (frees memory)</span>
+          <span style="flex:1" data-i18n="txt_restart_rnsd_night">Restart core services every night at 04:00 (frees memory)</span>
         </label>
         <div id="cron-rnsd-status" style="font-size:11px;color:var(--mu);margin-left:24px;margin-top:2px"></div>
       </div>
       <div style="margin-bottom:20px">
         <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--tx)">
           <input type="checkbox" id="cron-watchdog-toggle" onchange="setCronWatchdog(this.checked)" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;margin-top:1px">
-          <span style="flex:1" data-i18n="txt_tcp_watchdog">TCP watchdog: auto-restart rnsd on dropped TCP interfaces (every 5 min)</span>
+          <span style="flex:1" data-i18n="txt_tcp_watchdog">TCP watchdog: auto-restart on dropped TCP interfaces (every 5 min)</span>
         </label>
         <div id="cron-watchdog-status" style="font-size:11px;color:var(--mu);margin-left:24px;margin-top:2px"></div>
       </div>
@@ -1568,7 +1568,7 @@ function nav(id,el){
   if(id==="rnode") { loadRnodePanel(); loadInterference(); loadRfActivity(); }
   if(id==="nodes") loadNodesPanel();
   if(id==="i2p") loadI2pStatus();
-  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); _loadChatPropagationNode(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; _initSysPanel(); }
+  if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); _loadChatPropagationNode(); _initSysPanel(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; }
 }
 
 function toast(msg,ok=true){
@@ -1603,13 +1603,13 @@ const I18N = {
     filter_all: "All", txt_nodes_loading: "Loading…",
     sec_interference: "⚡ Interference Events", txt_interference_empty: "No interference events detected.",
     sec_rf_activity: "📡 RF Activity (LoRa)", txt_rf_activity_empty: "No LoRa packets received yet.",
-    btn_ports: "Ports", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Restart RNSD",
+    btn_ports: "Ports", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Restart Core Services",
     btn_restart_lxmf: "Restart LXMF", btn_memory: "Memory", btn_uptime: "Uptime",
     btn_restart_dash: "Restart Dashboard", btn_reboot: "Reboot", btn_reset_identity: "Reset All Identity",
     btn_download_backup: "Download Backup", btn_restore: "Restore",
     btn_save_limits: "Save limits", btn_clean_files: "Clean files now", btn_clear_history: "Clear all history",
-    txt_restart_rnsd_night: "Restart rnsd every night at 04:00 (frees memory)",
-    txt_tcp_watchdog: "TCP watchdog: auto-restart rnsd on dropped TCP interfaces (every 5 min)",
+    txt_restart_rnsd_night: "Restart core services every night at 04:00 (frees memory)",
+    txt_tcp_watchdog: "TCP watchdog: auto-restart on dropped TCP interfaces (every 5 min)",
     txt_bridge_whitelist_only: "Only allow messages from whitelisted addresses",
     txt_chat_whitelist_only: "Only allow chat messages from whitelisted addresses",
     txt_bridge_restart_note: "Changes automatically restart the LXMF Bridge.",
@@ -1704,13 +1704,13 @@ const I18N = {
     filter_all: "Все", txt_nodes_loading: "Загрузка…",
     sec_interference: "⚡ События помех", txt_interference_empty: "Событий помех не обнаружено.",
     sec_rf_activity: "📡 RF Активность (LoRa)", txt_rf_activity_empty: "Пакеты LoRa ещё не получены.",
-    btn_ports: "Порты", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Перезапуск RNSD",
+    btn_ports: "Порты", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Перезапуск сервисов",
     btn_restart_lxmf: "Перезапуск LXMF", btn_memory: "Память", btn_uptime: "Аптайм",
     btn_restart_dash: "Перезапуск дашборда", btn_reboot: "Перезагрузка", btn_reset_identity: "Сброс идентификаторов",
     btn_download_backup: "Скачать бэкап", btn_restore: "Восстановить",
     btn_save_limits: "Сохранить лимиты", btn_clean_files: "Очистить файлы", btn_clear_history: "Очистить историю",
-    txt_restart_rnsd_night: "Перезапускать rnsd каждую ночь в 04:00 (освобождает память)",
-    txt_tcp_watchdog: "TCP watchdog: авто-перезапуск rnsd при обрыве TCP-интерфейсов (каждые 5 мин)",
+    txt_restart_rnsd_night: "Перезапускать сервисы каждую ночь в 04:00 (освобождает память)",
+    txt_tcp_watchdog: "TCP watchdog: авто-перезапуск при обрыве TCP-интерфейсов (каждые 5 мин)",
     txt_bridge_whitelist_only: "Разрешать сообщения только с адресов из списка",
     txt_chat_whitelist_only: "Разрешать сообщения в чат только с адресов из списка",
     txt_bridge_restart_note: "Изменения автоматически перезапускают LXMF Bridge.",
@@ -1928,8 +1928,8 @@ async function svcAction(name,action){
 }
 
 async function restartAll(){
-  for(const s of ["rnsd","noema_lxmf_bridge"]){
-    await fetch(API+`/api/services/${s}/restart`,{method:"POST"});
+  for(const s of ["noema_lxmf_bridge","nomadnet","dashboard"]){
+    await fetch(API+`/api/services/${s}/restart`,{method:"POST"}).catch(()=>{});
   }
   toast(t("toast_all_restarted"));
   loadServices();
@@ -2254,7 +2254,7 @@ async function updateTopology(){
     const rnsStatus=await fetch(API+"/api/rnstatus").then(r=>r.json());
     const ifaces=rnsStatus.interfaces||[];
     const rnode=ifaces.find(i=>i.name&&i.name.includes("RNode"));
-    const rnodeOn=rnode&&rnode.fields&&rnode.fields["Status"]==="Up";
+    const rnodeOn=rnode&&rnode.fields&&(rnode.fields["Status"]||"").startsWith("Up");
     document.getElementById("mg-n-rnode")?.classList.toggle("dim",!rnodeOn);
     document.getElementById("mg-l-rnode")?.classList.toggle("off",!rnodeOn);
 
@@ -2319,7 +2319,7 @@ async function loadRns(){
   if(!el) return;
   el.innerHTML=ifaces.map(i=>{
     const status=i.fields["Status"]||"—";
-    const color=status==="Up"?"var(--gr)":"var(--rd)";
+    const color=status.startsWith("Up")?"var(--gr)":"var(--rd)";
     const fields=Object.entries(i.fields).map(([k,v])=>`<span style="color:var(--mu)">${esc(k)}:</span> ${esc(v)}`).join(" &nbsp;·&nbsp; ");
     return `<div style="padding:8px 0;border-bottom:1px solid var(--s3)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
@@ -2332,7 +2332,7 @@ async function loadRns(){
   // home rns
   document.getElementById("home-rns").innerHTML=ifaces.map(i=>{
     const status=i.fields["Status"]||"—";
-    const color=status==="Up"?"var(--gr)":"var(--rd)";
+    const color=status.startsWith("Up")?"var(--gr)":"var(--rd)";
     return `<div style="display:flex;align-items:center;gap:6px"><div style="width:6px;height:6px;border-radius:50%;background:${color}"></div>${esc(i.name)}</div>`;
   }).join("")||"—";
 }
@@ -3282,7 +3282,7 @@ async function loadRnodePanel(){
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" id="rnode-tabs">
         ${rnodes.map((rnode,i) => {
           const f = rnode.fields||{};
-          const isUp = f["Status"]==="Up";
+          const isUp = (f["Status"]||"").startsWith("Up");
           return `<button class="sys-btn${i===0?' teal':''}" onclick="selectRnode(${i})" id="rnode-tab-${i}">
             <span style="width:8px;height:8px;border-radius:50%;background:${isUp?"#4ade9a":"#f87171"};display:inline-block;margin-right:6px"></span>
             ${esc(rnode.name.replace("RNodeInterface[","").replace("]",""))}
@@ -3310,7 +3310,7 @@ function selectRnode(idx){
 
   const rnode = rnodes[idx];
   const f = rnode.fields||{};
-  const isUp = f["Status"]==="Up";
+  const isUp = (f["Status"]||"").startsWith("Up");
 
   // Name + status + metrics all in one row — set via metricsEl after building bars
   const nameEl = document.getElementById("rnode-selected-name");
@@ -3591,7 +3591,7 @@ async function loadRnsLog(){
       el.textContent = d.lines.join("\n");
       el.scrollTop = el.scrollHeight;
     } else {
-      el.textContent = "No log entries found. Check if rnsd is running.";
+      el.textContent = "No log entries found. Check if noema_lxmf_bridge is running.";
     }
   }catch(e){ el.textContent = "Error: "+_errMsg(e); }
 }
@@ -4561,7 +4561,7 @@ const RNS_IFACE_FIELDS = {
     {k:'bandwidth', label:'Bandwidth (Hz)', type:'select', opts:['7800','10400','15600','20800','31250','41700','62500','125000','250000','500000'], default:'125000'},
     {k:'txpower', label:'TX Power (dBm)', type:'text', default:'17', hint:'Max depends on hardware, e.g. 7-22 dBm'},
     {k:'spreadingfactor', label:'Spreading Factor', type:'select', opts:['7','8','9','10','11','12'], default:'9', hint:'7=fastest, 12=longest range'},
-    {k:'codingrate', label:'Coding Rate', type:'select', opts:['5','6','7','8'], default:'5', hint:'5=fastest, 8=longest range'},
+    {k:'codingrate', label:'Coding Rate', type:'select', opts:['5','6','7','8'], default:'8', hint:'5=fastest, 8=longest range'},
     {k:'mode', label:'Mode', type:'select', opts:['full','access_point','gateway','boundary'], default:'full'},
     {k:'id_callsign', label:'ID Callsign', type:'text', default:'', hint:'Optional station ID'},
     {k:'id_interval', label:'ID Interval (s)', type:'text', default:'600'},
@@ -4675,7 +4675,7 @@ function renderIfacesList(ifaces) {
           const nameKey = Object.keys(_rnstatusByName).find(k => k.includes(iface.name));
           if(!nameKey) return '';
           const status = _rnstatusByName[nameKey];
-          const on = status === 'Up';
+          const on = (status||"").startsWith('Up');
           return '<span style="width:7px;height:7px;border-radius:50%;background:'+(on?'var(--gr)':'var(--rd)')+';flex-shrink:0;display:inline-block" title="'+esc(status)+'"></span>';
         })()}
         <div style="font-size:12px;font-weight:600;color:${color}">[[ ${esc(iface.name)} ]]</div>
@@ -5020,7 +5020,7 @@ async function _rnsIfacesLoad() {
       const enabled = _ifaceIsEnabled(iface.params);
       const live = findLive(iface.name);
       const status = live?.Status || null;
-      const liveUp = status === "Up";
+      const liveUp = !!status && status.startsWith("Up");
       // Рассинхрон: конфиг изменён, но работающий экземпляр Reticulum ещё со старым
       const pendingOff = !enabled && liveUp;   // выключен в конфиге, но ещё в эфире
       const pendingOn  = enabled && status !== null && !liveUp; // включён, но не поднялся
