@@ -180,6 +180,71 @@ if [ -f "$INSTALL_DIR/docs/logo.png" ] && [ ! -f "$INSTALL_DIR/dashboard/logo.pn
     echo "      Logo copied to dashboard."
 fi
 
+# --- Install RTL-SDR tools (for the optional SDR Spectrum tab) ---
+echo "[2c] Installing RTL-SDR tools (for the SDR Spectrum tab)..."
+# Most installs won't have the hardware — this just means the driver is
+# already there and working the moment a dongle IS plugged in, instead of a
+# manual build step buried in the dashboard's own tab. The SDR tab itself
+# stays fully opt-in regardless (nothing auto-starts; Start/Stop is manual).
+#
+# Using the rtl-sdr-blog fork, not the distro's rtl-sdr package: RTL-SDR
+# Blog V4 dongles (R828D tuner) need it specifically — the stock package is
+# too old to recognize V4 correctly — and it's a strict superset for older
+# R820T2 dongles too, so there's no downside to always building this one.
+if command -v rtl_power >/dev/null 2>&1; then
+    echo "      rtl_power already installed, skipping."
+else
+    RTLSDR_BUILD_DIR="$CURRENT_HOME/rtl-sdr-blog"
+    if (
+        set -e
+        sudo apt-get install -y git build-essential cmake libusb-1.0-0-dev pkg-config -qq
+        [ -f /etc/modprobe.d/blacklist-rtl.conf ] || echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl.conf >/dev/null
+        [ -d "$RTLSDR_BUILD_DIR" ] || git clone --quiet https://github.com/rtlsdrblog/rtl-sdr-blog.git "$RTLSDR_BUILD_DIR"
+        mkdir -p "$RTLSDR_BUILD_DIR/build"
+        cd "$RTLSDR_BUILD_DIR/build"
+        cmake .. -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON >/dev/null
+        make -j"$(nproc)" >/dev/null
+        sudo make install >/dev/null
+        sudo ldconfig
+        sudo cp -f ../rtl-sdr.rules /etc/udev/rules.d/
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger
+    ); then
+        echo "      RTL-SDR tools installed (rtl_power, rtl_test, etc.) — plug in a dongle and use the SDR tab whenever you want."
+    else
+        echo "      [WARN] RTL-SDR driver build failed (no internet? disk space?) — the SDR tab will show its 'not installed' hint with manual build instructions instead. Not fatal, continuing the rest of the install."
+    fi
+fi
+
+# --- Install lorarx (LoRa packet detector, for SDR tab's Packet Detect mode) ---
+echo "[2d] Installing lorarx (LoRa packet detector)..."
+# lorarx (from the dxlAPRS toolchain, GPL, by OE5DXL) does actual LoRa PHY
+# demodulation — SF/BW/CR/level/SNR per packet — that rtl_power's plain
+# power sweep can't. We build only the `lorarx` make target, not the whole
+# dxlAPRS toolchain (which pulls in X11/graphics deps for GUI map tools we
+# never use here) — its object list (lorarx.o, fft.o, complex.o + a handful
+# of shared utility objects) links against nothing but libm.
+if command -v lorarx >/dev/null 2>&1; then
+    echo "      lorarx already installed, skipping."
+else
+    DXLAPRS_BUILD_DIR="$CURRENT_HOME/dxlAPRS"
+    if (
+        set -e
+        sudo apt-get install -y build-essential -qq
+        [ -d "$DXLAPRS_BUILD_DIR" ] || git clone --quiet https://github.com/oe5hpm/dxlAPRS.git "$DXLAPRS_BUILD_DIR"
+        cd "$DXLAPRS_BUILD_DIR/src"
+        make lorarx
+        LORARX_BIN=$(find .. -maxdepth 2 -name lorarx -type f | head -1)
+        [ -n "$LORARX_BIN" ]
+        sudo cp -f "$LORARX_BIN" /usr/local/bin/lorarx
+        sudo chmod +x /usr/local/bin/lorarx
+    ); then
+        echo "      lorarx installed to /usr/local/bin/lorarx."
+    else
+        echo "      [WARN] lorarx build failed — the SDR tab's Packet Detect mode won't be available (Waterfall mode is unaffected). Not fatal, continuing the rest of the install."
+    fi
+fi
+
 # --- Python venv ---
 echo "[3/7] Setting up Python virtual environment..."
 
@@ -326,6 +391,24 @@ else
     sudo usermod -aG dialout "$CURRENT_USER"
     echo "      Added $CURRENT_USER to dialout group."
     echo "      [!] You need to log out and back in for serial port access."
+fi
+
+# --- USB access for an optional RTL-SDR (SDR Spectrum tab) ---
+# rtl-sdr's udev rules (stock or the rtl-sdr-blog fork, for V4 dongles) grant
+# device access to the plugdev group, not dialout. Not fatal to skip this —
+# no dongle means the SDR tab just shows its "not installed" state — but a
+# CURRENT_USER outside plugdev with rtl_power actually installed hits a
+# confusing silent USB permission error instead of a working tab.
+if getent group plugdev >/dev/null; then
+    if groups "$CURRENT_USER" | grep -qw plugdev; then
+        echo "      User $CURRENT_USER already in plugdev group."
+    else
+        sudo usermod -aG plugdev "$CURRENT_USER"
+        echo "      Added $CURRENT_USER to plugdev group (RTL-SDR USB access, if one is ever plugged in)."
+        echo "      [!] You need to log out and back in for this to take effect."
+    fi
+else
+    echo "      [SKIP] plugdev group doesn't exist on this system — if you install RTL-SDR tools later (see the SDR tab), you may need to create it yourself: sudo groupadd plugdev && sudo usermod -aG plugdev $CURRENT_USER"
 fi
 
 # --- Systemd services ---
@@ -486,7 +569,6 @@ else
     echo "  [SKIP] rBrowser already installed"
 fi
 
-if [ ! -f /etc/systemd/system/rbrowser.service ]; then
 cat > /etc/systemd/system/rbrowser.service << SVCEOF
 [Unit]
 Description=rBrowser Nomadnet Browser
@@ -506,10 +588,9 @@ TimeoutStartSec=60
 [Install]
 WantedBy=multi-user.target
 SVCEOF
-    systemctl daemon-reload
-    systemctl enable --now rbrowser
-    echo "  [OK] rbrowser.service installed"
-fi
+systemctl daemon-reload
+systemctl enable --now rbrowser
+echo "  [OK] rbrowser.service installed (ExecStart refreshed to $INSTALL_DIR)"
 
 # --- Get LXMF Bridge address ---
 echo "Getting LXMF Bridge address..."
