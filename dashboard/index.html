@@ -460,6 +460,7 @@ function chatShowMessages(){
       <div class="hub-pill active" onclick="nav('home',this)"><div class="hub-pill-ic" style="color:var(--teal)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><span data-i18n="nav_services">Services</span></div>
       <div class="hub-pill" onclick="nav('addresses',this);loadAddressesPanel();"><div class="hub-pill-ic" style="color:var(--purple)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-4 7.5"/></svg></div><span data-i18n="nav_addresses">Addresses</span></div>
       <div class="hub-pill" onclick="nav('rnode',this)"><div class="hub-pill-ic" style="color:var(--am)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></div><span data-i18n="nav_rnode">RNode</span></div>
+      <div class="hub-pill" onclick="nav('sdr',this)"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-6 4 3 4-8 4 5"/><path d="M3 20h18"/></svg></div><span data-i18n="nav_sdr">SDR</span></div>
       <div class="hub-pill" onclick="nav('nodes',this);loadNodesPanel();"><div class="hub-pill-ic" style="color:var(--indigo)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 12h4m2-5.3L9.5 11M13 17.3L9.5 13"/></svg></div><span data-i18n="nav_nodes">Nodes</span></div>
       <div class="hub-pill" onclick="nav('i2p',this)"><div class="hub-pill-ic" style="color:var(--i2ptl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z"/></svg></div><span data-i18n="nav_i2p">I2P</span></div>
       <div class="hub-pill" onclick="nav('nomadnet',this);loadNomadnet();"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6 6-2Z"/></svg></div><span data-i18n="nav_nomadnet">Nomadnet</span></div>
@@ -1165,6 +1166,128 @@ function chatShowMessages(){
 
     </div>
 
+    <!-- SDR SPECTRUM MONITOR -->
+    <div class="panel" id="panel-sdr">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+        <div class="section-lbl" style="margin:0" data-i18n="sec_sdr">SDR Spectrum</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
+            <span data-i18n="txt_sdr_mode">Mode</span>
+            <select id="sdr-mode" onchange="sdrModeChange()" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+              <option value="waterfall" data-i18n="opt_sdr_mode_waterfall">Waterfall</option>
+              <option value="packets" data-i18n="opt_sdr_mode_packets">Packet Detect</option>
+            </select>
+          </label>
+          <span id="sdr-band-label" style="font-family:var(--mono);font-size:11px;color:var(--mu)"></span>
+
+          <span id="sdr-waterfall-controls" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
+              <span data-i18n="txt_sdr_preset">Range</span>
+              <select id="sdr-preset" onchange="sdrPresetChange()" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+                <option value="auto" data-i18n="opt_sdr_preset_auto">Full band (auto)</option>
+                <option value="meshtastic_eu868" data-i18n="opt_sdr_preset_mt_eu">Meshtastic EU868 (869.40–869.65)</option>
+                <option value="__custom__" data-i18n="opt_sdr_preset_custom">Custom range…</option>
+              </select>
+            </label>
+            <span id="sdr-custom-range" style="display:none;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
+              <input id="sdr-custom-start" type="number" step="0.001" placeholder="869.0" style="width:66px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+              <span>–</span>
+              <input id="sdr-custom-stop" type="number" step="0.001" placeholder="869.2" style="width:66px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+              <span>MHz</span>
+            </span>
+            <button class="sys-btn teal" id="sdr-btn-save-preset" onclick="sdrSavePreset()" data-i18n-title="txt_sdr_save_preset_title" title="Save current range as a preset" style="padding:3px 8px;font-size:11px">💾</button>
+            <button class="sys-btn rd" id="sdr-btn-delete-preset" onclick="sdrDeletePreset()" style="display:none;padding:3px 8px;font-size:11px" data-i18n-title="txt_sdr_delete_preset_title" title="Delete this preset">🗑</button>
+          </span>
+
+          <span id="sdr-packet-controls" style="display:none;gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
+              <span data-i18n="txt_sdr_protocol">Protocol</span>
+              <select id="sdr-pkt-preset" onchange="sdrPktPresetChange()" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+                <option value="meshtastic_eu868" data-i18n="opt_sdr_pkt_mt_eu">Meshtastic EU868 (SF11/BW250)</option>
+                <option value="meshtastic_us915" data-i18n="opt_sdr_pkt_mt_us">Meshtastic US915 (SF11/BW250)</option>
+                <option value="meshcore_us915" data-i18n="opt_sdr_pkt_mc_us">MeshCore US/Canada (SF7/BW62.5)</option>
+                <option value="meshcore_eu868" data-i18n="opt_sdr_pkt_mc_eu">MeshCore EU/UK (SF8/BW62.5, scan recommended)</option>
+                <option value="__custom__" data-i18n="opt_sdr_pkt_custom">Custom…</option>
+              </select>
+            </label>
+            <span id="sdr-pkt-custom" style="display:none;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
+              <input id="sdr-pkt-freq" type="number" step="0.001" placeholder="869.525" style="width:72px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+              <span id="sdr-pkt-freq-to-wrap" style="display:none;align-items:center;gap:4px">
+                <span>–</span>
+                <input id="sdr-pkt-freq-to" type="number" step="0.001" placeholder="869.65" style="width:72px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+              </span>
+              <span>MHz</span>
+              <span data-i18n="txt_sdr_bw">BW</span>
+              <select id="sdr-pkt-bw" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+                <option value="0">7.8k</option><option value="1">10.4k</option><option value="2">15.6k</option>
+                <option value="3">20.8k</option><option value="4">31.25k</option><option value="5">41.7k</option>
+                <option value="6">62.5k</option><option value="7">125k</option><option value="8" selected>250k</option>
+                <option value="9">500k</option>
+              </select>
+            </span>
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)" data-i18n-title="txt_sdr_scan_title" title="Cycle through several frequencies automatically instead of needing the exact one">
+              <input type="checkbox" id="sdr-pkt-scan" onchange="sdrPktScanToggle()">
+              <span data-i18n="txt_sdr_scan">Scan</span>
+            </label>
+          </span>
+
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
+            <span data-i18n="txt_sdr_gain">Gain</span>
+            <input id="sdr-gain" type="number" value="40" min="0" max="50" step="0.5" style="width:56px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+          </label>
+          <button class="sys-btn teal" id="sdr-btn-start" onclick="sdrStart()" data-i18n="btn_sdr_start">▶ START</button>
+          <button class="sys-btn rd" id="sdr-btn-stop" onclick="sdrStop()" style="display:none" data-i18n="btn_sdr_stop">■ STOP</button>
+        </div>
+      </div>
+      <div id="sdr-status" style="font-size:11px;color:var(--mu);margin-bottom:10px;font-family:var(--mono)"></div>
+      <div id="sdr-not-installed" style="display:none;background:var(--s1);border:1px solid var(--am);border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:12px;color:var(--tx);line-height:1.6">
+        <div style="color:var(--am);font-weight:700;margin-bottom:6px" data-i18n="txt_sdr_missing_title">rtl_power not found</div>
+        <div data-i18n="txt_sdr_missing_body">Install the RTL-SDR Blog driver fork first (needed for V4 dongles — the stock apt package is too old):</div>
+        <pre style="background:var(--bg);border-radius:8px;padding:10px;margin-top:8px;overflow-x:auto;font-family:var(--fn);font-size:11px">sudo apt install -y git build-essential cmake libusb-1.0-0-dev pkg-config
+echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl.conf
+git clone https://github.com/rtlsdrblog/rtl-sdr-blog.git ~/rtl-sdr-blog
+cd ~/rtl-sdr-blog && mkdir build && cd build
+cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON
+make -j$(nproc) && sudo make install && sudo ldconfig</pre>
+      </div>
+      <div id="sdr-pkt-not-installed" style="display:none;background:var(--s1);border:1px solid var(--am);border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:12px;color:var(--tx);line-height:1.6">
+        <div style="color:var(--am);font-weight:700;margin-bottom:6px" data-i18n="txt_sdr_pkt_missing_title">rtl_sdr / lorarx not found</div>
+        <div data-i18n="txt_sdr_pkt_missing_body">Needs RTL-SDR tools (same driver as Waterfall mode) plus lorarx, the LoRa packet decoder — both are built automatically by install.sh. To build lorarx by hand instead:</div>
+        <pre style="background:var(--bg);border-radius:8px;padding:10px;margin-top:8px;overflow-x:auto;font-family:var(--fn);font-size:11px">sudo apt install -y build-essential
+git clone https://github.com/oe5hpm/dxlAPRS.git ~/dxlAPRS
+cd ~/dxlAPRS/src && make lorarx
+sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
+      </div>
+
+      <div id="sdr-waterfall-view" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px;min-height:0;flex:1;display:flex;flex-direction:column">
+        <div style="position:relative;flex:1;min-height:220px">
+          <canvas id="sdr-waterfall" style="width:100%;height:100%;display:block;border-radius:8px"></canvas>
+        </div>
+        <div style="position:relative;height:70px;margin-top:8px">
+          <canvas id="sdr-linechart" style="width:100%;height:100%;display:block"></canvas>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);font-family:var(--mono);margin-top:4px">
+          <span id="sdr-freq-lo">—</span>
+          <span id="sdr-peak" style="color:var(--teal)"></span>
+          <span id="sdr-freq-hi">—</span>
+        </div>
+        <div id="sdr-hover" style="font-size:11px;color:var(--sky);font-family:var(--mono);text-align:center;margin-top:3px;min-height:15px" data-i18n="txt_sdr_hover_hint">Hover the waterfall to read a point's exact frequency and level</div>
+      </div>
+
+      <div id="sdr-packets-view" style="display:none;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px;min-height:0;flex:1;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0">
+          <span id="sdr-pkt-count" style="font-size:11px;color:var(--mu);font-family:var(--mono)"></span>
+          <button class="sys-btn rd" style="padding:2px 8px;font-size:11px" onclick="sdrPktClear()" data-i18n="btn_clear">Clear</button>
+        </div>
+        <div id="sdr-pkt-log" style="font-family:var(--fn);font-size:11px;overflow-y:auto;flex:1">
+          <span style="color:var(--mu)" data-i18n="txt_sdr_pkt_empty">No packets detected yet.</span>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--mu);margin-top:8px" id="sdr-hint-waterfall" data-i18n="txt_sdr_hint">Raw RF around the LoRa band — separate from the RNode's own RSSI/SNR, useful for spotting other transmitters or interference. Needs its own RTL-SDR USB receiver. Minimum: ~1GB free RAM and a Pi 4 / Pi Zero 2W class board or better — not recommended on an Orange Pi Zero (512MB).</div>
+      <div style="font-size:11px;color:var(--mu);margin-top:8px;display:none" id="sdr-hint-packets" data-i18n="txt_sdr_pkt_hint">Actual LoRa PHY demodulation (SF/BW/CR/level/SNR per packet) via lorarx — not just a power sweep. Metadata only: payload bytes are never stored, parsed, or decrypted, so this can't show message content, only that a matching packet was heard. Mutually exclusive with Waterfall mode — both need the same USB receiver.</div>
+    </div>
+
     <!-- NODE TRACKER -->
     <div class="panel" id="panel-nodes">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
@@ -1566,6 +1689,8 @@ function nav(id,el){
   if(id==="configs") { loadConfigs(); _rnsIfacesLoad(); }
 
   if(id==="rnode") { loadRnodePanel(); loadInterference(); loadRfActivity(); }
+  if(id==="sdr") sdrPanelOpen();
+  if(id!=="sdr") sdrPanelClose();
   if(id==="nodes") loadNodesPanel();
   if(id==="i2p") loadI2pStatus();
   if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); _loadChatPropagationNode(); _initSysPanel(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; }
@@ -1586,7 +1711,7 @@ function cssVar(name){return getComputedStyle(document.documentElement).getPrope
 const I18N = {
   en: {
     nav_services: "Services", nav_configs: "Configs", nav_addresses: "Addresses",
-    nav_monitor: "Monitor", nav_rnode: "RNode", nav_nodes: "Nodes", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
+    nav_monitor: "Monitor", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Nodes", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
     nav_chat: "Chat", nav_logs: "Logs", nav_system: "System",
     nav_group_network: "Network", nav_group_monitoring: "Monitoring",
     nav_group_apps: "Apps", nav_group_settings: "Settings",
@@ -1603,6 +1728,33 @@ const I18N = {
     filter_all: "All", txt_nodes_loading: "Loading…",
     sec_interference: "⚡ Interference Events", txt_interference_empty: "No interference events detected.",
     sec_rf_activity: "📡 RF Activity (LoRa)", txt_rf_activity_empty: "No LoRa packets received yet.",
+    sec_sdr: "SDR Spectrum", txt_sdr_gain: "Gain", txt_sdr_preset: "Range", btn_sdr_start: "▶ START", btn_sdr_stop: "■ STOP",
+    opt_sdr_preset_auto: "Full band (auto)", opt_sdr_preset_mt_eu: "Meshtastic EU868 (869.40–869.65)",
+    txt_sdr_band_mt_eu: "Meshtastic EU868", txt_sdr_marker_mt_eu: "Meshtastic EU868 default", txt_sdr_marker_mt_us: "Meshtastic US915 default",
+    txt_sdr_missing_title: "rtl_power not found",
+    txt_sdr_missing_body: "Install the RTL-SDR Blog driver fork first (needed for V4 dongles — the stock apt package is too old):",
+    txt_sdr_hint: "Raw RF around the LoRa band — separate from the RNode's own RSSI/SNR, useful for spotting other transmitters or interference. Needs its own RTL-SDR USB receiver. Minimum: ~1GB free RAM and a Pi 4 / Pi Zero 2W class board or better — not recommended on an Orange Pi Zero (512MB).",
+    txt_sdr_hover_hint: "Hover the waterfall to read a point's exact frequency and level",
+    opt_sdr_preset_custom: "Custom range…",
+    txt_sdr_save_preset_title: "Save current range as a preset",
+    txt_sdr_delete_preset_title: "Delete this preset",
+    txt_sdr_set_range_first: "Set a valid range first",
+    txt_sdr_preset_name_prompt: "Preset name:",
+    txt_sdr_preset_saved: "Preset saved",
+    txt_sdr_confirm_delete_preset: "Delete preset \"{name}\"?",
+    txt_sdr_mode: "Mode", opt_sdr_mode_waterfall: "Waterfall", opt_sdr_mode_packets: "Packet Detect",
+    txt_sdr_protocol: "Protocol",
+    opt_sdr_pkt_mt_eu: "Meshtastic EU868 (SF11/BW250)", opt_sdr_pkt_mt_us: "Meshtastic US915 (SF11/BW250)",
+    opt_sdr_pkt_mc_us: "MeshCore US/Canada (SF7/BW62.5)", opt_sdr_pkt_mc_eu: "MeshCore EU/UK (SF8/BW62.5, scan recommended)",
+    opt_sdr_pkt_custom: "Custom…",
+    txt_sdr_sf: "SF", txt_sdr_bw: "BW", txt_sdr_all_sf: "all SF",
+    txt_sdr_pkt_missing_title: "rtl_sdr / lorarx not found",
+    txt_sdr_pkt_missing_body: "Needs RTL-SDR tools (same driver as Waterfall mode) plus lorarx, the LoRa packet decoder — both are built automatically by install.sh. To build lorarx by hand instead:",
+    txt_sdr_pkt_hint: "Actual LoRa PHY demodulation (SF/BW/CR/level/SNR per packet) via lorarx — not just a power sweep. Metadata only: payload bytes are never stored, parsed, or decrypted, so this can't show message content, only that a matching packet was heard. Mutually exclusive with Waterfall mode — both need the same USB receiver.",
+    txt_sdr_pkt_empty: "No packets detected yet.",
+    txt_sdr_pkt_recent: "recent",
+    txt_sdr_scan: "Scan", txt_sdr_scan_title: "Cycle through several frequencies automatically instead of needing the exact one",
+    txt_sdr_scanning: "Scanning",
     btn_ports: "Ports", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Restart Core Services",
     btn_restart_lxmf: "Restart LXMF", btn_memory: "Memory", btn_uptime: "Uptime",
     btn_restart_dash: "Restart Dashboard", btn_reboot: "Reboot", btn_reset_identity: "Reset All Identity",
@@ -1687,7 +1839,7 @@ const I18N = {
   },
   ru: {
     nav_services: "Сервисы", nav_configs: "Конфиги", nav_addresses: "Адреса",
-    nav_monitor: "Монитор", nav_rnode: "RNode", nav_nodes: "Узлы", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
+    nav_monitor: "Монитор", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Узлы", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
     nav_group_network: "Сеть", nav_group_monitoring: "Мониторинг",
     nav_group_apps: "Приложения", nav_group_settings: "Настройка",
     nav_chat: "Чат", nav_logs: "Логи", nav_system: "Система",
@@ -1704,6 +1856,33 @@ const I18N = {
     filter_all: "Все", txt_nodes_loading: "Загрузка…",
     sec_interference: "⚡ События помех", txt_interference_empty: "Событий помех не обнаружено.",
     sec_rf_activity: "📡 RF Активность (LoRa)", txt_rf_activity_empty: "Пакеты LoRa ещё не получены.",
+    sec_sdr: "SDR-спектр", txt_sdr_gain: "Усиление", txt_sdr_preset: "Диапазон", btn_sdr_start: "▶ СТАРТ", btn_sdr_stop: "■ СТОП",
+    opt_sdr_preset_auto: "Весь диапазон (авто)", opt_sdr_preset_mt_eu: "Meshtastic EU868 (869.40–869.65)",
+    txt_sdr_band_mt_eu: "Meshtastic EU868", txt_sdr_marker_mt_eu: "Meshtastic EU868 дефолт", txt_sdr_marker_mt_us: "Meshtastic US915 дефолт",
+    txt_sdr_missing_title: "rtl_power не найден",
+    txt_sdr_missing_body: "Сначала поставь форк драйвера RTL-SDR Blog (нужен для донглов V4 — штатный пакет apt слишком старый):",
+    txt_sdr_hint: "Сырой радиоэфир вокруг LoRa-диапазона — отдельно от RSSI/SNR самого RNode, удобно для поиска помех и посторонних передатчиков. Нужен отдельный RTL-SDR USB-приёмник. Минимум: ~1ГБ свободной RAM и плата не слабее Pi 4 / Pi Zero 2W — на Orange Pi Zero (512МБ) не рекомендуется.",
+    txt_sdr_hover_hint: "Наведи курсор на водопад, чтобы узнать точную частоту и уровень",
+    opt_sdr_preset_custom: "Свой диапазон…",
+    txt_sdr_save_preset_title: "Сохранить текущий диапазон как пресет",
+    txt_sdr_delete_preset_title: "Удалить этот пресет",
+    txt_sdr_set_range_first: "Сначала задай корректный диапазон",
+    txt_sdr_preset_name_prompt: "Имя пресета:",
+    txt_sdr_preset_saved: "Пресет сохранён",
+    txt_sdr_confirm_delete_preset: "Удалить пресет «{name}»?",
+    txt_sdr_mode: "Режим", opt_sdr_mode_waterfall: "Водопад", opt_sdr_mode_packets: "Детекция пакетов",
+    txt_sdr_protocol: "Протокол",
+    opt_sdr_pkt_mt_eu: "Meshtastic EU868 (SF11/BW250)", opt_sdr_pkt_mt_us: "Meshtastic US915 (SF11/BW250)",
+    opt_sdr_pkt_mc_us: "MeshCore US/Canada (SF7/BW62.5)", opt_sdr_pkt_mc_eu: "MeshCore EU/UK (SF8/BW62.5, лучше со Scan)",
+    opt_sdr_pkt_custom: "Свои параметры…",
+    txt_sdr_sf: "SF", txt_sdr_bw: "BW", txt_sdr_all_sf: "все SF",
+    txt_sdr_pkt_missing_title: "rtl_sdr / lorarx не найдены",
+    txt_sdr_pkt_missing_body: "Нужны RTL-SDR инструменты (тот же драйвер, что для Waterfall) плюс lorarx — декодер LoRa-пакетов. Оба ставятся автоматически через install.sh. Собрать lorarx вручную:",
+    txt_sdr_pkt_hint: "Реальная демодуляция LoRa PHY (SF/BW/CR/уровень/SNR на каждый пакет) через lorarx — не просто свип мощности. Только метаданные: байты payload никогда не сохраняются, не парсятся и не расшифровываются — видно только факт совпадающего по параметрам пакета, не содержимое. Несовместимо с режимом Waterfall — оба требуют один и тот же USB-приёмник.",
+    txt_sdr_pkt_empty: "Пакетов пока не обнаружено.",
+    txt_sdr_pkt_recent: "недавних",
+    txt_sdr_scan: "Скан", txt_sdr_scan_title: "Перебирать несколько частот автоматически вместо ввода точной",
+    txt_sdr_scanning: "Сканирую",
     btn_ports: "Порты", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Перезапуск сервисов",
     btn_restart_lxmf: "Перезапуск LXMF", btn_memory: "Память", btn_uptime: "Аптайм",
     btn_restart_dash: "Перезапуск дашборда", btn_reboot: "Перезагрузка", btn_reset_identity: "Сброс идентификаторов",
@@ -3253,6 +3432,632 @@ function _tickBadges(){
   requestAnimationFrame(_tickBadges);
 }
 requestAnimationFrame(_tickBadges);
+
+// SDR SPECTRUM MONITOR
+let _sdrPollTimer = null;
+let _sdrWaterfallRows = [];
+let _sdrLastSeq = 0;
+
+function sdrPanelOpen(){
+  sdrLoadPresets();
+  _sdrInitHover();
+  sdrModeChange();  // syncs control/view visibility, then triggers status+poll for the current mode
+  if(!_sdrPollTimer) _sdrPollTimer = setInterval(sdrPoll, 2000);
+}
+function sdrPanelClose(){
+  if(_sdrPollTimer){ clearInterval(_sdrPollTimer); _sdrPollTimer = null; }
+}
+
+// --- Mode dispatch: Waterfall (rtl_power) vs Packet Detect (rtl_sdr|lorarx) ---
+// Mutually exclusive on the backend (same USB dongle) — this just routes
+// the shared Start/Stop button and controls to whichever is selected.
+let _sdrLastMode = null;
+function sdrModeChange(){
+  const mode = document.getElementById("sdr-mode")?.value || "waterfall";
+  const isWf = mode === "waterfall";
+  const wfControls = document.getElementById("sdr-waterfall-controls");
+  const pktControls = document.getElementById("sdr-packet-controls");
+  const wfView = document.getElementById("sdr-waterfall-view");
+  const pktView = document.getElementById("sdr-packets-view");
+  const wfHint = document.getElementById("sdr-hint-waterfall");
+  const pktHint = document.getElementById("sdr-hint-packets");
+  if(wfControls) wfControls.style.display = isWf ? "inline-flex" : "none";
+  if(pktControls) pktControls.style.display = isWf ? "none" : "inline-flex";
+  if(wfView) wfView.style.display = isWf ? "flex" : "none";
+  if(pktView) pktView.style.display = isWf ? "none" : "flex";
+  if(wfHint) wfHint.style.display = isWf ? "block" : "none";
+  if(pktHint) pktHint.style.display = isWf ? "none" : "block";
+  // Packet Detect defaults to rtl_sdr's auto-gain (0) — a fixed gain that's
+  // fine for the waterfall sweep can badly overload the front end at close
+  // range and corrupt the actual chirp demodulation (found live: a strong,
+  // nearby signal only decoded once gain was set to auto, not 20 or 40).
+  const gainEl = document.getElementById("sdr-gain");
+  if(gainEl && mode !== _sdrLastMode){ gainEl.value = isWf ? "40" : "0"; }
+  _sdrLastMode = mode;
+  sdrRefreshStatus();
+  sdrPoll();
+}
+
+async function sdrRefreshStatus(){
+  const mode = document.getElementById("sdr-mode")?.value || "waterfall";
+  if(mode === "packets") return sdrPktRefreshStatus();
+  return sdrWaterfallRefreshStatus();
+}
+
+async function sdrStart(){
+  const mode = document.getElementById("sdr-mode")?.value || "waterfall";
+  if(mode === "packets") return sdrPktStart();
+  return sdrWaterfallStart();
+}
+
+async function sdrStop(){
+  const mode = document.getElementById("sdr-mode")?.value || "waterfall";
+  if(mode === "packets") return sdrPktStop();
+  return sdrWaterfallStop();
+}
+
+async function sdrPoll(){
+  const mode = document.getElementById("sdr-mode")?.value || "waterfall";
+  if(mode === "packets") return sdrPktPoll();
+  return sdrWaterfallPoll();
+}
+
+async function sdrWaterfallRefreshStatus(){
+  try{
+    const d = await fetch(API+"/api/sdr/status").then(r=>r.json());
+    const notInstalled = document.getElementById("sdr-not-installed");
+    if(notInstalled) notInstalled.style.display = d.installed ? "none" : "block";
+    const btnStart = document.getElementById("sdr-btn-start");
+    const btnStop = document.getElementById("sdr-btn-stop");
+    if(btnStart) btnStart.style.display = d.running ? "none" : "inline-flex";
+    if(btnStop) btnStop.style.display = d.running ? "inline-flex" : "none";
+    const meta = d.meta || {};
+    const bandEl = document.getElementById("sdr-band-label");
+    if(bandEl){
+      if(meta.is_preset){
+        bandEl.textContent = `${meta.band} (preset)`;
+      } else if(meta.band){
+        const df = meta.detected_freq ? (meta.detected_freq/1e6).toFixed(3)+" MHz" : "not detected — using default";
+        bandEl.textContent = `${meta.band} · RNode freq: ${df}`;
+      } else {
+        bandEl.textContent = "";
+      }
+    }
+    const st = document.getElementById("sdr-status");
+    if(st){
+      if(d.error){ st.textContent = "Error: "+d.error; st.style.color = "var(--rd)"; }
+      else if(d.running){ st.textContent = `Running — gain ${meta.gain ?? "?"} dB, step ${meta.step ? (meta.step/1000)+" kHz" : "?"}`; st.style.color = "var(--teal)"; }
+      else { st.textContent = "Stopped"; st.style.color = "var(--mu)"; }
+    }
+  }catch(e){}
+}
+
+// Known reference frequencies drawn as labeled ticks on the waterfall/line
+// chart when they fall inside whatever range is currently being swept —
+// NOT a claim about protocol identification (rtl_power only measures power,
+// it can't demodulate), just "this is where that protocol's default
+// channel sits, if you're using default settings".
+const SDR_PRESETS = {
+  auto: null,
+  meshtastic_eu868: {freq_start: 869_400_000, freq_stop: 869_650_000, labelKey: "txt_sdr_band_mt_eu"},
+};
+const SDR_REF_MARKERS = [
+  {freq: 869_525_000, labelKey: "txt_sdr_marker_mt_eu"},
+  {freq: 906_875_000, labelKey: "txt_sdr_marker_mt_us"},
+];
+
+// User-saved custom ranges, kept on the backend (data/sdr_presets.json) so
+// they're the same from any device/browser opening the dashboard, not just
+// this one's localStorage.
+let _sdrSavedPresets = [];
+
+async function sdrLoadPresets(){
+  try{ _sdrSavedPresets = await fetch(API+"/api/sdr/presets").then(r=>r.json()); }
+  catch(e){ _sdrSavedPresets = []; }
+  const sel = document.getElementById("sdr-preset");
+  if(!sel) return;
+  const prevValue = sel.value;
+  [...sel.querySelectorAll('option[data-saved="1"]')].forEach(o=>o.remove());
+  _sdrSavedPresets.forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value = "saved:"+p.name;
+    opt.textContent = `${p.name} (${(p.freq_start/1e6).toFixed(3)}–${(p.freq_stop/1e6).toFixed(3)})`;
+    opt.dataset.saved = "1";
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
+}
+
+function sdrPresetChange(){
+  const v = document.getElementById("sdr-preset")?.value || "auto";
+  const customEl = document.getElementById("sdr-custom-range");
+  const delBtn = document.getElementById("sdr-btn-delete-preset");
+  if(customEl) customEl.style.display = v === "__custom__" ? "inline-flex" : "none";
+  if(delBtn) delBtn.style.display = v.startsWith("saved:") ? "inline-flex" : "none";
+  if(v.startsWith("saved:")){
+    const p = _sdrSavedPresets.find(x=>x.name===v.slice(6));
+    const gainEl = document.getElementById("sdr-gain");
+    if(p && gainEl) gainEl.value = p.gain;
+  }
+}
+
+function _sdrCurrentRange(){
+  const v = document.getElementById("sdr-preset")?.value || "auto";
+  if(v === "__custom__"){
+    const s = parseFloat(document.getElementById("sdr-custom-start")?.value);
+    const e = parseFloat(document.getElementById("sdr-custom-stop")?.value);
+    if(!isFinite(s) || !isFinite(e) || e<=s) return null;
+    return {freq_start: Math.round(s*1e6), freq_stop: Math.round(e*1e6), label: `${s}–${e} MHz`};
+  }
+  if(v.startsWith("saved:")){
+    const p = _sdrSavedPresets.find(x=>x.name===v.slice(6));
+    return p ? {freq_start: p.freq_start, freq_stop: p.freq_stop, label: p.name} : null;
+  }
+  const preset = SDR_PRESETS[v];
+  return preset ? {freq_start: preset.freq_start, freq_stop: preset.freq_stop, label: t(preset.labelKey)} : null;
+}
+
+async function sdrSavePreset(){
+  const range = _sdrCurrentRange();
+  if(!range){ toast(t("txt_sdr_set_range_first"), false); return; }
+  const name = prompt(t("txt_sdr_preset_name_prompt"));
+  if(!name) return;
+  const _gainRaw = parseFloat(document.getElementById("sdr-gain")?.value); const gain = isFinite(_gainRaw) ? _gainRaw : 40;
+  try{
+    const d = await fetch(API+"/api/sdr/presets", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({name, freq_start: range.freq_start, freq_stop: range.freq_stop, gain})}).then(r=>r.json());
+    if(d.ok){
+      await sdrLoadPresets();
+      const sel = document.getElementById("sdr-preset");
+      if(sel) sel.value = "saved:"+name;
+      sdrPresetChange();
+      toast(t("txt_sdr_preset_saved"));
+    } else toast(d.error || "Save failed", false);
+  }catch(e){ toast("Save failed", false); }
+}
+
+async function sdrDeletePreset(){
+  const v = document.getElementById("sdr-preset")?.value || "";
+  if(!v.startsWith("saved:")) return;
+  const name = v.slice(6);
+  if(!confirm(t("txt_sdr_confirm_delete_preset").replace("{name}", name))) return;
+  try{ await fetch(API+"/api/sdr/presets/"+encodeURIComponent(name), {method:"DELETE"}); }catch(e){}
+  await sdrLoadPresets();
+  const sel = document.getElementById("sdr-preset");
+  if(sel) sel.value = "auto";
+  sdrPresetChange();
+}
+
+async function sdrWaterfallStart(){
+  const gainEl = document.getElementById("sdr-gain");
+  const gain = parseFloat(gainEl?.value) || 40;
+  const preset = _sdrCurrentRange();
+  const btn = document.getElementById("sdr-btn-start");
+  if(btn) btn.disabled = true;
+  try{
+    const body = {gain};
+    if(preset){ body.freq_start = preset.freq_start; body.freq_stop = preset.freq_stop; body.label = preset.label; }
+    const d = await fetch(API+"/api/sdr/start", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)}).then(r=>r.json());
+    if(!d.ok) toast(d.error || "SDR start failed", false);
+    _sdrWaterfallRows = [];
+    _sdrLastSeq = 0;
+  }catch(e){ toast("SDR start failed", false); }
+  if(btn) btn.disabled = false;
+  sdrWaterfallRefreshStatus();
+}
+
+function sdrWaterfallClearDisplay(){
+  _sdrWaterfallRows = [];
+  _sdrLastSeq = 0;
+  _sdrGeom = null;
+  ["sdr-waterfall","sdr-linechart"].forEach(id=>{
+    const c = document.getElementById(id);
+    if(c){ const ctx = c.getContext("2d"); ctx.clearRect(0,0,c.width,c.height); }
+  });
+  const freqLoEl = document.getElementById("sdr-freq-lo");
+  const freqHiEl = document.getElementById("sdr-freq-hi");
+  const peakEl = document.getElementById("sdr-peak");
+  const hoverEl = document.getElementById("sdr-hover");
+  if(freqLoEl) freqLoEl.textContent = "—";
+  if(freqHiEl) freqHiEl.textContent = "—";
+  if(peakEl) peakEl.textContent = "";
+  if(hoverEl) hoverEl.textContent = hoverEl.dataset.hint || "";
+}
+
+async function sdrWaterfallStop(){
+  try{ await fetch(API+"/api/sdr/stop", {method:"POST"}); }catch(e){}
+  sdrWaterfallClearDisplay();
+  sdrWaterfallRefreshStatus();
+}
+
+async function sdrWaterfallPoll(){
+  if(!document.getElementById("panel-sdr")?.classList.contains("active")) return;
+  if((document.getElementById("sdr-mode")?.value || "waterfall") !== "waterfall") return;
+  try{
+    const d = await fetch(API+"/api/sdr/spectrum?n=90").then(r=>r.json());
+    sdrWaterfallRefreshStatus();
+    const hist = d.history || [];
+    if(!hist.length){
+      // Empty on the backend (freshly stopped, or a page load that caught
+      // a stopped/never-started state) — don't leave a stale frame parked
+      // on screen implying it's still live.
+      if(_sdrWaterfallRows.length) sdrWaterfallClearDisplay();
+      return;
+    }
+    const newRows = hist.filter(r => r.seq > _sdrLastSeq);
+    if(newRows.length){
+      _sdrLastSeq = hist[hist.length-1].seq;
+      _sdrWaterfallRows.push(...newRows);
+      if(_sdrWaterfallRows.length > 90) _sdrWaterfallRows = _sdrWaterfallRows.slice(-90);
+      sdrDraw();
+    }
+  }catch(e){}
+}
+
+// --- Packet Detect mode (rtl_sdr | lorarx) ---
+// Metadata only, same as the backend: never reads or shows packet payload
+// content, just that a LoRa frame matching these PHY parameters was heard.
+const SDR_BW_LABELS = {0:"7.8k",1:"10.4k",2:"15.6k",3:"20.8k",4:"31.25k",5:"41.7k",6:"62.5k",7:"125k",8:"250k",9:"500k"};
+function _sdrBwLabel(code){ return SDR_BW_LABELS[code] ?? code; }
+
+// Scan ranges for the built-in protocol presets: since Meshtastic's actual
+// channel frequency depends on channel name/PSK (not always the well-known
+// default), Scan cycles across the whole regional allocation instead of
+// needing the exact one up front.
+const SDR_SCAN_RANGES = {
+  meshtastic_eu868: {freq_start: 869_400_000, freq_stop: 869_650_000, step: 50_000},
+  meshtastic_us915: {freq_start: 902_000_000, freq_stop: 928_000_000, step: 500_000},
+  // MeshCore has no agreed default frequency at all in EU/UK (unlike
+  // Meshtastic's hashed slot) — Scan across the whole allocation is the
+  // normal way to find it, not an edge case.
+  meshcore_eu868: {freq_start: 869_400_000, freq_stop: 869_650_000, step: 25_000},
+};
+
+function sdrPktPresetChange(){
+  const v = document.getElementById("sdr-pkt-preset")?.value;
+  const customEl = document.getElementById("sdr-pkt-custom");
+  if(customEl) customEl.style.display = v === "__custom__" ? "inline-flex" : "none";
+  // A preset with a single known frequency (e.g. MeshCore US/Canada) has no
+  // scan range at all — leaving Scan checked from a previous preset (e.g.
+  // MeshCore EU/UK, which needs it) silently produced an empty profile and
+  // a confusing "invalid" error. Uncheck it automatically for those.
+  const scanEl = document.getElementById("sdr-pkt-scan");
+  if(scanEl && scanEl.checked && v !== "__custom__" && !SDR_SCAN_RANGES[v]){
+    scanEl.checked = false;
+  }
+  _sdrPktSyncScanUI();
+}
+
+function sdrPktScanToggle(){
+  _sdrPktSyncScanUI();
+}
+
+function _sdrPktSyncScanUI(){
+  const isCustom = document.getElementById("sdr-pkt-preset")?.value === "__custom__";
+  const isScan = document.getElementById("sdr-pkt-scan")?.checked;
+  const toWrap = document.getElementById("sdr-pkt-freq-to-wrap");
+  if(toWrap) toWrap.style.display = (isCustom && isScan) ? "inline-flex" : "none";
+}
+
+// The backend always listens on every spreading factor (SF7-12) at once —
+// lorarx supports stacking multiple simultaneous demodulators on one
+// capture, so there's no real cost to just covering all of them instead of
+// making the user guess/try one at a time. `sf` here is a fixed placeholder
+// kept only because the backend's request shape still has the field.
+const SDR_PKT_SF_ALL = 11;
+
+function _sdrPktCurrentProfile(){
+  const v = document.getElementById("sdr-pkt-preset")?.value;
+  const scanning = !!document.getElementById("sdr-pkt-scan")?.checked;
+  if(v === "__custom__"){
+    const freq = parseFloat(document.getElementById("sdr-pkt-freq")?.value);
+    const bw_code = parseInt(document.getElementById("sdr-pkt-bw")?.value, 10);
+    if(!isFinite(freq) || !isFinite(bw_code)) return null;
+    if(scanning){
+      const freqTo = parseFloat(document.getElementById("sdr-pkt-freq-to")?.value);
+      if(!isFinite(freqTo) || freqTo<=freq) return null;
+      return {scan:true, freq_start: Math.round(freq*1e6), freq_stop: Math.round(freqTo*1e6),
+              step: 25_000, sf: SDR_PKT_SF_ALL, bw_code, label: `${freq}–${freqTo} MHz`};
+    }
+    return {freq: Math.round(freq*1e6), sf: SDR_PKT_SF_ALL, bw_code, label: `${freq} MHz`};
+  }
+  if(!v) return null;
+  if(scanning){
+    const range = SDR_SCAN_RANGES[v];
+    if(!range) return null;
+    const preset = _SDR_PROTOCOL_PRESETS_JS[v];
+    return {scan:true, freq_start: range.freq_start, freq_stop: range.freq_stop, step: range.step,
+            sf: preset.sf, bw_code: preset.bw_code, label: preset.label + " (scan)"};
+  }
+  return {preset: v};
+}
+// Mirrors backend _SDR_PROTOCOL_PRESETS — only bw_code/label needed here
+// (scan mode reuses the BW, just cycles the frequency; SF is always "all").
+const _SDR_PROTOCOL_PRESETS_JS = {
+  meshtastic_eu868: {sf: SDR_PKT_SF_ALL, bw_code: 8, label: "Meshtastic EU868 (BW250)"},
+  meshtastic_us915: {sf: SDR_PKT_SF_ALL, bw_code: 8, label: "Meshtastic US915 (BW250)"},
+  meshcore_us915: {sf: SDR_PKT_SF_ALL, bw_code: 6, label: "MeshCore US/Canada (BW62.5)"},
+  meshcore_eu868: {sf: SDR_PKT_SF_ALL, bw_code: 6, label: "MeshCore EU/UK (BW62.5)"},
+};
+
+async function sdrPktRefreshStatus(){
+  try{
+    const d = await fetch(API+"/api/sdr/packets").then(r=>r.json());
+    const notInstalled = document.getElementById("sdr-pkt-not-installed");
+    if(notInstalled) notInstalled.style.display = d.installed ? "none" : "block";
+    const btnStart = document.getElementById("sdr-btn-start");
+    const btnStop = document.getElementById("sdr-btn-stop");
+    if(btnStart) btnStart.style.display = d.running ? "none" : "inline-flex";
+    if(btnStop) btnStop.style.display = d.running ? "inline-flex" : "none";
+    const meta = d.meta || {};
+    const bandEl = document.getElementById("sdr-band-label");
+    if(bandEl) bandEl.textContent = meta.label || "";
+    const st = document.getElementById("sdr-status");
+    if(st){
+      if(d.error){ st.textContent = "Error: "+d.error; st.style.color = "var(--rd)"; }
+      else if(d.scanning){
+        const cur = meta.current_freq ? (meta.current_freq/1e6).toFixed(3) : "?";
+        st.textContent = `${t("txt_sdr_scanning")} ${(meta.current_index??0)+1}/${meta.n_freqs??"?"} — ${cur} MHz, ${t("txt_sdr_all_sf")} BW${_sdrBwLabel(meta.bw_code)}, gain ${meta.gain ?? "?"} dB`;
+        st.style.color = "var(--teal)";
+      }
+      else if(d.running){ st.textContent = `Listening — ${t("txt_sdr_all_sf")} BW${_sdrBwLabel(meta.bw_code)} @ ${meta.freq?(meta.freq/1e6).toFixed(3):"?"} MHz, gain ${meta.gain ?? "?"} dB`; st.style.color = "var(--teal)"; }
+      else { st.textContent = "Stopped"; st.style.color = "var(--mu)"; }
+    }
+    const countEl = document.getElementById("sdr-pkt-count");
+    if(countEl) countEl.textContent = `${(d.packets||[]).length} ${t("txt_sdr_pkt_recent")}`;
+  }catch(e){}
+}
+
+async function sdrPktStart(){
+  const _gainRaw = parseFloat(document.getElementById("sdr-gain")?.value); const gain = isFinite(_gainRaw) ? _gainRaw : 40;
+  const profile = _sdrPktCurrentProfile();
+  if(!profile){ toast(t("txt_sdr_set_range_first"), false); return; }
+  const btn = document.getElementById("sdr-btn-start");
+  if(btn) btn.disabled = true;
+  try{
+    const isScan = profile.scan;
+    const endpoint = isScan ? "/api/sdr/scan/start" : "/api/sdr/packets/start";
+    const body = Object.assign({gain}, profile);
+    delete body.scan;
+    const d = await fetch(API+endpoint, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)}).then(r=>r.json());
+    if(!d.ok) toast(d.error || "Packet Detect start failed", false);
+  }catch(e){ toast("Packet Detect start failed", false); }
+  if(btn) btn.disabled = false;
+  sdrPktRefreshStatus();
+}
+
+async function sdrPktStop(){
+  try{
+    await fetch(API+"/api/sdr/scan/stop", {method:"POST"});
+    await fetch(API+"/api/sdr/packets/stop", {method:"POST"});
+  }catch(e){}
+  sdrPktRefreshStatus();
+}
+
+async function sdrPktClear(){
+  try{ await fetch(API+"/api/sdr/packets/clear", {method:"POST"}); }catch(e){}
+  sdrPktPoll();
+}
+
+function _sdrPktRenderLog(packets){
+  const logEl = document.getElementById("sdr-pkt-log");
+  if(!logEl) return;
+  if(!packets.length){
+    logEl.innerHTML = `<span style="color:var(--mu)">${t("txt_sdr_pkt_empty")}</span>`;
+    return;
+  }
+  logEl.innerHTML = packets.map(p=>{
+    const time = new Date(p.ts*1000).toLocaleTimeString();
+    const bw = (typeof p.bw === "number") ? p.bw.toFixed(0)+"k" : "?";
+    const crcOk = p.crc === 1 || p.crc === true;
+    const crcColor = crcOk ? "var(--gr)" : "var(--rd)";
+    const freq = p.freq ? (p.freq/1e6).toFixed(3)+" MHz" : "";
+    return `<div style="padding:3px 0;border-bottom:1px solid var(--bd)">
+      <span style="color:var(--mu)">${time}</span>
+      ${freq ? `<span style="color:var(--sky)">${freq}</span>` : ""}
+      <span style="color:var(--teal)">SF${p.sf ?? "?"}</span> BW${bw}
+      <span style="color:var(--mu)">lev</span> ${p.level ?? "?"}dB
+      <span style="color:var(--mu)">snr</span> ${p.snr ?? "?"}dB
+      <span style="color:${crcColor}">${crcOk ? "CRC ok" : "CRC fail"}</span>
+    </div>`;
+  }).join("");
+}
+
+async function sdrPktPoll(){
+  if(!document.getElementById("panel-sdr")?.classList.contains("active")) return;
+  if((document.getElementById("sdr-mode")?.value || "waterfall") !== "packets") return;
+  try{
+    const d = await fetch(API+"/api/sdr/packets").then(r=>r.json());
+    sdrPktRefreshStatus();
+    _sdrPktRenderLog(d.packets || []);
+  }catch(e){}
+}
+
+function _sdrColorRGB(db, lo, hi){
+  let t = (db-lo)/(hi-lo);
+  t = Math.max(0, Math.min(1, t));
+  const stops = [[7,11,9],[16,60,45],[61,220,132],[230,190,60],[230,70,60]];
+  const seg = t*(stops.length-1);
+  const i = Math.min(stops.length-2, Math.floor(seg));
+  const f = seg-i;
+  const a=stops[i], b=stops[i+1];
+  return [
+    Math.round(a[0]+(b[0]-a[0])*f),
+    Math.round(a[1]+(b[1]-a[1])*f),
+    Math.round(a[2]+(b[2]-a[2])*f),
+  ];
+}
+function _sdrColor(db, lo, hi){
+  const [r,g,b] = _sdrColorRGB(db, lo, hi);
+  return `rgb(${r},${g},${b})`;
+}
+
+// Color scale adapts to whatever dynamic range is actually present in the
+// buffered sweeps — a fixed absolute dBm scale looked all-red or all-black
+// depending on gain/receiver noise floor, burying real signal contrast.
+function _sdrRange(rows){
+  let min=Infinity, max=-Infinity;
+  for(const row of rows){
+    for(const v of row.bins){
+      if(v<min) min=v;
+      if(v>max) max=v;
+    }
+  }
+  if(!isFinite(min) || !isFinite(max) || (max-min)<3){
+    // Degenerate case: almost everything is at/near its own floor (rel≈0),
+    // which is the GOOD outcome, not missing data. This function is fed
+    // floor-relative dB (bins_rel), not absolute dBm, so "at floor" always
+    // means ≈0 regardless of gain or RF environment — a fixed small window
+    // around 0 keeps that reading dark/quiet instead of the old mid±spread
+    // fallback (built for absolute dBm, where "mid" could be -60) dragging
+    // a near-zero relative value into the hot end of the scale.
+    return {lo: -1, hi: 6};
+  }
+  const pad = (max-min)*0.05;
+  return {lo: min-pad, hi: max+pad};
+}
+
+let _sdrGeom = null;  // last-drawn waterfall geometry, reused by the hover readout
+let _sdrOffscreen = null;  // native-resolution buffer, scaled+smoothed onto the visible canvas
+
+function sdrDraw(){
+  const wCanvas = document.getElementById("sdr-waterfall");
+  const lCanvas = document.getElementById("sdr-linechart");
+  if(!wCanvas || !_sdrWaterfallRows.length) return;
+  const rows = _sdrWaterfallRows;
+  // bins_rel (floor-subtracted) drives color/peak-detection — a persistent
+  // artifact (e.g. the RTL-SDR's own DC spike) reads ~0 there regardless of
+  // its absolute dBm, while real transient activity still stands out.
+  const relRows = rows.map(r => ({...r, bins: r.bins_rel || r.bins}));
+  const nBins = Math.max(...rows.map(r=>r.bins.length));
+  if(!nBins) return;
+
+  const {lo, hi} = _sdrRange(relRows);
+  const dpr = window.devicePixelRatio || 1;
+  const rectW = wCanvas.clientWidth, rectH = wCanvas.clientHeight;
+  const last = rows[rows.length-1];
+  const visibleMarkers = SDR_REF_MARKERS.filter(m => m.freq >= last.freq_start && m.freq <= last.freq_stop);
+  if(rectW && rectH){
+    if(wCanvas.width !== Math.round(rectW*dpr) || wCanvas.height !== Math.round(rectH*dpr)){
+      wCanvas.width = Math.round(rectW*dpr); wCanvas.height = Math.round(rectH*dpr);
+    }
+    const wctx = wCanvas.getContext("2d");
+    wctx.setTransform(dpr,0,0,dpr,0,0);
+    wctx.clearRect(0,0,rectW,rectH);
+    const rowH = rectH/rows.length;
+    // Render at native (bin × sweep) resolution into an offscreen canvas,
+    // then let the browser's own image scaling smooth it up to display
+    // size — cheaper and smoother than hand-rolled interpolation, and it's
+    // how a real waterfall reads: interpolated, not hard rectangular cells.
+    if(!_sdrOffscreen){ _sdrOffscreen = document.createElement("canvas"); }
+    if(_sdrOffscreen.width !== nBins || _sdrOffscreen.height !== rows.length){
+      _sdrOffscreen.width = nBins; _sdrOffscreen.height = rows.length;
+    }
+    const octx = _sdrOffscreen.getContext("2d");
+    const img = octx.createImageData(nBins, rows.length);
+    rows.forEach((row,ri)=>{
+      const relBins = row.bins_rel || row.bins;
+      const destRow = rows.length-1-ri;  // newest row at the bottom
+      for(let bi=0; bi<nBins; bi++){
+        const srcBi = row.bins.length===nBins ? bi : Math.min(row.bins.length-1, Math.floor(bi*row.bins.length/nBins));
+        const [r,g,b] = _sdrColorRGB(relBins[srcBi], lo, hi);
+        const idx = (destRow*nBins+bi)*4;
+        img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=255;
+      }
+    });
+    octx.putImageData(img, 0, 0);
+    wctx.imageSmoothingEnabled = true;
+    wctx.imageSmoothingQuality = "high";
+    wctx.drawImage(_sdrOffscreen, 0, 0, nBins, rows.length, 0, 0, rectW, rectH);
+    visibleMarkers.forEach(m=>{
+      const x = ((m.freq-last.freq_start)/(last.freq_stop-last.freq_start))*rectW;
+      wctx.strokeStyle = "rgba(180,140,255,.55)";
+      wctx.lineWidth = 1;
+      wctx.setLineDash([3,3]);
+      wctx.beginPath(); wctx.moveTo(x,0); wctx.lineTo(x,rectH); wctx.stroke();
+      wctx.setLineDash([]);
+    });
+    _sdrGeom = {rectW, rectH, rows, nBins, rowH};
+  }
+
+  if(lCanvas){
+    const rectW2 = lCanvas.clientWidth, rectH2 = lCanvas.clientHeight;
+    if(rectW2 && rectH2){
+      if(lCanvas.width !== Math.round(rectW2*dpr) || lCanvas.height !== Math.round(rectH2*dpr)){
+        lCanvas.width = Math.round(rectW2*dpr); lCanvas.height = Math.round(rectH2*dpr);
+      }
+      const lctx = lCanvas.getContext("2d");
+      lctx.setTransform(dpr,0,0,dpr,0,0);
+      lctx.clearRect(0,0,rectW2,rectH2);
+      const bins = last.bins;
+      const relBins = last.bins_rel || last.bins;
+      lctx.beginPath();
+      let peakRel=-1e9, peakIdx=0;
+      relBins.forEach((rv,i)=>{
+        if(rv>peakRel){ peakRel=rv; peakIdx=i; }
+        const x = bins.length>1 ? (i/(bins.length-1))*rectW2 : 0;
+        const t = Math.max(0,Math.min(1,(rv-lo)/(hi-lo)));
+        const y = rectH2 - t*rectH2;
+        if(i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y);
+      });
+      lctx.strokeStyle = "#3ddc84";
+      lctx.lineWidth = 1.3;
+      lctx.stroke();
+
+      visibleMarkers.forEach(m=>{
+        const x = ((m.freq-last.freq_start)/(last.freq_stop-last.freq_start))*rectW2;
+        lctx.strokeStyle = "rgba(180,140,255,.7)";
+        lctx.lineWidth = 1;
+        lctx.setLineDash([3,3]);
+        lctx.beginPath(); lctx.moveTo(x,0); lctx.lineTo(x,rectH2); lctx.stroke();
+        lctx.setLineDash([]);
+        lctx.fillStyle = "rgba(200,170,255,.9)";
+        lctx.font = "9px monospace";
+        const label = t(m.labelKey);
+        const labelW = lctx.measureText(label).width;
+        const overflowsRight = x + 4 + labelW > rectW2;
+        lctx.textAlign = overflowsRight ? "right" : "left";
+        lctx.fillText(label, x + (overflowsRight ? -4 : 4), 9);
+      });
+
+      const freqLoEl = document.getElementById("sdr-freq-lo");
+      const freqHiEl = document.getElementById("sdr-freq-hi");
+      const peakEl = document.getElementById("sdr-peak");
+      if(freqLoEl) freqLoEl.textContent = (last.freq_start/1e6).toFixed(3)+" MHz";
+      if(freqHiEl) freqHiEl.textContent = (last.freq_stop/1e6).toFixed(3)+" MHz";
+      if(peakEl && bins.length>1){
+        const peakFreq = last.freq_start + (peakIdx/(bins.length-1))*(last.freq_stop-last.freq_start);
+        peakEl.textContent = `peak ${(peakFreq/1e6).toFixed(4)} MHz · ${bins[peakIdx].toFixed(1)} dBm (+${peakRel.toFixed(1)} above floor)`;
+      }
+    }
+  }
+}
+
+function _sdrInitHover(){
+  const wCanvas = document.getElementById("sdr-waterfall");
+  const hoverEl = document.getElementById("sdr-hover");
+  if(!wCanvas || wCanvas._sdrHoverBound) return;
+  wCanvas._sdrHoverBound = true;
+  wCanvas.addEventListener("mousemove", (ev)=>{
+    if(!_sdrGeom || !hoverEl) return;
+    const rect = wCanvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    const {rectW, rectH, rows, rowH} = _sdrGeom;
+    if(x<0 || x>rectW || y<0 || y>rectH) return;
+    const ri = Math.min(rows.length-1, Math.max(0, rows.length-1-Math.floor(y/rowH)));
+    const row = rows[ri];
+    const bins = row.bins;
+    const bi = Math.min(bins.length-1, Math.max(0, Math.floor((x/rectW)*bins.length)));
+    const freq = row.freq_start + (bi/(bins.length-1))*(row.freq_stop-row.freq_start);
+    const ageS = Math.max(0, Math.round((Date.now()/1000) - row.ts));
+    const rel = (row.bins_rel || row.bins)[bi];
+    hoverEl.textContent = `${(freq/1e6).toFixed(4)} MHz · ${bins[bi].toFixed(1)} dBm (+${rel.toFixed(1)} above floor) · ${ageS}s ago`;
+  });
+  wCanvas.addEventListener("mouseleave", ()=>{
+    if(hoverEl) hoverEl.textContent = hoverEl.dataset.hint || "";
+  });
+  if(hoverEl) hoverEl.dataset.hint = hoverEl.textContent;
+}
 
 // RNODE PANEL
 let rnodeChartAirtime = null;

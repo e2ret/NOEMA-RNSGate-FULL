@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.6"
+__version__ = "1.1.7"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -1091,6 +1091,627 @@ def pty_stream():
 # END PTY TERMINAL
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# SDR SPECTRUM MONITOR (optional — RTL-SDR via rtl_power, manually started)
+#
+# Hardware: any RTL2832U-based dongle (R820T2, R828D, etc.) — that's what
+# `rtl_power` and librtlsdr talk to. Tested against an RTL-SDR Blog V4
+# (R828D tuner); older/plain RTL-SDR dongles work the same way, no code
+# changes needed, just re-check `rtl_test -t` for that dongle's own gain
+# table. A non-RTL2832U SDR (HackRF, Airspy, SDRplay) is NOT compatible —
+# those don't speak librtlsdr/rtl_power at all and would need a different
+# capture tool and a different CSV/output format to parse here.
+#
+# Not a systemd service and not auto-started: continuous rtl_power sweeps
+# cost real CPU, and this dashboard also has to run on weak boards (Orange
+# Pi Zero, 512MB). The subprocess lives only as long as the dashboard
+# process itself wants it — started/stopped from the SDR tab, same as the
+# PTY terminal above.
+# ---------------------------------------------------------------------------
+_sdr_proc = None
+_sdr_lock = threading.Lock()
+_sdr_history = deque(maxlen=150)  # ~5 min at 2s/sweep
+_sdr_seq = 0
+_sdr_meta = {}
+_sdr_error = None
+_sdr_floor = []  # per-bin leaky-minimum tracker, see _sdr_update_floor()
+
+# Common LoRa ISM sub-bands: (lo_hz, hi_hz, label) — used to auto-pick a
+# sensible sweep range from whatever frequency the RNode interface is
+# actually configured for.
+_SDR_BANDS = [
+    (863_000_000, 870_000_000, "EU868"),
+    (902_000_000, 928_000_000, "US915 / AU915"),
+    (470_000_000, 510_000_000, "CN470"),
+    (779_000_000, 787_000_000, "CN779"),
+    (433_050_000, 434_790_000, "EU433"),
+    (920_000_000, 923_000_000, "JP920"),
+]
+
+
+def _sdr_rtl_power_bin():
+    return _shutil.which("rtl_power") or (
+        "/usr/local/bin/rtl_power" if os.path.exists("/usr/local/bin/rtl_power") else None
+    )
+
+
+def _sdr_detect_band():
+    """Read the RNode interface's configured frequency from .reticulum/config
+    and match it to a known LoRa ISM band. Falls back to EU868."""
+    try:
+        import re
+        text = open(f"{_HOME}/.reticulum/config").read()
+        for m in re.finditer(r'^\s*\[\[([^\]]+)\]\](.*?)(?=^\s*\[\[|\Z)', text, re.MULTILINE | re.DOTALL):
+            params = {}
+            for line in m.group(2).splitlines():
+                line = line.strip()
+                if '=' in line and not line.startswith('#'):
+                    k, v = line.split('=', 1)
+                    params[k.strip()] = v.strip()
+            freq = params.get("frequency")
+            if not freq:
+                continue
+            try:
+                freq_hz = int(float(freq))
+            except ValueError:
+                continue
+            for lo, hi, label in _SDR_BANDS:
+                if lo <= freq_hz <= hi:
+                    return {"label": label, "start": lo, "stop": hi, "detected_freq": freq_hz}
+    except Exception:
+        pass
+    return {"label": "EU868 (default — no RNode frequency found)", "start": 863_000_000,
+            "stop": 870_000_000, "detected_freq": None}
+
+
+def _sdr_scrub_dc_spike(bins, width=2):
+    """R820x tuners leak LO energy right at the center of whatever frequency
+    they're retuned to. rtl_power has to retune (hop) to cover a band wider
+    than the dongle's own ~2.4MHz bandwidth, so that leakage lands at the
+    same known bin — the middle of THIS hop's own bins — on every single
+    sweep, showing up as a fixed, fake-looking vertical line in the
+    waterfall. We know exactly where it is (we don't need to detect it), so
+    blank a couple of bins around it via linear interpolation instead of
+    plotting it. (rtl_power's own `-c` crop trims hop *edges*, for the
+    unrelated filter-rolloff artifact — it doesn't touch this.)"""
+    n = len(bins)
+    if n < width * 2 + 3:
+        return bins
+    c = n // 2
+    lo, hi = c - width, c + width + 1
+    left = bins[lo - 1] if lo > 0 else bins[hi]
+    right = bins[hi] if hi < n else bins[lo - 1]
+    span = hi - lo + 1
+    for i in range(lo, hi):
+        t = (i - lo + 1) / span
+        bins[i] = left + (right - left) * t
+    return bins
+
+
+def _sdr_update_floor(bins):
+    """Any persistent, always-on artifact — the R820x DC spike included,
+    whichever bin it actually lands on — reads elevated on literally every
+    sweep. A real LoRa packet or other transmission doesn't: it comes and
+    goes. So instead of guessing where a fixed artifact sits geometrically,
+    track a per-bin 'floor' that snaps down instantly to any new low reading
+    (so it always finds the true noise floor) and creeps back up slowly
+    otherwise (so it can recover if a channel that was busy goes quiet).
+    Subtracting this floor from each sweep zeroes out anything that's
+    always there, leaving only what actually changes — real activity."""
+    global _sdr_floor
+    if len(_sdr_floor) != len(bins):
+        _sdr_floor = list(bins)
+        return [0.0] * len(bins)
+    rel = [0.0] * len(bins)
+    floor = _sdr_floor
+    for i, v in enumerate(bins):
+        f = floor[i]
+        f = v if v < f else f + (v - f) * 0.01
+        floor[i] = f
+        rel[i] = v - f
+    return rel
+
+
+def _sdr_reader(proc):
+    """Background thread: reads rtl_power's CSV lines from stdout and groups
+    hop-lines that share one timestamp (wide bands need several hops per
+    sweep, since the dongle's own bandwidth is ~2.4MHz) into one combined
+    spectrum row before pushing it into the history buffer."""
+    global _sdr_seq
+    group_key = None
+    group_rows = []  # (freq_low, freq_high, bin_size, bins)
+
+    def flush():
+        nonlocal group_rows
+        global _sdr_seq
+        if not group_rows:
+            return
+        import time as _t
+        group_rows.sort(key=lambda r: r[0])
+        bins = []
+        for _, _, _, row_bins in group_rows:
+            bins.extend(_sdr_scrub_dc_spike(row_bins))
+        _sdr_seq += 1
+        _sdr_history.append({
+            "seq": _sdr_seq,
+            "ts": _t.time(),
+            "freq_start": group_rows[0][0],
+            "freq_stop": group_rows[-1][1],
+            "bin_size": group_rows[0][2],
+            "bins": bins,
+            "bins_rel": _sdr_update_floor(bins),
+        })
+        group_rows = []
+
+    try:
+        for line in iter(proc.stdout.readline, ''):
+            if not line:
+                break
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(', ')
+            if len(parts) < 7:
+                continue
+            try:
+                key = (parts[0], parts[1])
+                freq_low = int(parts[2])
+                freq_high = int(parts[3])
+                bin_size = float(parts[4])
+                bins = [float(x) for x in parts[6:]]
+            except ValueError:
+                continue
+            if group_key is not None and key != group_key:
+                flush()
+            group_key = key
+            group_rows.append((freq_low, freq_high, bin_size, bins))
+    except Exception:
+        pass
+    finally:
+        flush()
+
+
+def _sdr_start(gain=40, freq_start=None, freq_stop=None, label=None):
+    global _sdr_proc, _sdr_meta, _sdr_error, _sdr_floor
+    _sdr_scan_full_stop()  # mutually exclusive with packet-detect/scan mode — same USB dongle
+    with _sdr_lock:
+        if _sdr_proc and _sdr_proc.poll() is None:
+            return True, None
+        rtl_power_bin = _sdr_rtl_power_bin()
+        if not rtl_power_bin:
+            _sdr_error = "rtl_power not found — install RTL-SDR tools first"
+            return False, _sdr_error
+        is_preset = bool(freq_start and freq_stop)
+        if is_preset:
+            # explicit preset (e.g. a protocol's known sub-band) overrides
+            # the auto-detected full ISM band
+            band = {"label": label or "custom", "start": int(freq_start),
+                    "stop": int(freq_stop), "detected_freq": None}
+        else:
+            band = _sdr_detect_band()
+        # Finer step on a narrow preset (e.g. Meshtastic EU868's 250kHz
+        # allocation) — 10kHz across a wide multi-MHz sweep keeps hop count
+        # sane, but the same step across a narrow band would only be ~25
+        # bins wide, too coarse to be useful.
+        span = band["stop"] - band["start"]
+        step = 1_000 if span <= 1_000_000 else 10_000
+        # -c 20%: crop each hop's edges (with overlap) — fixes the filter-
+        # rolloff artifact at hop boundaries. The DC spike at each hop's
+        # center is a separate thing, handled by _sdr_update_floor() instead.
+        cmd = [rtl_power_bin, "-f", f"{band['start']}:{band['stop']}:{step}",
+               "-i", "2", "-e", "86400", "-g", str(gain), "-c", "20%", "-"]
+        try:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     text=True, bufsize=1)
+        except Exception as e:
+            _sdr_error = str(e)
+            return False, _sdr_error
+        _sdr_proc = proc
+        _sdr_error = None
+        _sdr_history.clear()
+        _sdr_floor = []
+        _sdr_meta = {"band": band["label"], "freq_start": band["start"],
+                     "freq_stop": band["stop"], "step": step, "gain": gain,
+                     "detected_freq": band["detected_freq"], "is_preset": is_preset}
+        threading.Thread(target=_sdr_reader, args=(proc,), daemon=True).start()
+        return True, None
+
+
+def _sdr_stop():
+    global _sdr_proc, _sdr_floor
+    with _sdr_lock:
+        if _sdr_proc and _sdr_proc.poll() is None:
+            try:
+                _sdr_proc.terminate()
+                _sdr_proc.wait(timeout=3)
+            except Exception:
+                try:
+                    _sdr_proc.kill()
+                except Exception:
+                    pass
+        _sdr_proc = None
+        # Otherwise a stale sweep from before Stop keeps coming back from
+        # /api/sdr/spectrum — on the next page load too, since it's just
+        # reading this same buffer — looking like it's still running.
+        _sdr_history.clear()
+        _sdr_floor = []
+        return True
+
+
+@app.route("/api/sdr/status")
+def sdr_status():
+    running = _sdr_proc is not None and _sdr_proc.poll() is None
+    return jsonify({
+        "running": running, "meta": _sdr_meta, "error": _sdr_error,
+        "installed": _sdr_rtl_power_bin() is not None,
+    })
+
+
+@app.route("/api/sdr/start", methods=["POST"])
+def sdr_start():
+    data = request.get_json(silent=True) or {}
+    gain = data.get("gain", 40)
+    try:
+        gain = float(gain)
+    except (TypeError, ValueError):
+        gain = 40
+    freq_start = data.get("freq_start")
+    freq_stop = data.get("freq_stop")
+    label = data.get("label")
+    try:
+        freq_start = int(freq_start) if freq_start else None
+        freq_stop = int(freq_stop) if freq_stop else None
+    except (TypeError, ValueError):
+        freq_start = freq_stop = None
+    ok, err = _sdr_start(gain=gain, freq_start=freq_start, freq_stop=freq_stop, label=label)
+    return jsonify({"ok": ok, "error": err, "meta": _sdr_meta})
+
+
+@app.route("/api/sdr/stop", methods=["POST"])
+def sdr_stop():
+    _sdr_stop()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/sdr/spectrum")
+def sdr_spectrum():
+    n = int(request.args.get("n", 60))
+    return jsonify({
+        "running": _sdr_proc is not None and _sdr_proc.poll() is None,
+        "meta": _sdr_meta,
+        "history": list(_sdr_history)[-n:],
+    })
+
+
+# User-saved custom ranges (name + freq_start/freq_stop/gain), kept on disk
+# instead of localStorage so they're the same from any device/browser that
+# opens the dashboard.
+SDR_PRESETS_FILE = f"{_HOME}/dashboard/sdr_presets.json"
+
+
+def _sdr_presets_load():
+    import json as _j
+    try:
+        return _j.load(open(SDR_PRESETS_FILE))
+    except Exception:
+        return []
+
+
+def _sdr_presets_save(presets):
+    import json as _j
+    os.makedirs(os.path.dirname(SDR_PRESETS_FILE), exist_ok=True)
+    _j.dump(presets, open(SDR_PRESETS_FILE, "w"), indent=2, ensure_ascii=False)
+
+
+@app.route("/api/sdr/presets")
+def sdr_presets_list():
+    return jsonify(_sdr_presets_load())
+
+
+@app.route("/api/sdr/presets", methods=["POST"])
+def sdr_presets_add():
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", "")).strip()
+    try:
+        freq_start = int(data.get("freq_start"))
+        freq_stop = int(data.get("freq_stop"))
+        gain = float(data.get("gain", 40))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid freq_start/freq_stop/gain"}), 400
+    if not name:
+        return jsonify({"error": "name required"}), 400
+    if freq_stop <= freq_start:
+        return jsonify({"error": "freq_stop must be greater than freq_start"}), 400
+    presets = [p for p in _sdr_presets_load() if p.get("name") != name]
+    presets.append({"name": name, "freq_start": freq_start, "freq_stop": freq_stop, "gain": gain})
+    _sdr_presets_save(presets)
+    return jsonify({"ok": True, "presets": presets})
+
+
+@app.route("/api/sdr/presets/<name>", methods=["DELETE"])
+def sdr_presets_delete(name):
+    presets = [p for p in _sdr_presets_load() if p.get("name") != name]
+    _sdr_presets_save(presets)
+    return jsonify({"ok": True, "presets": presets})
+
+
+# ---------------------------------------------------------------------------
+# LoRa PACKET DETECT MODE (rtl_sdr | lorarx) — separate pipeline from the
+# rtl_power waterfall above, mutually exclusive with it (both want the same
+# USB dongle). lorarx (dxlAPRS, OE5DXL) actually demodulates LoRa PHY frames
+# — SF/BW/CR/level/SNR per packet — instead of just measuring RF power.
+#
+# Metadata only: lorarx's raw payload bytes are discarded on arrival and
+# never stored, parsed, or decrypted. This reports "a LoRa packet matching
+# these PHY parameters was heard", not what it said.
+# ---------------------------------------------------------------------------
+_sdr_pkt_proc = None
+_sdr_pkt_log = deque(maxlen=200)
+_sdr_pkt_meta = {}
+_sdr_pkt_port = 47100  # local-only UDP port lorarx's -J output is sent to
+
+# Known LoRa mesh protocol PHY profiles.
+# - Meshtastic's LongFast (its default, public channel preset) is
+#   SF11/BW250kHz — confirmed against Meshtastic's own docs.
+# - MeshCore has no algorithmic default the way Meshtastic does (users set
+#   frequency/SF/BW by hand, per node) — but as of late 2025 the community
+#   settled on de-facto regional conventions confirmed across MeshCore
+#   community docs: US/Canada is specifically 910.525 MHz / SF7 / BW62.5
+#   (their official "Recommended" preset); EU/UK is BW62.5 / SF8 "for
+#   pretty much all of Europe and the UK", but with no single agreed
+#   frequency to point at (unlike Meshtastic's slot hash) — offered as a
+#   Scan preset across the EU868 band instead of one fixed frequency.
+_SDR_PROTOCOL_PRESETS = {
+    "meshtastic_eu868": {"freq": 869_525_000, "sf": 11, "bw_code": 8, "label": "Meshtastic EU868 (SF11 / BW250)"},
+    "meshtastic_us915": {"freq": 906_875_000, "sf": 11, "bw_code": 8, "label": "Meshtastic US915 (SF11 / BW250)"},
+    "meshcore_us915": {"freq": 910_525_000, "sf": 7, "bw_code": 6, "label": "MeshCore US/Canada (SF7 / BW62.5)"},
+    # No single agreed EU frequency — freq here is only the single-listen
+    # fallback if Scan is off; meant to be used with Scan across the whole
+    # EU868 band instead (frontend SDR_SCAN_RANGES covers the range).
+    "meshcore_eu868": {"freq": 869_525_000, "sf": 8, "bw_code": 6, "label": "MeshCore EU/UK (SF8 / BW62.5)"},
+}
+
+
+def _sdr_rtl_sdr_bin():
+    return _shutil.which("rtl_sdr") or (
+        "/usr/local/bin/rtl_sdr" if os.path.exists("/usr/local/bin/rtl_sdr") else None
+    )
+
+
+def _sdr_lorarx_bin():
+    return _shutil.which("lorarx") or (
+        "/usr/local/bin/lorarx" if os.path.exists("/usr/local/bin/lorarx") else None
+    )
+
+
+def _sdr_pkt_udp_listener(proc, freq):
+    import socket, json as _j, time as _t
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(1.0)
+    try:
+        sock.bind(("127.0.0.1", _sdr_pkt_port))
+    except Exception:
+        return
+    try:
+        while proc.poll() is None:
+            try:
+                data, _addr = sock.recvfrom(65536)
+            except socket.timeout:
+                continue
+            except Exception:
+                break
+            try:
+                pkt = _j.loads(data.decode("utf-8", "ignore"))
+            except Exception:
+                continue
+            pkt.pop("payload", None)  # metadata only — never kept, parsed, or decrypted
+            pkt["ts"] = _t.time()
+            pkt["freq"] = freq  # which listen frequency caught it — matters once scanning cycles several
+            _sdr_pkt_log.appendleft(pkt)
+    finally:
+        sock.close()
+
+
+def _sdr_pkt_start(freq, sf, bw_code, gain=40, clear_log=True):
+    global _sdr_pkt_proc, _sdr_error
+    _sdr_stop()  # mutually exclusive with waterfall mode — same USB dongle
+    with _sdr_lock:
+        if _sdr_pkt_proc and _sdr_pkt_proc.poll() is None:
+            return True, None
+        rtl_sdr_bin = _sdr_rtl_sdr_bin()
+        lorarx_bin = _sdr_lorarx_bin()
+        if not rtl_sdr_bin or not lorarx_bin:
+            missing = []
+            if not rtl_sdr_bin: missing.append("rtl_sdr")
+            if not lorarx_bin: missing.append("lorarx")
+            _sdr_error = f"{' and '.join(missing)} not found — install RTL-SDR + lorarx tools first"
+            return False, _sdr_error
+        samplerate = 1_000_000
+        # lorarx supports stacking multiple -s flags to run several
+        # spreading-factor demodulators on the same capture at once — so
+        # rather than making the user guess/try SF7..SF12 one at a time
+        # (as manual troubleshooting on real hardware required), always
+        # listen on all of them simultaneously. `sf` is kept as a parameter
+        # only for display in the status line / packet log.
+        sf_flags = " ".join(f"-s {v}" for v in (12, 11, 10, 9, 8, 7))
+        cmd = (
+            f'"{rtl_sdr_bin}" -f {int(freq)} -s {samplerate} -g {gain} - | '
+            f'"{lorarx_bin}" -i /dev/stdin -f u8 -v -b {int(bw_code)} {sf_flags} '
+            f'-r {samplerate} -J 127.0.0.1:{_sdr_pkt_port}'
+        )
+        try:
+            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL, preexec_fn=os.setsid)
+        except Exception as e:
+            _sdr_error = str(e)
+            return False, _sdr_error
+        _sdr_pkt_proc = proc
+        _sdr_error = None
+        if clear_log:
+            _sdr_pkt_log.clear()
+        threading.Thread(target=_sdr_pkt_udp_listener, args=(proc, freq), daemon=True).start()
+        return True, None
+
+
+def _sdr_pkt_stop(clear_log=True):
+    global _sdr_pkt_proc
+    with _sdr_lock:
+        if _sdr_pkt_proc and _sdr_pkt_proc.poll() is None:
+            import signal as _signal
+            try:
+                os.killpg(os.getpgid(_sdr_pkt_proc.pid), _signal.SIGTERM)
+                _sdr_pkt_proc.wait(timeout=3)
+            except Exception:
+                try:
+                    os.killpg(os.getpgid(_sdr_pkt_proc.pid), _signal.SIGKILL)
+                except Exception:
+                    pass
+        _sdr_pkt_proc = None
+        if clear_log:
+            _sdr_pkt_log.clear()
+
+
+# --- Scan mode: cycle through several frequencies automatically instead of
+# needing the exact one up front (e.g. Meshtastic's actual channel/slot
+# frequency isn't always the well-known default — it depends on channel
+# name/PSK). Each frequency gets `dwell` seconds of real listening via the
+# same _sdr_pkt_start/_sdr_pkt_stop as a single-frequency session, cycling
+# continuously; packets accumulate into the same log across the whole scan,
+# each tagged with which frequency caught it.
+_sdr_scan_thread = None
+_sdr_scan_stop_evt = threading.Event()
+_sdr_scan_meta = {}
+
+
+def _sdr_scan_is_active():
+    return _sdr_scan_thread is not None and _sdr_scan_thread.is_alive()
+
+
+def _sdr_scan_worker(freqs, sf, bw_code, gain, dwell):
+    idx = 0
+    while not _sdr_scan_stop_evt.is_set():
+        freq = freqs[idx % len(freqs)]
+        _sdr_scan_meta["current_index"] = idx % len(freqs)
+        _sdr_scan_meta["current_freq"] = freq
+        ok, _err = _sdr_pkt_start(freq, sf, bw_code, gain, clear_log=False)
+        if not ok:
+            break  # e.g. tools went missing mid-scan — no point spinning forever
+        _sdr_scan_stop_evt.wait(dwell)
+        _sdr_pkt_stop(clear_log=False)
+        idx += 1
+
+
+def _sdr_scan_start(freq_start, freq_stop, step, sf, bw_code, gain, dwell):
+    global _sdr_scan_thread, _sdr_scan_meta
+    _sdr_scan_full_stop()
+    _sdr_pkt_stop(clear_log=True)  # fresh log for this new scan
+    freqs = list(range(int(freq_start), int(freq_stop) + 1, int(step)))
+    if not freqs:
+        return False, "invalid frequency range"
+    _sdr_scan_stop_evt.clear()
+    _sdr_scan_meta = {"freq_start": freq_start, "freq_stop": freq_stop, "step": step,
+                       "sf": sf, "bw_code": bw_code, "gain": gain, "dwell": dwell,
+                       "n_freqs": len(freqs), "current_index": 0, "current_freq": freqs[0]}
+    _sdr_scan_thread = threading.Thread(target=_sdr_scan_worker, args=(freqs, sf, bw_code, gain, dwell), daemon=True)
+    _sdr_scan_thread.start()
+    return True, None
+
+
+def _sdr_scan_full_stop():
+    global _sdr_scan_thread
+    _sdr_scan_stop_evt.set()
+    t = _sdr_scan_thread
+    if t:
+        t.join(timeout=5)
+    _sdr_scan_thread = None
+    _sdr_pkt_stop(clear_log=False)
+
+
+@app.route("/api/sdr/packets/start", methods=["POST"])
+def sdr_packets_start():
+    global _sdr_pkt_meta
+    _sdr_scan_full_stop()  # a leftover scan thread would otherwise keep cycling its own
+                            # frequency in the background and stop/override this single-freq session
+    data = request.get_json(silent=True) or {}
+    gain = data.get("gain", 40)
+    try:
+        gain = float(gain)
+    except (TypeError, ValueError):
+        gain = 40
+    preset_key = data.get("preset")
+    if preset_key and preset_key in _SDR_PROTOCOL_PRESETS:
+        p = _SDR_PROTOCOL_PRESETS[preset_key]
+        freq, sf, bw_code, label = p["freq"], p["sf"], p["bw_code"], p["label"]
+    else:
+        try:
+            freq = int(data.get("freq"))
+            sf = int(data.get("sf"))
+            bw_code = int(data.get("bw_code"))
+        except (TypeError, ValueError):
+            return jsonify({"error": "invalid freq/sf/bw_code"}), 400
+        if not (5 <= sf <= 12) or not (0 <= bw_code <= 9):
+            return jsonify({"error": "sf must be 5-12, bw_code must be 0-9"}), 400
+        label = str(data.get("label") or "custom")
+    ok, err = _sdr_pkt_start(freq, sf, bw_code, gain)
+    _sdr_pkt_meta = {"freq": freq, "sf": sf, "bw_code": bw_code, "label": label, "gain": gain}
+    return jsonify({"ok": ok, "error": err, "meta": _sdr_pkt_meta})
+
+
+@app.route("/api/sdr/packets/stop", methods=["POST"])
+def sdr_packets_stop():
+    _sdr_pkt_stop()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/sdr/packets")
+def sdr_packets_list():
+    scanning = _sdr_scan_is_active()
+    running = scanning or (_sdr_pkt_proc is not None and _sdr_pkt_proc.poll() is None)
+    return jsonify({
+        "running": running,
+        "scanning": scanning,
+        "meta": _sdr_scan_meta if scanning else _sdr_pkt_meta,
+        "installed": _sdr_rtl_sdr_bin() is not None and _sdr_lorarx_bin() is not None,
+        "packets": list(_sdr_pkt_log)[:100],
+    })
+
+
+@app.route("/api/sdr/packets/clear", methods=["POST"])
+def sdr_packets_clear():
+    _sdr_pkt_log.clear()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/sdr/scan/start", methods=["POST"])
+def sdr_scan_start():
+    data = request.get_json(silent=True) or {}
+    try:
+        freq_start = int(data.get("freq_start"))
+        freq_stop = int(data.get("freq_stop"))
+        step = int(data.get("step", 50_000))
+        sf = int(data.get("sf", 11))
+        bw_code = int(data.get("bw_code", 8))
+        gain = float(data.get("gain", 40))
+        dwell = float(data.get("dwell", 3))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid scan parameters"}), 400
+    if freq_stop <= freq_start or step <= 0:
+        return jsonify({"error": "freq_stop must be greater than freq_start, step must be positive"}), 400
+    if not (5 <= sf <= 12) or not (0 <= bw_code <= 9):
+        return jsonify({"error": "sf must be 5-12, bw_code must be 0-9"}), 400
+    ok, err = _sdr_scan_start(freq_start, freq_stop, step, sf, bw_code, gain, dwell)
+    return jsonify({"ok": ok, "error": err, "meta": _sdr_scan_meta})
+
+
+@app.route("/api/sdr/scan/stop", methods=["POST"])
+def sdr_scan_stop():
+    _sdr_scan_full_stop()
+    return jsonify({"ok": True})
+
+# ---------------------------------------------------------------------------
+# END SDR SPECTRUM MONITOR
+# ---------------------------------------------------------------------------
+
 @app.route("/api/rnode/interference")
 def rnode_interference():
     """List of detected noise spike events, newest first."""
@@ -1476,6 +2097,7 @@ def backup_download():
         "data/monitored_nodes.json":       f"{_HOME}/dashboard/monitored_nodes.json",
         "data/node_tracker.json":          f"{_HOME}/dashboard/node_tracker.json",
         "data/nomadnet_hashes":            NOMADNET_ADDR_FILE,
+        "data/sdr_presets.json":           SDR_PRESETS_FILE,
     }
 
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -1587,6 +2209,7 @@ def backup_restore():
         "identity/reticulum_identity": f"{_HOME}/.reticulum/storage/identity",
         "data/monitored_nodes.json":   f"{_HOME}/dashboard/monitored_nodes.json",
         "data/nomadnet_hashes":        NOMADNET_ADDR_FILE,
+        "data/sdr_presets.json":       SDR_PRESETS_FILE,
         # legacy keys from old backups
         "reticulum_config":            f"{_HOME}/.reticulum/config",
         "noema_bridge.cfg":            "/etc/noema/bridge.cfg",
