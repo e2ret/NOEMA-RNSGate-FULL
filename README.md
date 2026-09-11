@@ -21,6 +21,7 @@ FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate
 | Interference Detection | ❌ | ✅ |
 | Network Map (dartboard) | ❌ | ✅ |
 | PTY Terminal | ❌ | ✅ |
+| SDR Spectrum & LoRa Packet Detection | ❌ | ✅ |
 
 ### Features
 
@@ -29,6 +30,7 @@ FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate
 - **Interference Events** — automatic detection of noise floor spikes (>3 dBm above baseline)
 - **Node Tracker** — all Reticulum nodes heard via announce, dartboard network map with hop rings
 - **PTY Terminal** — full bash terminal in the browser (Logs panel)
+- **SDR Spectrum** — RTL-SDR power-sweep waterfall, plus real LoRa PHY packet detection (Meshtastic/MeshCore, SF/BW/CR/level/SNR/CRC per packet, metadata only) via an optional RTL-SDR dongle
 - **LXMF Chat** — send/receive messages via MQTT bridge
 - **Nomadnet** — page browser and node hosting
 - **I2P integration** — anonymous incoming tunnel via i2pd
