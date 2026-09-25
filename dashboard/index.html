@@ -1774,6 +1774,13 @@ const I18N = {
     sec_reticulum: "Reticulum", sec_interfaces: "Interfaces", txt_select_interface: "Select an interface",
     txt_add_interface_title: "Add Interface", txt_interface_name: "Interface Name", txt_type: "Type",
     btn_add: "ADD", btn_cancel: "CANCEL",
+    btn_ble_usb: "USB / TCP", btn_ble_bluetooth: "Bluetooth", btn_ble_pair: "Pair via Bluetooth",
+    txt_ble_pair_hint: "Connect the RNode via USB, then pair it over Bluetooth. USB is only needed for this one-time setup — unplug it afterwards.",
+    txt_ble_no_ports: "No serial device found — plug in the RNode",
+    txt_ble_loading_ports: "Loading ports...",
+    txt_ble_no_port_selected: "No serial port selected",
+    txt_ble_pairing: "Pairing... this can take up to 30s, do not unplug yet.",
+    txt_ble_paired: "Paired: {name} — you can unplug USB now.",
     sec_gateway_addresses: "Gateway Addresses",
     txt_lxmf_bridge: "LXMF Bridge", txt_i2p_address: "I2P Address (b32)",
     txt_nn_node: "Nomadnet Node", txt_nn_chat: "Nomadnet Chat", txt_noema_chat: "NOEMA Chat",
@@ -1902,6 +1909,13 @@ const I18N = {
     sec_reticulum: "Reticulum", sec_interfaces: "Интерфейсы", txt_select_interface: "Выберите интерфейс",
     txt_add_interface_title: "Добавить интерфейс", txt_interface_name: "Название интерфейса", txt_type: "Тип",
     btn_add: "ДОБАВИТЬ", btn_cancel: "ОТМЕНА",
+    btn_ble_usb: "USB / TCP", btn_ble_bluetooth: "Bluetooth", btn_ble_pair: "Сопрячь по Bluetooth",
+    txt_ble_pair_hint: "Подключите RNode по USB, затем сопрягите его по Bluetooth. USB нужен только для этой разовой настройки — потом можно отключить.",
+    txt_ble_no_ports: "Устройство не найдено — подключите RNode",
+    txt_ble_loading_ports: "Загрузка портов...",
+    txt_ble_no_port_selected: "Не выбран serial-порт",
+    txt_ble_pairing: "Сопряжение... может занять до 30с, пока не отключайте.",
+    txt_ble_paired: "Сопряжено: {name} — теперь можно отключить USB.",
     sec_gateway_addresses: "Адреса шлюза",
     txt_lxmf_bridge: "LXMF Bridge", txt_i2p_address: "I2P адрес (b32)",
     txt_nn_node: "Nomadnet Node", txt_nn_chat: "Nomadnet Chat", txt_noema_chat: "NOEMA Chat",
@@ -5570,6 +5584,9 @@ function renderNewIfaceFields() {
   const inpSty = `width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 9px`;
   box.innerHTML = fields.map(f => {
     const id = 'new-iface-f-' + f.k;
+    if (type === 'RNodeInterface' && f.k === 'port') {
+      return renderRNodePortField(id, f, inpSty);
+    }
     let input;
     if (f.type === 'select') {
       input = `<select id="${id}" style="${inpSty}">` +
@@ -5580,6 +5597,89 @@ function renderNewIfaceFields() {
     }
     return `<div><div style="font-size:10px;color:var(--mu);margin-bottom:3px">${esc(f.label)}</div>${input}</div>`;
   }).join('');
+}
+
+function _i18nDict() {
+  return I18N[localStorage.getItem("noema-lang")||"en"] || I18N.en;
+}
+
+function renderRNodePortField(id, f, inpSty) {
+  const _d = _i18nDict();
+  return `<div>
+    <div style="font-size:10px;color:var(--mu);margin-bottom:3px">${esc(f.label)}</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <button type="button" id="ble-mode-usb" class="sys-btn teal" style="font-size:10px;padding:3px 10px" onclick="bleToggleMode('usb')">${esc(_d.btn_ble_usb)}</button>
+      <button type="button" id="ble-mode-ble" class="sys-btn" style="font-size:10px;padding:3px 10px" onclick="bleToggleMode('ble')">${esc(_d.btn_ble_bluetooth)}</button>
+    </div>
+    <input id="${id}" value="${esc(f.default||'')}" placeholder="${esc(f.label)}" style="${inpSty}">
+    <div id="ble-pair-block" style="display:none;margin-top:8px;padding:10px;background:var(--s2);border:1px solid var(--bd);border-radius:8px">
+      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${esc(_d.txt_ble_pair_hint)}</div>
+      <select id="ble-pair-serial-port" style="${inpSty};margin-bottom:6px"><option value="">${esc(_d.txt_ble_loading_ports)}</option></select>
+      <button type="button" id="ble-pair-btn" class="sys-btn teal" style="font-size:11px;width:100%" onclick="bleStartPairing()">${esc(_d.btn_ble_pair)}</button>
+      <div id="ble-pair-status" style="font-size:10px;margin-top:6px;color:var(--mu)"></div>
+    </div>
+  </div>`;
+}
+
+function bleToggleMode(mode) {
+  const usbBtn = document.getElementById('ble-mode-usb');
+  const bleBtn = document.getElementById('ble-mode-ble');
+  const portInput = document.getElementById('new-iface-f-port');
+  const bleBlock = document.getElementById('ble-pair-block');
+  if (!usbBtn || !bleBtn || !portInput || !bleBlock) return;
+  if (mode === 'ble') {
+    usbBtn.className = 'sys-btn'; bleBtn.className = 'sys-btn teal';
+    portInput.style.display = 'none';
+    bleBlock.style.display = 'block';
+    bleLoadSerialPorts();
+  } else {
+    usbBtn.className = 'sys-btn teal'; bleBtn.className = 'sys-btn';
+    portInput.style.display = '';
+    bleBlock.style.display = 'none';
+  }
+}
+
+async function bleLoadSerialPorts() {
+  const _d = _i18nDict();
+  const sel = document.getElementById('ble-pair-serial-port');
+  if (!sel) return;
+  sel.innerHTML = `<option value="">${esc(_d.txt_ble_loading_ports)}</option>`;
+  try {
+    const d = await fetch(API+'/api/ble/serial_ports').then(r=>r.json());
+    sel.innerHTML = (d.ports||[]).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('') || `<option value="">${esc(_d.txt_ble_no_ports)}</option>`;
+  } catch(e) {
+    sel.innerHTML = '<option value="">Error listing ports</option>';
+  }
+}
+
+async function bleStartPairing() {
+  const _d = _i18nDict();
+  const portSel = document.getElementById('ble-pair-serial-port');
+  const port = portSel ? portSel.value : '';
+  const statusEl = document.getElementById('ble-pair-status');
+  const btn = document.getElementById('ble-pair-btn');
+  if (!port) { statusEl.style.color = 'var(--rd)'; statusEl.textContent = _d.txt_ble_no_port_selected; return; }
+  btn.disabled = true;
+  statusEl.style.color = 'var(--mu)';
+  statusEl.textContent = _d.txt_ble_pairing;
+  try {
+    const r = await fetch(API+'/api/ble/pair', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({port})});
+    const d = await r.json();
+    if (d.ok) {
+      statusEl.style.color = 'var(--gr)';
+      statusEl.textContent = _d.txt_ble_paired.replace('{name}', d.name || d.mac);
+      const portInput = document.getElementById('new-iface-f-port');
+      if (portInput) portInput.value = 'ble://' + d.mac;
+    } else {
+      statusEl.style.color = 'var(--rd)';
+      statusEl.textContent = 'Error: ' + d.error;
+    }
+  } catch(e) {
+    statusEl.style.color = 'var(--rd)';
+    statusEl.textContent = 'Error: ' + e;
+  } finally {
+    btn.disabled = false;
+  }
 }
 function updateNewIfaceHint() {
   const type = document.getElementById('new-iface-type')?.value;

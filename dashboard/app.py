@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.7"
+__version__ = "1.1.8"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -3556,6 +3556,32 @@ def rns_config_save():
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/ble/serial_ports")
+def ble_serial_ports():
+    import glob
+    ports = sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/ttyACM*"))
+    return jsonify({"ports": ports})
+
+
+@app.route("/api/ble/pair", methods=["POST"])
+def ble_pair():
+    import json
+    data = request.get_json(silent=True) or {}
+    port = data.get("port", "").strip()
+    if not port:
+        return jsonify({"ok": False, "error": "no serial port given"}), 400
+
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ble_autopair.py")
+    out, code = sh(f"{_RNS_BIN}/python3 {script} --port {port} --timeout 30")
+
+    last_line = (out or "").strip().splitlines()[-1] if out else ""
+    try:
+        result = json.loads(last_line)
+    except Exception:
+        return jsonify({"ok": False, "error": out or f"pairing script exited with code {code}"}), 500
+    return jsonify(result)
 
 
 @app.route("/api/rns_update_check")
