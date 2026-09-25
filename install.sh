@@ -61,7 +61,24 @@ sudo apt-get install -y \
     python3-dev \
     libffi-dev \
     python3-cffi \
-    python3-cryptography
+    python3-cryptography \
+    bluez \
+    rfkill \
+    python3-dbus \
+    python3-gi
+
+# --- BLE (RNode over Bluetooth) setup ---
+echo "[1b/7] Enabling BlueZ experimental mode (needed for BLE RNode support)..."
+BLUEZ_BIN=$(command -v bluetoothd || echo "/usr/libexec/bluetooth/bluetoothd")
+[ -x "$BLUEZ_BIN" ] || BLUEZ_BIN="/usr/lib/bluetooth/bluetoothd"
+mkdir -p /etc/systemd/system/bluetooth.service.d
+cat > /etc/systemd/system/bluetooth.service.d/override.conf << EOF
+[Service]
+ExecStart=
+ExecStart=$BLUEZ_BIN -E
+EOF
+systemctl daemon-reload
+systemctl restart bluetooth 2>/dev/null || echo "      [WARN] Could not restart bluetooth.service — no Bluetooth adapter on this machine?"
 
 # --- Clone or update NOEMA FULL ---
 echo "[2/7] Getting NOEMA RNSGate FULL..."
@@ -278,7 +295,9 @@ pip install \
     nomadnet \
     pytz \
     requests \
-    geopy
+    geopy \
+    bleak \
+    pexpect
 # Force reinstall rns to ensure the RNS library is properly linked in the venv
 # (dashboard.py imports it directly now — there's no separate rnsd process)
 pip install --force-reinstall rns -q
