@@ -38,6 +38,19 @@ FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate
 
 [NOEMA RNSGate Full — Documentation](https://github.com/e2ret/NOEMA-RNSGate-FULL/wiki)
 
+### Requirements
+
+| Component | Minimum | Recommended |
+|---|---|---|
+| RAM | 2 GB | 4 GB+ |
+| Storage | 8 GB | 16 GB+ |
+| OS | Ubuntu 22.04+ / Debian 12+ (x86_64 or ARM64) | Ubuntu 24.04 LTS |
+| Python | 3.10+ | 3.11+ |
+| RNode (optional) | any supported RNode device | Heltec LoRa32 v4 |
+| RTL-SDR (optional) | RTL-SDR Blog V4 | RTL-SDR Blog V4 |
+
+**Tested on:** Orange Pi 3 LTS, Orange Pi 5, Raspberry Pi 4, x86_64 mini PCs (Beelink, etc.)
+
 ### Quick Install
 
 ```bash
