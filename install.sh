@@ -65,7 +65,8 @@ sudo apt-get install -y \
     bluez \
     rfkill \
     python3-dbus \
-    python3-gi
+    python3-gi \
+    iputils-ping
 
 # --- BLE (RNode over Bluetooth) setup ---
 echo "[1b/7] Enabling BlueZ experimental mode (needed for BLE RNode support)..."
@@ -79,6 +80,81 @@ ExecStart=$BLUEZ_BIN -E
 EOF
 systemctl daemon-reload
 systemctl restart bluetooth 2>/dev/null || echo "      [WARN] Could not restart bluetooth.service — no Bluetooth adapter on this machine?"
+
+# --- Network resilience ---
+echo "[1c/7] Network resilience..."
+
+# 1) Don't let unattended-upgrades/needrestart restart networking.
+#    After a library update (e.g. liblzma) needrestart restarts every service
+#    using it, including NetworkManager/wpa_supplicant — Wi-Fi may not come back.
+if [ -d /etc/needrestart ]; then
+    mkdir -p /etc/needrestart/conf.d
+    cat > /etc/needrestart/conf.d/noema.conf << 'NREOF'
+$nrconf{override_rc}{qr(^NetworkManager)} = 0;
+$nrconf{override_rc}{qr(^wpa_supplicant)} = 0;
+$nrconf{override_rc}{qr(^systemd-networkd)} = 0;
+NREOF
+    echo "      needrestart: network services excluded from auto-restart."
+fi
+
+# 2) Wi-Fi watchdog — only if the default route goes through a wireless interface.
+DEF_IF=$(ip route 2>/dev/null | awk '/^default/ {print $5; exit}')
+if [ -n "$DEF_IF" ] && [ -d "/sys/class/net/$DEF_IF/wireless" ]; then
+    cat > /usr/local/bin/noema-wifi-watchdog.sh << 'WDEOF'
+#!/bin/sh
+# Restart the network manager if the default gateway is unreachable for ~3 min.
+GW=$(ip route | awk '/^default/ {print $3; exit}')
+if [ -n "$GW" ]; then
+    for i in 1 2 3; do
+        ping -c1 -W5 "$GW" >/dev/null 2>&1 && exit 0
+        sleep 60
+    done
+fi
+for svc in NetworkManager systemd-networkd wpa_supplicant; do
+    if systemctl is-active --quiet "$svc"; then
+        logger -t noema-wifi-watchdog "gateway ${GW:-none} unreachable, restarting $svc"
+        systemctl restart "$svc"
+        exit 0
+    fi
+done
+WDEOF
+    chmod +x /usr/local/bin/noema-wifi-watchdog.sh
+    cat > /etc/systemd/system/noema-wifi-watchdog.service << 'WDEOF'
+[Unit]
+Description=NOEMA Wi-Fi watchdog
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/noema-wifi-watchdog.sh
+WDEOF
+    cat > /etc/systemd/system/noema-wifi-watchdog.timer << 'WDEOF'
+[Unit]
+Description=NOEMA Wi-Fi watchdog every 5 min
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+[Install]
+WantedBy=timers.target
+WDEOF
+    # Replace a hand-made "wifi-watchdog" from earlier manual setups, if any
+    systemctl disable --now wifi-watchdog.timer 2>/dev/null || true
+    rm -f /etc/systemd/system/wifi-watchdog.timer /etc/systemd/system/wifi-watchdog.service /usr/local/bin/wifi-watchdog.sh
+    systemctl daemon-reload
+    # Non-critical: a failure here must not abort the whole install (set -e)
+    if systemctl enable --now noema-wifi-watchdog.timer; then
+        echo "      Default route via Wi-Fi ($DEF_IF) — watchdog enabled."
+    else
+        echo "      [WARN] Could not enable the Wi-Fi watchdog timer."
+    fi
+else
+    echo "      Default route via ${DEF_IF:-unknown} (not Wi-Fi) — watchdog skipped."
+fi
+
+# 3) Leftover standalone rnsd (e.g. from NOEMA Lite). In FULL the dashboard owns
+#    the Reticulum instance — a separate rnsd conflicts or crash-loops.
+if systemctl list-unit-files rnsd.service 2>/dev/null | grep -q '^rnsd.service'; then
+    systemctl disable --now rnsd.service 2>/dev/null || true
+    echo "      [FIX] Disabled leftover rnsd.service (FULL dashboard owns the RNS instance)."
+fi
 
 # --- Clone or update NOEMA FULL ---
 echo "[2/7] Getting NOEMA RNSGate FULL..."
