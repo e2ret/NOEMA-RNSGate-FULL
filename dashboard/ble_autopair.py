@@ -46,7 +46,20 @@ PIN_RE = re.compile(r"Bluetooth pairing PIN is:\s*(\d+)")
 RNODE_NAME_RE = re.compile(r"^RNode ")
 
 
+LOG_PATH = "/tmp/ble_autopair.log"
+
+
+def log(msg):
+    # Step trace for diagnosing hangs; never let logging break pairing.
+    try:
+        with open(LOG_PATH, "a") as f:
+            f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
+    except Exception:
+        pass
+
+
 def emit(payload, code):
+    log(f"result {payload}")
     print(json.dumps(payload))
     sys.exit(code)
 
@@ -143,6 +156,53 @@ def find_device_path(bus, mac):
     return None
 
 
+def advertising_rnodes(bus):
+    """RNode devices BlueZ is hearing right now (it only reports RSSI while it hears them).
+    Returns {mac: (name, rssi, paired, path)}."""
+    out = {}
+    for path, ifaces in get_managed_objects(bus).items():
+        dev = ifaces.get(DEVICE_IFACE)
+        if not dev or "RSSI" not in dev:
+            continue
+        name = str(dev.get("Name") or dev.get("Alias") or "")
+        if RNODE_NAME_RE.match(name):
+            out[str(dev.get("Address"))] = (name, int(dev["RSSI"]), bool(dev.get("Paired", False)), str(path))
+    return out
+
+
+def pick_target(bus, adapter, session, wait=8):
+    """Find the RNode that is advertising now (the one plugged in) *before* pairing mode starts.
+    If BlueZ already holds a bond for it, drop that bond so a fresh pairing can succeed --
+    a stale bond makes the board reject the connection and Pair() hang."""
+    cands = {}
+    end = time.time() + wait
+    while time.time() < end:
+        cands = advertising_rnodes(bus)
+        if cands:
+            break
+        time.sleep(0.5)
+    log("advertising RNodes: " + str({m: v[:3] for m, v in cands.items()}))
+    if not cands:
+        return
+    mac = max(cands, key=lambda m: cands[m][1])
+    name, _rssi, paired, path = cands[mac]
+    session.target_mac, session.target_name = mac, name
+    if not paired:
+        return
+    try:
+        adapter.RemoveDevice(path)
+        log(f"removed stale bond for {mac}")
+    except dbus.exceptions.DBusException as e:
+        log(f"RemoveDevice failed: {e}")
+        return
+    end = time.time() + 8
+    while time.time() < end:
+        if find_device_path(bus, mac):
+            return
+        time.sleep(0.3)
+    log("device did not reappear after removal")
+
+
 def run_bluetooth_on(port, timeout):
     child = pexpect.spawn(f"rnodeconf {port} --bluetooth-on", timeout=timeout, encoding="utf-8")
     try:
@@ -164,6 +224,7 @@ def run_bluetooth_pair(port, timeout, session):
         session.result["error"] = "rnodeconf did not enter pairing mode (device disconnected or wrong port?)"
         return
 
+    log("rnodeconf: pairing mode on")
     session.pairing_mode_ready.set()
 
     buf = ""
@@ -175,6 +236,7 @@ def run_bluetooth_pair(port, timeout, session):
             m = PIN_RE.search(buf)
             if m:
                 session.pin = m.group(1)
+                log("passkey captured from serial")
                 session.pin_ready.set()
                 break
         except pexpect.TIMEOUT:
@@ -197,20 +259,24 @@ def pair_success(bus, session):
     props.Set(DEVICE_IFACE, "Trusted", True)
     dev = dbus.Interface(dev_obj, DEVICE_IFACE)
 
-    def connect_ok():
+    done = {"v": False}
+
+    def finish(*_a):
+        # Pairing already succeeded -- treat as success even if this immediate
+        # reconnect is slow or races with BlueZ; RNS will connect on its own.
+        if done["v"]:
+            return False
+        done["v"] = True
         session.result = {"ok": True, "mac": session.target_mac, "name": session.target_name}
         session.mainloop.quit()
+        return False
 
-    def connect_err(e):
-        # Pairing already succeeded -- treat as success even if this
-        # immediate reconnect races with BlueZ; RNS will connect on its own.
-        session.result = {"ok": True, "mac": session.target_mac, "name": session.target_name}
-        session.mainloop.quit()
-
-    dev.Connect(reply_handler=connect_ok, error_handler=connect_err, dbus_interface=DEVICE_IFACE)
+    dev.Connect(reply_handler=finish, error_handler=finish, dbus_interface=DEVICE_IFACE)
+    GLib.timeout_add_seconds(5, finish)
 
 
 def pair_error(session, e):
+    log(f"Pair error: {e}")
     session.result = {"ok": False, "error": f"pairing failed: {e}"}
     session.mainloop.quit()
 
@@ -233,6 +299,9 @@ def poll_and_pair(bus, session, deadline):
         else:
             return True  # keep polling
 
+    if session.target_mac and not getattr(session, "_logged_target", False):
+        session._logged_target = True
+        log(f"target {session.target_mac} {session.target_name}")
     if not session.pairing_mode_ready.wait(timeout=0.01):
         if time.time() > deadline:
             session.result = {"ok": False, "error": "RNode never confirmed pairing mode"}
@@ -242,12 +311,41 @@ def poll_and_pair(bus, session, deadline):
 
     dev_obj = bus.get_object("org.bluez", find_device_path(bus, session.target_mac))
     dev = dbus.Interface(dev_obj, DEVICE_IFACE)
+    props = dbus.Interface(dev_obj, "org.freedesktop.DBus.Properties")
+    try:
+        if props.Get(DEVICE_IFACE, "Paired"):
+            # Already bonded (e.g. an earlier attempt finished after we gave up)
+            pair_success(bus, session)
+            return False
+    except dbus.exceptions.DBusException:
+        pass
+    start_pair(bus, session, dev, retries=2)
+    return False
+
+
+def start_pair(bus, session, dev, retries):
+    log(f"Pair() call, retries left {retries}")
+    # A stale or aborted attempt leaves BlueZ answering "InProgress"; cancel it
+    # first, and if it still complains, wait a moment and try again.
+    try:
+        dev.CancelPairing()
+    except dbus.exceptions.DBusException:
+        pass
+
+    def on_error(e):
+        if retries > 0 and "InProgress" in str(e):
+            def again():
+                start_pair(bus, session, dev, retries - 1)
+                return False
+            GLib.timeout_add(1500, again)
+        else:
+            pair_error(session, e)
+
     dev.Pair(
         reply_handler=lambda: pair_success(bus, session),
-        error_handler=lambda e: pair_error(session, e),
+        error_handler=on_error,
         dbus_interface=DEVICE_IFACE,
     )
-    return False
 
 
 def main():
@@ -261,6 +359,7 @@ def main():
     mainloop = GLib.MainLoop()
     session = PairSession(mainloop)
 
+    log(f"start port={args.port} timeout={args.timeout}")
     Agent(bus, AGENT_PATH, session)
     agent_manager = dbus.Interface(bus.get_object("org.bluez", "/org/bluez"), "org.bluez.AgentManager1")
     try:
@@ -279,8 +378,10 @@ def main():
     adapter.StartDiscovery()
     time.sleep(2)  # brief baseline window so we can tell which RNode is new
     session.baseline_macs = set(scan_rnode_devices(bus).keys())
+    log(f"baseline RNode devices: {sorted(session.baseline_macs)}")
 
     run_bluetooth_on(args.port, timeout=15)
+    pick_target(bus, adapter, session)
 
     t_pair = threading.Thread(target=run_bluetooth_pair, args=(args.port, args.timeout, session), daemon=True)
     t_pair.start()
