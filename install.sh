@@ -24,6 +24,19 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# --- sudo (absent on minimal Debian) ---
+# We run as root, but this script and the dashboard (restart/reboot buttons, i2pd, etc.)
+# call `sudo`, so make sure it exists before anything else uses it.
+if ! command -v sudo >/dev/null 2>&1; then
+    echo "[0/7] Installing sudo (missing on minimal Debian)..."
+    apt-get update -qq
+    apt-get install -y sudo
+fi
+
+# Never let git stop to ask for a username/password: if any repository this script
+# clones is removed or made private, GitHub answers with a login prompt and the install hangs.
+export GIT_TERMINAL_PROMPT=0
+
 # --- Journald log size limit ---
 echo "[1/7] Limiting systemd journal size..."
 if ! grep -q '^SystemMaxUse=' /etc/systemd/journald.conf 2>/dev/null; then
@@ -654,16 +667,20 @@ echo "      Services enabled."
 echo "      Starting services..."
 sudo systemctl start $SERVICES_LIST
 
-# --- Install rBrowser ---
+# --- Install rBrowser (optional extra) ---
+# rBrowser ships inside this repository (rBrowser/): the upstream project's GitHub repo was removed.
 echo "Installing rBrowser..."
-if [ ! -d "/root/rBrowser" ]; then
-    git clone https://github.com/fr33n0w/rBrowser.git /root/rBrowser
-    "$INSTALL_DIR/.venv/bin/pip" install waitress --quiet
-    echo "  [OK] rBrowser cloned"
-else
+if [ -d "/root/rBrowser" ]; then
     echo "  [SKIP] rBrowser already installed"
+elif [ -f "$INSTALL_DIR/rBrowser/rBrowser.py" ]; then
+    cp -a "$INSTALL_DIR/rBrowser" /root/rBrowser
+    echo "  [OK] rBrowser installed from this repository"
+else
+    echo "  [WARN] rBrowser/ is not in the repository — skipping rBrowser (everything else is installed)."
 fi
 
+if [ -f /root/rBrowser/rBrowser.py ]; then
+    "$INSTALL_DIR/.venv/bin/pip" install waitress --quiet
 cat > /etc/systemd/system/rbrowser.service << SVCEOF
 [Unit]
 Description=rBrowser Nomadnet Browser
@@ -686,6 +703,9 @@ SVCEOF
 systemctl daemon-reload
 systemctl enable --now rbrowser
 echo "  [OK] rbrowser.service installed (ExecStart refreshed to $INSTALL_DIR)"
+else
+    echo "  [SKIP] rbrowser.service not created (no /root/rBrowser)"
+fi
 
 # --- Get LXMF Bridge address ---
 echo "Getting LXMF Bridge address..."
