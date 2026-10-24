@@ -115,33 +115,63 @@ DEF_IF=$(ip route 2>/dev/null | awk '/^default/ {print $5; exit}')
 if [ -n "$DEF_IF" ] && [ -d "/sys/class/net/$DEF_IF/wireless" ]; then
     cat > /usr/local/bin/noema-wifi-watchdog.sh << 'WDEOF'
 #!/bin/sh
-# Restart the network manager if the default gateway is unreachable for ~3 min.
-GW=$(ip route | awk '/^default/ {print $3; exit}')
-if [ -n "$GW" ]; then
-    for i in 1 2 3; do
-        ping -c1 -W5 "$GW" >/dev/null 2>&1 && exit 0
-        sleep 60
-    done
-fi
-for svc in NetworkManager systemd-networkd wpa_supplicant; do
-    if systemctl is-active --quiet "$svc"; then
-        logger -t noema-wifi-watchdog "gateway ${GW:-none} unreachable, restarting $svc"
-        systemctl restart "$svc"
-        exit 0
-    fi
+# NOEMA network watchdog.
+#   1. Gateway unreachable for ~3 min  -> restart the network stack that is actually running.
+#   2. Still unreachable ~90 s later   -> reboot the machine (at most once per 30 min).
+STATE_DIR=/var/lib/noema-wifi-watchdog
+TAG=noema-wifi-watchdog
+mkdir -p "$STATE_DIR"
+
+gateway_ok() {
+    GW=$(ip route | awk '/^default/ {print $3; exit}')
+    [ -n "$GW" ] && ping -c1 -W5 "$GW" >/dev/null 2>&1
+}
+
+for i in 1 2 3; do
+    gateway_ok && exit 0
+    sleep 60
 done
+
+logger -t "$TAG" "gateway ${GW:-none} unreachable for ~3 min, restarting the network stack"
+if systemctl is-active --quiet NetworkManager; then
+    systemctl restart NetworkManager
+else
+    # Plain wpa_supplicant (e.g. wpa_supplicant@wlan0 on Armbian/TV boxes) + systemd-networkd
+    for u in $(systemctl list-units --state=active --plain --no-legend 'wpa_supplicant*.service' | awk '{print $1}'); do
+        systemctl restart "$u"
+    done
+    systemctl is-active --quiet systemd-networkd && systemctl restart systemd-networkd
+fi
+
+sleep 90
+if gateway_ok; then
+    logger -t "$TAG" "network is back after the restart"
+    exit 0
+fi
+
+# Last resort: a wedged Wi-Fi driver is often only cured by a reboot.
+NOW=$(date +%s)
+LAST=$(cat "$STATE_DIR/last_reboot" 2>/dev/null || echo 0)
+if [ $((NOW - LAST)) -gt 1800 ]; then
+    echo "$NOW" > "$STATE_DIR/last_reboot"
+    logger -t "$TAG" "still unreachable after restarting the network, rebooting"
+    sync
+    systemctl reboot
+else
+    logger -t "$TAG" "still unreachable, but rebooted less than 30 min ago — not rebooting again"
+fi
 WDEOF
     chmod +x /usr/local/bin/noema-wifi-watchdog.sh
     cat > /etc/systemd/system/noema-wifi-watchdog.service << 'WDEOF'
 [Unit]
-Description=NOEMA Wi-Fi watchdog
+Description=NOEMA network watchdog
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/noema-wifi-watchdog.sh
 WDEOF
     cat > /etc/systemd/system/noema-wifi-watchdog.timer << 'WDEOF'
 [Unit]
-Description=NOEMA Wi-Fi watchdog every 5 min
+Description=NOEMA network watchdog every 5 min
 [Timer]
 OnBootSec=5min
 OnUnitActiveSec=5min
@@ -160,6 +190,19 @@ WDEOF
     fi
 else
     echo "      Default route via ${DEF_IF:-unknown} (not Wi-Fi) — watchdog skipped."
+fi
+
+# 2b) Hardware watchdog: if the whole machine hangs (e.g. a wedged Wi-Fi driver on a TV box),
+#     systemd keeps feeding the board's watchdog; when it stops, the board resets itself.
+#     Only if the board has one and nothing else (e.g. the `watchdog` daemon) already uses it.
+if [ -e /dev/watchdog ] && ! systemctl is-active --quiet watchdog 2>/dev/null \
+   && ! grep -qs '^RuntimeWatchdogSec=[1-9]' /etc/systemd/system.conf /etc/systemd/system.conf.d/*.conf 2>/dev/null; then
+    mkdir -p /etc/systemd/system.conf.d
+    cat > /etc/systemd/system.conf.d/noema-watchdog.conf << 'WDEOF'
+[Manager]
+RuntimeWatchdogSec=60
+WDEOF
+    echo "      Hardware watchdog enabled (takes effect after the next reboot)."
 fi
 
 # 3) Leftover standalone rnsd (e.g. from NOEMA Lite). In FULL the dashboard owns
@@ -670,8 +713,12 @@ sudo systemctl start $SERVICES_LIST
 # --- Install rBrowser (optional extra) ---
 # rBrowser ships inside this repository (rBrowser/): the upstream project's GitHub repo was removed.
 echo "Installing rBrowser..."
-if [ -d "/root/rBrowser" ]; then
+# An empty leftover dir (e.g. from an interrupted clone) would block the copy below.
+[ -d /root/rBrowser ] && [ ! -f /root/rBrowser/rBrowser.py ] && rmdir /root/rBrowser 2>/dev/null || true
+if [ -f "/root/rBrowser/rBrowser.py" ]; then
     echo "  [SKIP] rBrowser already installed"
+elif [ -d "/root/rBrowser" ]; then
+    echo "  [WARN] /root/rBrowser exists but has no rBrowser.py — leaving it alone, skipping rBrowser."
 elif [ -f "$INSTALL_DIR/rBrowser/rBrowser.py" ]; then
     cp -a "$INSTALL_DIR/rBrowser" /root/rBrowser
     echo "  [OK] rBrowser installed from this repository"
