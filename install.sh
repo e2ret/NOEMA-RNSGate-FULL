@@ -563,6 +563,54 @@ else
 fi
 
 # --- Systemd services ---
+
+# Self-healing for Reticulum ratchet files. A hard power-off (or a hang) in the middle of a
+# write leaves a truncated *.ratchets file, and then dashboard / LXMF bridge / Nomadnet crash
+# on every start ("Could not read ratchet file"), looping forever. Before each start this
+# script moves unreadable ones aside (*.bad); Reticulum simply creates a new file.
+cat > /usr/local/bin/noema-fix-ratchets.py << 'FIXEOF'
+#!/usr/bin/env python3
+import os
+import sys
+import time
+
+try:
+    from RNS.vendor import umsgpack
+except Exception:
+    sys.exit(0)
+
+SKIP = {".venv", ".git", "node_modules", "__pycache__"}
+root = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~")
+
+
+def unreadable(path):
+    try:
+        with open(path, "rb") as fh:
+            umsgpack.unpackb(fh.read())
+        return False
+    except Exception:
+        return True
+
+
+for d, dirs, files in os.walk(root):
+    dirs[:] = [x for x in dirs if x not in SKIP]
+    for f in files:
+        if not f.endswith(".ratchets"):
+            continue
+        p = os.path.join(d, f)
+        try:
+            # A file another service is writing right now must not be touched.
+            if time.time() - os.path.getmtime(p) < 10:
+                continue
+            if unreadable(p):
+                time.sleep(1)
+                if unreadable(p):
+                    os.rename(p, p + ".bad")
+                    print(f"noema-fix-ratchets: moved unreadable {p}")
+        except OSError:
+            pass
+FIXEOF
+chmod +x /usr/local/bin/noema-fix-ratchets.py
 echo "[6/7] Installing systemd services..."
 
 install_service() {
@@ -596,6 +644,7 @@ WorkingDirectory=${WORKDIR}
 Environment=HOME=${CURRENT_HOME}
 Environment=LXMFY_LANDLOCK=0
 Environment=LXMF_TOOLS_DIR=${LXMF_TOOLS_DIR}
+ExecStartPre=-${PYTHON} /usr/local/bin/noema-fix-ratchets.py ${CURRENT_HOME}
 ${EXECSTARTPRE}
 ExecStart=${EXEC}
 StandardOutput=journal
