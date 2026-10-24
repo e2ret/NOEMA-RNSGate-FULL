@@ -1,0 +1,4684 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>rBrowser v1.0 - Standalone NomadNet Browser</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main">
+        <div class="sidebar" style="position: relative; max-width: 210px !important;">
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <input type="text" class="node-search" id="node-search" placeholder="Search nodes by name or hash..." onkeyup="filterNodes()" oninput="toggleClearButton()">
+                    <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display: none;">×</button>
+                </div>
+            </div>
+            <div class="favorites-section" id="favorites-section" style="background: #21262d; border-bottom: 1px solid #30363d; padding: 8px; flex-shrink: 0; z-index: 100; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="color: #ffa657; font-size: 12px; font-weight: bold;">⭐ Favorites</span>
+                    <div style="display: flex; gap: 4px;">
+                        <button id="add-favorite-btn" onclick="showAddFavoriteDialog()" style="background: none; border: none; color: #58a6ff; cursor: pointer; font-size: 10px;">+ Add</button>
+                        <button id="favorites-toggle" onclick="toggleFavoritesSection()" style="background: none; border: none; color: #ebf4ff; cursor: pointer; font-size: 10px;">Hide</button>
+                    </div>
+                </div>
+                <div class="favorites-list" id="favorites-list" style="background: #161b22; padding: 4px; border-radius: 4px; min-height: 20px;">
+                    <div style="text-align: center; color: #7d8590; font-size: 11px; padding: 8px;">No favorites yet</div>
+                </div>
+            </div>
+            <div class="sort-container" style="background: #161b22; padding: 6px 8px; border-bottom: 1px solid #30363d; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #7d8590; font-size: 11px;">Sort:</span>
+                    <select id="node-sort" onchange="sortAndFilterNodes()" style="
+                        background: #0d1117;
+                        border: 1px solid #30363d;
+                        color: #e6edf3;
+                        padding: 4px 8px;
+                        border-radius: 3px;
+                        font-size: 11px;
+                        flex: 1;
+                        cursor: pointer;
+                    ">
+                        <option value="original">Original Order (Announce Time)</option>
+                        <option value="recent">Most Recent First</option>
+                        <option value="frequent">Most Announced First</option>
+                        <option value="alphabetical">Alphabetical (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="node-list-container" style="position: absolute !important; top: 160px !important; bottom: 38px !important; left: 0 !important; right: 0 !important; overflow-y: auto !important;">
+                <div class="node-list" id="node-list">
+                    <div style="text-align: center; padding: 20px; color: #d2d7df; font-size: 12px;">Scanning for nodes...</div>
+                </div>
+            </div>
+            <div class="status-bar" style="position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; padding: 4px 8px !important; margin: 0 !important; font-size: 11px !important; line-height: 1.1 !important; height: 38px !important; min-height: 38px !important; max-height: 38px !important; box-sizing: border-box !important;">
+                Status:<span class="status-indicator" id="connection-status"><strong> ● Initializing...</strong></span><br>
+                Total Announces: <span class="count" id="announce-count">0</span> - NomadNet Nodes: <span class="count" id="node-count">0</span>                
+            </div>
+        </div>
+            <div class="content">
+            <div class="tab-bar">
+                <div class="tabs-container" id="tabs-container">
+                    <!-- Tabs will be dynamically created here -->
+                </div>
+                <button class="new-tab-btn" onclick="createNewTab()" title="Open New Tab Window">+ New Tab</button>
+                <button class="search-tab-btn" onclick="createSearchTab()" title="Open Search Engine Window">Search Engine</button>
+            </div>
+            <div class="tab-content-wrapper" id="tab-content-wrapper">
+                <!-- Each tab will have its own content area -->
+            </div>
+        </div>
+    </div>
+
+    <template id="tab-content-template">
+    <div class="tab-content">
+        <div class="nav-bar">
+            <div class="nav-controls">
+                <button class="nav-btn back-btn" onclick="navigateBack()" disabled>←</button>
+                <button class="nav-btn forward-btn" onclick="navigateForward()" disabled>→</button>
+                <button class="nav-btn" onclick="refreshPage()">⟳</button>
+                <button class="nav-btn home-btn" onclick="navigateHome()" title="Go to index.mu homepage">🏠</button>
+            </div>
+            <input type="text" class="address-bar" id="address-bar" placeholder="Enter NomadNet URL (hash:/path/to/page.mu)" onkeypress="handleAddressBarEnter(event)">
+            <button class="go-btn" onclick="navigateToUrl()" title="Navigate to current url page"><img src="/templates/go.png" alt="" style="width: 19px; height: 19px; vertical-align: middle;"></button>
+                <button class="search-btn" onclick="openSearchFromNav()" title="Open Search Engine Window"><img src="/templates/search.png" alt="" style="width: 19px; height: 19px; vertical-align: middle;"></button>
+            <button class="star-btn" onclick="addCurrentPageToFavorites()" title="Add current page to favorites"><img src="/templates/star.png" alt="" style="width: 21px; height: 21px; vertical-align: middle;"></button>
+            <button class="info-btn-nav" onclick="showCurrentNodeInfo()" title="Show current node info"><img src="/templates/info.png" alt="Info" style="width: 20px; height: 20px; vertical-align: middle;"></button>
+            <button class="ping-btn" onclick="pingCurrentNode()" title="Ping current node">
+                <img src="/templates/ping.png" alt="Ping" title="Ping remote Node" style="width: 20px; height: 20px; vertical-align: middle;">                
+            </button>
+            <button class="fingerprint-btn" onclick="sendFingerprintToCurrentNode()" title="Send fingerprint to current node">
+                <img src="/templates/fingerprint.png" alt="" style="width: 20px; height: 20px; vertical-align: middle;">                
+            </button>           
+        </div>
+
+        <div class="header">
+            <div class="page-info">
+                <span class="page-title"><center>Select a node from the announce list, favorites, or paste an address into the bar to navigate pages.</center></span>
+                <span class="page-details"></span>
+            </div>
+            
+            <!-- New container for all header buttons -->
+            <div class="header-buttons">
+                <div class="ascii-control" style="display: none;">
+                    <span class="ascii-status">Text Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" class="ascii-switch" onchange="toggleAsciiOptimization()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button class="view-toggle" title="Toggle between rendered and raw view">Raw View</button>
+                <button class="auto-reload-btn" onclick="showAutoReloadSettings()" title="Auto-reload settings">
+                    ⏱️
+                    <span class="reload-countdown"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="browser-area">
+            <div class="page-content">
+                <div class="welcome">
+                    <h2>rBrowser v1.0</h2>
+                    <p>Welcome to the NomadNet Standalone Browser.<br>This browser connects to Reticulum and listens for announces of NomadNet Nodes serving pages.<br>Wait for announces and select a node from the sidebar to explore the distributed content<br>or navigate manually with the navigation bar.</p><br>
+                    <button onclick="createSearchTab()" style="
+                        background: #0969da; 
+                        color: white; 
+                        border: none; 
+                        padding: 12px 24px; 
+                        border-radius: 6px; 
+                        cursor: pointer; 
+                        font-size: 14px; 
+                        font-weight: 600;
+                        margin-top: 20px;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.background='#1f6feb'" onmouseout="this.style.background='#0969da'">
+                        🔍 Open NomadNet Search Engine
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="shortcuts-bar">
+            <span class="shortcut-item">
+                <kbd>Alt + N</kbd> New Tab
+            </span>
+            <span class="shortcut-item">
+                <kbd>Alt + X</kbd> Close Current Tab
+            </span>
+            <span class="shortcut-item">
+                <kbd>Alt + B</kbd> Reload Current Page
+            </span>
+            <span class="shortcut-item">
+                <kbd>Alt + F</kbd> Add current page to favorites
+            </span>
+            <span class="shortcut-item">
+                <kbd>Ctrl + Left or Right arrows</kbd> Switch Tabs
+            </span>
+            <span class="shortcut-item">
+                <kbd>Ctrl + X</kbd> Close all other tabs
+            </span>
+            <span class="shortcut-item">
+                <kbd>Alt + I</kbd> Fingerprint 
+            </span>
+        </div>
+    </div>
+</template>
+
+    <!-- Load local DOMPurify js for html security -->
+    <script src="../script/purify.min.js"></script>
+
+    <script>
+        let selectedNode = null;
+        let currentRequest = null;
+        let currentRawContent = '';
+        let isRawView = false;
+        let micronParser = null;
+        let isOriginalParser = false;
+        let navigationHistory = [];
+        let historyIndex = -1;
+        let currentUrl = '';
+        let cachedNodes = [];
+        let favoriteNodes = [];
+        let tabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
+        let lastStatusFetch = 0;
+        let statusFetchFailures = 0;
+        let maxStatusFailures = 3; // Allow 3 failures before marking as connection error
+        let lastNodesHash = '';
+        // Auto-reload system variables
+        let autoReloadTimers = {}; // Store timers per tab
+        let autoReloadSettings = {}; // Store settings per tab
+
+
+class BrowserTab {
+    constructor(id) {
+        this.id = id;
+        this.title = 'New Tab';
+        this.url = '';
+        this.loading = false;
+        this.selectedNode = null;
+        this.currentRequest = null;
+        this.currentRawContent = '';
+        this.isRawView = false;
+        this.navigationHistory = [];
+        this.historyIndex = -1;
+        this.currentUrl = '';
+        this.knownNodeName = null;
+        this.autoReloadEnabled = false;
+        this.autoReloadInterval = 60;
+        this.autoReloadTimer = null;
+        this.autoReloadCountdown = 0;
+        this.notificationShown = false;
+        this.asciiOptimized = false;
+        this.savedFormData = {}; // Add this line
+    }
+    
+    setTitle(title) {
+        this.title = title || 'New Tab';
+        this.updateTabDisplay();
+    }
+    
+    setUrl(url) {
+        this.url = url;
+        this.currentUrl = url;
+        this.updateAddressBar();
+    }
+    
+    setLoading(loading) {
+        this.loading = loading;
+        this.updateTabDisplay();
+    }
+    
+    addToHistory(url) {
+        if (url !== this.currentUrl) {
+            this.navigationHistory = this.navigationHistory.slice(0, this.historyIndex + 1);
+            this.navigationHistory.push(url);
+            this.historyIndex = this.navigationHistory.length - 1;
+            this.currentUrl = url;
+            this.updateNavigationButtons();
+        }
+    }
+    
+    updateTabDisplay() {
+        const tabElement = document.querySelector(`[data-tab-id="${this.id}"]`);
+        if (tabElement) {
+            const titleElement = tabElement.querySelector('.tab-title');
+            titleElement.textContent = this.loading ? 'Loading...' : this.title;
+            tabElement.classList.toggle('loading', this.loading);
+        }
+    }
+    
+    updateAddressBar() {
+        if (this.id === activeTabId) {
+            const addressBar = document.querySelector(`#${this.id} .address-bar`);
+            if (addressBar) {
+                addressBar.value = this.url;
+            }
+        }
+    }
+    updateNavigationButtons() {
+        if (this.id === activeTabId) {
+            const backBtn = document.querySelector(`#${this.id} .back-btn`);
+            const forwardBtn = document.querySelector(`#${this.id} .forward-btn`);
+            
+            if (backBtn) backBtn.disabled = this.historyIndex <= 0;
+            if (forwardBtn) forwardBtn.disabled = this.historyIndex >= this.navigationHistory.length - 1;
+        }
+    }
+
+    startAutoReload() {
+        this.stopAutoReload();
+        this.autoReloadEnabled = true;
+        this.autoReloadCountdown = this.autoReloadInterval;
+        this.notificationShown = false;
+        
+        this.autoReloadTimer = setInterval(() => {
+            this.autoReloadCountdown--;
+            
+            // Only update button if this is the active tab
+            if (this.id === activeTabId) {
+                updateAutoReloadButton();
+            }
+            
+            // Show notification 2 seconds before reload
+            if (this.autoReloadCountdown === 2 && !this.notificationShown) {
+                this.notificationShown = true;
+                showNotification(
+                    '⏱️ Auto-reloading page in 2 seconds...',
+                    'info',
+                    2000
+                );
+            }
+            
+            if (this.autoReloadCountdown <= 0) {
+                this.autoReloadCountdown = this.autoReloadInterval;
+                this.notificationShown = false;
+                
+                if (this.currentUrl) {
+                    console.log(`Auto-reloading tab ${this.id}: ${this.currentUrl}`);
+                    
+                    // Show notification higher on the screen (stack position 1)
+                    showNotification(
+                        '🔄 Auto-reloading page now...',
+                        'info',
+                        1500,
+                        1  // Stack position parameter - shows higher
+                    );
+                    
+                    // Reload THIS specific tab, not the active one
+                    this.reloadPage();
+                }
+            }
+        }, 1000);
+        
+        console.log(`Auto-reload started for tab ${this.id}: ${this.autoReloadInterval}s`);
+    }
+
+    reloadPage() {
+        if (!this.currentUrl) return;
+        
+        // Store the current view state before reloading
+        const wasAsciiOptimized = this.asciiOptimized || false;
+        const wasRawView = this.isRawView || false;
+        
+        // Save form data before reload
+        this.saveFormData();
+        
+        // Temporarily switch to this tab to reload it
+        const previousActiveTab = activeTabId;
+        const needsSwitch = (this.id !== activeTabId);
+        
+        if (needsSwitch) {
+            // Silently switch to this tab
+            activeTabId = this.id;
+        }
+        
+        // Perform the reload
+        navigateToUrlInternalTab(this.currentUrl, false);
+        
+        // Wait for content to load, then restore view state and form data
+        setTimeout(() => {
+            const content = document.querySelector(`#${this.id} .page-content`);
+            const asciiSwitch = document.querySelector(`#${this.id} .ascii-switch`);
+            const asciiStatus = document.querySelector(`#${this.id} .ascii-status`);
+            const viewToggle = document.querySelector(`#${this.id} .view-toggle`);
+            
+            // Restore ASCII mode if it was enabled
+            if (wasAsciiOptimized && content && asciiSwitch) {
+                if (!content.classList.contains('ascii-optimized')) {
+                    content.classList.add('ascii-optimized');
+                    asciiSwitch.checked = true;
+                    if (asciiStatus) {
+                        asciiStatus.textContent = 'Ascii Mode';
+                    }
+                }
+            }
+            
+            // Restore raw view if it was enabled
+            if (wasRawView && this.currentRawContent && viewToggle) {
+                content.innerHTML = escapeHtml(this.currentRawContent);
+                content.className = 'page-content raw';
+                viewToggle.textContent = 'Rendered';
+                this.isRawView = true;
+                
+                if (asciiSwitch) {
+                    asciiSwitch.disabled = true;
+                }
+            }
+            
+            // Store the view state back to the tab
+            this.asciiOptimized = wasAsciiOptimized;
+            this.isRawView = wasRawView;
+            
+            // Restore form data immediately - no additional delay
+            this.restoreFormDataFast();
+            
+            // Switch back to the previous tab if we switched
+            if (needsSwitch) {
+                activeTabId = previousActiveTab;
+                
+                // Update UI to show the correct active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                const tabElement = document.querySelector(`[data-tab-id="${previousActiveTab}"]`);
+                const contentElement = document.getElementById(previousActiveTab);
+                
+                if (tabElement && contentElement) {
+                    tabElement.classList.add('active');
+                    contentElement.classList.add('active');
+                }
+            }
+        }, 300); // Reduced from 500ms to 300ms
+    }    
+
+    stopAutoReload() {
+        if (this.autoReloadTimer) {
+            clearInterval(this.autoReloadTimer);
+            this.autoReloadTimer = null;
+        }
+        this.autoReloadEnabled = false;
+        this.autoReloadCountdown = 0;
+    }
+
+    setAutoReloadInterval(seconds) {
+        this.autoReloadInterval = seconds;
+        if (this.autoReloadEnabled) {
+            this.startAutoReload();
+        }
+    }
+    
+    saveFormData() {
+        const formData = {};
+        const inputs = document.querySelectorAll(`#${this.id} .page-content input, #${this.id} .page-content textarea`);
+        
+        inputs.forEach(input => {
+            if (input.name || input.id) {
+                const key = input.name || input.id;
+                
+                if (input.type === 'checkbox') {
+                    formData[key] = {
+                        type: 'checkbox',
+                        checked: input.checked,
+                        value: input.value
+                    };
+                } else if (input.type === 'radio') {
+                    if (input.checked) {
+                        formData[key] = {
+                            type: 'radio',
+                            value: input.value,
+                            checked: true
+                        };
+                    }
+                } else {
+                    formData[key] = {
+                        type: input.type || 'text',
+                        value: input.value
+                    };
+                }
+            }
+        });
+        
+        this.savedFormData = formData;
+        console.log('Form data saved for tab', this.id, ':', formData);
+        return formData;
+    }
+
+    restoreFormData() {
+        if (!this.savedFormData || Object.keys(this.savedFormData).length === 0) {
+            console.log(`[Tab ${this.id}] No form data to restore`);
+            return;
+        }
+        
+        console.log(`[Tab ${this.id}] Attempting to restore form data:`, this.savedFormData);
+        
+        let restoredCount = 0;
+        
+        // Use requestAnimationFrame for immediate execution on next paint
+        requestAnimationFrame(() => {
+            for (const [key, data] of Object.entries(this.savedFormData)) {
+                let input = null;
+                
+                // Try multiple strategies to find the input field
+                // 1. By name attribute
+                input = document.querySelector(`#${this.id} .page-content input[name="${key}"]`) ||
+                        document.querySelector(`#${this.id} .page-content textarea[name="${key}"]`);
+                
+                // 2. By id attribute
+                if (!input) {
+                    input = document.querySelector(`#${this.id} .page-content input[id="${key}"]`) ||
+                            document.querySelector(`#${this.id} .page-content textarea[id="${key}"]`);
+                }
+                
+                // 3. By placeholder attribute (useful for Micron forms)
+                if (!input && data.placeholder) {
+                    input = document.querySelector(`#${this.id} .page-content input[placeholder="${data.placeholder}"]`) ||
+                            document.querySelector(`#${this.id} .page-content textarea[placeholder="${data.placeholder}"]`);
+                }
+                
+                // 4. By index if key contains "input_"
+                if (!input && key.startsWith('input_')) {
+                    const index = parseInt(key.split('_')[1]);
+                    const allInputs = document.querySelectorAll(`#${this.id} .page-content input, #${this.id} .page-content textarea`);
+                    input = allInputs[index];
+                }
+                
+                if (input) {
+                    if (data.type === 'checkbox') {
+                        input.checked = data.checked;
+                        if (data.value) {
+                            input.value = data.value;
+                        }
+                    } else if (data.type === 'radio') {
+                        if (data.checked && input.value === data.value) {
+                            input.checked = true;
+                        }
+                    } else {
+                        input.value = data.value;
+                    }
+                    restoredCount++;
+                    console.log(`[Tab ${this.id}] ✓ Restored field "${key}":`, data.value);
+                } else {
+                    console.warn(`[Tab ${this.id}] ✗ Could not find input field for key: ${key}`);
+                }
+            }
+            
+            // Show notification if fields were restored
+            if (restoredCount > 0) {
+                console.log(`[Tab ${this.id}] Successfully restored ${restoredCount} field(s)`);
+                if (this.id === activeTabId) {
+                    showNotification(
+                        `✅ Restored ${restoredCount} form field${restoredCount > 1 ? 's' : ''}`,
+                        'success',
+                        2000,
+                        2
+                    );
+                }
+            }
+        });
+    }
+
+    restoreFormDataFast() {
+        if (!this.savedFormData || Object.keys(this.savedFormData).length === 0) {
+            return;
+        }
+        
+        const content = document.querySelector(`#${this.id} .page-content`);
+        if (!content) return;
+        
+        let restoredCount = 0;
+        
+        // Function to attempt restoration
+        const attemptRestore = () => {
+            for (const [key, data] of Object.entries(this.savedFormData)) {
+                let input = null;
+                
+                // Try to find the input field
+                input = document.querySelector(`#${this.id} .page-content input[name="${key}"]`) ||
+                        document.querySelector(`#${this.id} .page-content textarea[name="${key}"]`) ||
+                        document.querySelector(`#${this.id} .page-content input[id="${key}"]`) ||
+                        document.querySelector(`#${this.id} .page-content textarea[id="${key}"]`);
+                
+                if (!input && data.placeholder) {
+                    input = document.querySelector(`#${this.id} .page-content input[placeholder="${data.placeholder}"]`) ||
+                            document.querySelector(`#${this.id} .page-content textarea[placeholder="${data.placeholder}"]`);
+                }
+                
+                if (!input && key.startsWith('input_')) {
+                    const index = parseInt(key.split('_')[1]);
+                    const allInputs = document.querySelectorAll(`#${this.id} .page-content input, #${this.id} .page-content textarea`);
+                    input = allInputs[index];
+                }
+                
+                if (input && !input.dataset.restored) {
+                    if (data.type === 'checkbox') {
+                        input.checked = data.checked;
+                        if (data.value) input.value = data.value;
+                    } else if (data.type === 'radio') {
+                        if (data.checked && input.value === data.value) {
+                            input.checked = true;
+                        }
+                    } else {
+                        input.value = data.value;
+                    }
+                    input.dataset.restored = 'true'; // Mark as restored
+                    restoredCount++;
+                }
+            }
+        };
+        
+        // Observe DOM changes and restore immediately when inputs appear
+        const observer = new MutationObserver((mutations) => {
+            attemptRestore();
+            
+            // Stop observing after successful restoration
+            if (restoredCount >= Object.keys(this.savedFormData).length) {
+                observer.disconnect();
+                if (restoredCount > 0 && this.id === activeTabId) {
+                    showNotification(
+                        `✅ Restored ${restoredCount} form field${restoredCount > 1 ? 's' : ''}`,
+                        'success',
+                        2000,
+                        2
+                    );
+                }
+            }
+        });
+        
+        observer.observe(content, {
+            childList: true,
+            subtree: true
+        });
+        
+        // Also try immediate restoration
+        attemptRestore();
+        
+        // Disconnect observer after 2 seconds as fallback
+        setTimeout(() => observer.disconnect(), 2000);
+    }
+
+}
+
+// TAB MANAGEMENT FUNCTIONS
+function createNewTab() {
+    const tabId = `tab-${++tabCounter}`;
+    const tab = new BrowserTab(tabId);
+    tabs.push(tab);
+    
+    createTabElement(tab);
+    createTabContent(tab);
+    switchToTab(tabId);
+    
+    // Hide auto-reload button on new empty tabs
+    setTimeout(() => {
+        updateAutoReloadButton();
+    }, 100);
+    
+    return tab;
+}
+
+function createTabElement(tab) {
+    const tabsContainer = document.getElementById('tabs-container');
+    
+    const tabElement = document.createElement('div');
+    tabElement.className = 'tab';
+    tabElement.setAttribute('data-tab-id', tab.id);
+    tabElement.innerHTML = `
+        <span class="tab-title">${tab.title}</span>
+        <span class="tab-close" onclick="closeTab('${tab.id}', event)">&times;</span>
+    `;
+    
+    tabElement.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('tab-close')) {
+            switchToTab(tab.id);
+        }
+    });
+    
+    tabsContainer.appendChild(tabElement);
+}
+
+function createTabContent(tab) {
+    const wrapper = document.getElementById('tab-content-wrapper');
+    const template = document.getElementById('tab-content-template');
+    const clone = template.content.cloneNode(true);
+    
+    const content = clone.querySelector('.tab-content');
+    content.id = tab.id;
+    
+    const backBtn = content.querySelector('.back-btn');
+    const forwardBtn = content.querySelector('.forward-btn');
+    const refreshBtn = content.querySelector('.refresh-btn');
+    const homeBtn = content.querySelector('.home-btn');
+    const goBtn = content.querySelector('.go-btn');
+    const addressBar = content.querySelector('.address-bar');
+    const viewToggle = content.querySelector('.view-toggle');
+    
+    if (backBtn) backBtn.onclick = () => navigateBackTab();
+    if (forwardBtn) forwardBtn.onclick = () => navigateForwardTab();
+    if (refreshBtn) refreshBtn.onclick = () => refreshPageTab();
+    if (homeBtn) homeBtn.onclick = () => navigateHome();  // Add this line
+    if (goBtn) goBtn.onclick = () => navigateToUrlTab();
+    if (addressBar) addressBar.onkeypress = (e) => handleAddressBarEnterTab(e);
+    if (viewToggle) viewToggle.onclick = () => toggleViewTab();
+    
+    wrapper.appendChild(content);
+}
+
+function switchToTab(tabId) {
+    activeTabId = tabId;
+    
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    const tabElement = document.querySelector(`[data-tab-id="${tabId}"]`);
+    const contentElement = document.getElementById(tabId);
+    
+    if (tabElement && contentElement) {
+        tabElement.classList.add('active');
+        contentElement.classList.add('active');
+        
+        const activeTab = getActiveTab();
+        if (activeTab) {
+            activeTab.updateAddressBar();
+            activeTab.updateNavigationButtons();
+            
+            updateNodeSelection();
+            setTimeout(updateStarButtonState, 100);
+            updateAutoReloadButton(); // Update auto-reload button
+        }
+    }
+}
+
+function updateNodeListPosition() {
+    const searchContainer = document.querySelector('.search-container');
+    const favoritesSection = document.querySelector('.favorites-section');
+    const sortContainer = document.querySelector('.sort-container');
+    const nodeListContainer = document.querySelector('.node-list-container');
+    
+    if (!nodeListContainer) return;
+    
+    let topPosition = 0;
+    
+    // Add heights of all elements above node list
+    if (searchContainer) topPosition += searchContainer.offsetHeight;
+    if (favoritesSection) topPosition += favoritesSection.offsetHeight;
+    if (sortContainer) topPosition += sortContainer.offsetHeight;
+    
+    nodeListContainer.style.top = `${topPosition}px`;
+}
+
+function closeTab(tabId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const tabIndex = tabs.findIndex(t => t.id === tabId);
+    if (tabIndex === -1) return;
+    
+    if (tabs.length === 1) {
+        return;
+    }
+    
+    // Stop auto-reload timer before removing tab
+    const tab = tabs[tabIndex];
+    if (tab) {
+        tab.stopAutoReload();
+    }
+    
+    tabs.splice(tabIndex, 1);
+    
+    document.querySelector(`[data-tab-id="${tabId}"]`)?.remove();
+    document.getElementById(tabId)?.remove();
+    
+    if (activeTabId === tabId) {
+        const nextTab = tabs[Math.max(0, tabIndex - 1)];
+        switchToTab(nextTab.id);
+    }
+}
+
+function getActiveTab() {
+    return tabs.find(t => t.id === activeTabId);
+}
+
+// Favorites system //
+
+function addCurrentPageToFavorites() {
+    const tab = getActiveTab();
+    if (!tab || !tab.currentUrl) {
+        showNotification('No current page to add to favorites', 'warning', 4000);
+        return;
+    }
+   
+    const parsed = parseNomadNetUrl(tab.currentUrl);
+    if (!parsed) {
+        showNotification('Cannot parse current URL', 'error', 4000);
+        return;
+    }
+   
+    // Check if already favorited - if so, remove it
+    const existingIndex = favoriteNodes.findIndex(fav => fav.hash === parsed.hash);
+    if (existingIndex >= 0) {
+        const removedName = favoriteNodes[existingIndex].name;
+        favoriteNodes.splice(existingIndex, 1);
+        saveFavorites();
+        updateFavoritesDisplay();
+        
+        // NEW: Update node list star
+        const nodeStarBtn = document.querySelector(`[data-hash="${parsed.hash}"].star-btn`);
+        if (nodeStarBtn) {
+            nodeStarBtn.style.color = '#7d8590';
+            nodeStarBtn.textContent = '☆';
+        }
+        
+        updateNodes();
+        updateStarButtonState();
+        
+        showNotification(`Removed "${removedName}" from favorites`, 'info', 4000);
+        return;
+    }
+    
+    // Add to favorites
+    const name = tab.knownNodeName || prompt("Enter a name for this favorite:", `Node (${parsed.hash.substring(0, 8)}...)`);
+    if (!name) return;
+    
+    favoriteNodes.push({ hash: parsed.hash, name: name });
+    saveFavorites();
+    updateFavoritesDisplay();
+    
+    // NEW: Update node list star
+    const nodeStarBtn = document.querySelector(`[data-hash="${parsed.hash}"].star-btn`);
+    if (nodeStarBtn) {
+        nodeStarBtn.style.color = '#ffa657';
+        nodeStarBtn.textContent = '★';
+    }
+    
+    updateNodes();
+    updateStarButtonState();
+
+    showNotification(`Added "${name}" to favorites!`, 'success', 4000);
+}
+
+function updateStarButtonState() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const starBtn = document.querySelector(`#${tab.id} .star-btn`);
+    if (!starBtn) return;
+    
+    if (tab.currentUrl) {
+        const parsed = parseNomadNetUrl(tab.currentUrl);
+        if (parsed && favoriteNodes.some(fav => fav.hash === parsed.hash)) {
+            starBtn.classList.add('favorited');
+            starBtn.title = 'Remove from favorites';
+        } else {
+            starBtn.classList.remove('favorited');
+            starBtn.title = 'Add current page to favorites';
+        }
+    }
+}
+
+function showAddFavoriteDialog() {
+    const input = prompt("Enter NomadNet address (hash:/path/to/page.mu or just hash for node):");
+    if (!input) return;
+    
+    let hash, name;
+    
+    if (input.includes(':')) {
+        const parsed = parseNomadNetUrl(input);
+        if (parsed) {
+            hash = parsed.hash;
+            name = prompt("Enter a name for this favorite:", `Custom Node (${hash.substring(0, 8)}...)`);
+        } else {
+            showNotification(
+                "Invalid URL format. Please use: hash:/path or just hash",
+                'error',
+                5000
+            );
+            return;
+        }
+    } else if (input.match(/^[a-fA-F0-9]{32}$/)) {
+        hash = input;
+        name = prompt("Enter a name for this favorite:", `Custom Node (${hash.substring(0, 8)}...)`);
+    } else {
+        showNotification(
+            "Invalid format. Please enter a 32-character hash or full NomadNet URL",
+            'error',
+            5000
+        );
+        return;
+    }
+
+    if (!name) return;
+
+    if (favoriteNodes.some(fav => fav.hash === hash)) {
+        showNotification(
+            "This node is already in your favorites",
+            'warning',
+            4000
+        );
+        return;
+    }
+    
+    favoriteNodes.push({ hash: hash, name: name });
+    saveFavorites();
+    updateFavoritesDisplay();
+    updateNodes(); 
+}
+
+function addFavoriteFromUrl() {
+    const tab = getActiveTab();
+    if (!tab || !tab.currentUrl) {
+        showNotification(
+            "No current page to add to favorites",
+            'warning',
+            4000
+        );
+        return;
+    }
+   
+    const parsed = parseNomadNetUrl(tab.currentUrl);
+    if (!parsed) {
+        showNotification(
+            "Cannot parse current URL",
+            'error',
+            4000
+        );
+        return;
+    }
+   
+    const name = prompt("Enter a name for this favorite:", tab.knownNodeName || `Node (${parsed.hash.substring(0, 8)}...)`);
+    if (!name) return;
+   
+    if (favoriteNodes.some(fav => fav.hash === parsed.hash)) {
+        showNotification(
+            "This node is already in your favorites",
+            'warning',
+            4000
+        );
+        return;
+    }
+    
+    favoriteNodes.push({ hash: parsed.hash, name: name });
+    saveFavorites();
+    updateFavoritesDisplay();
+    
+    // ADD: Update node list star
+    const nodeStarBtn = document.querySelector(`[data-hash="${parsed.hash}"].star-btn`);
+    if (nodeStarBtn) {
+        nodeStarBtn.style.color = '#ffa657';
+        nodeStarBtn.textContent = '★';
+    }
+    
+    updateNodes();
+    
+    // ADD: Update nav bar star button state
+    updateStarButtonState();
+
+    showNotification(
+        `Added "${name}" to favorites!`,
+        'success',
+        4000
+    );
+}
+
+// Navigation bar
+
+function navigateBackTab() {
+    const tab = getActiveTab();
+    if (tab && tab.historyIndex > 0) {
+        tab.historyIndex--;
+        const url = tab.navigationHistory[tab.historyIndex];
+        tab.setUrl(url);
+        navigateToUrlInternalTab(url, false);
+        tab.updateNavigationButtons();
+    }
+}
+
+function navigateForwardTab() {
+    const tab = getActiveTab();
+    if (tab && tab.historyIndex < tab.navigationHistory.length - 1) {
+        tab.historyIndex++;
+        const url = tab.navigationHistory[tab.historyIndex];
+        tab.setUrl(url);
+        navigateToUrlInternalTab(url, false);
+        tab.updateNavigationButtons();
+    }
+}
+
+function refreshPageTab() {
+    const tab = getActiveTab();
+    if (tab && tab.currentUrl) {
+        navigateToUrlInternalTab(tab.currentUrl, false);
+    }
+}
+
+function navigateToUrlTab() {
+    const tab = getActiveTab();
+    if (tab) {
+        const addressBar = document.querySelector(`#${tab.id} .address-bar`);
+        if (addressBar) {
+            const url = addressBar.value.trim();
+            if (!url) {
+                showNotification('Please enter a URL in the address bar', 'warning', 3000);
+                return;
+            }
+            navigateToUrlInternalTab(url, true);
+        }
+    }
+}
+
+function handleAddressBarEnterTab(event) {
+    if (event.key === 'Enter') {
+        navigateToUrlTab();
+    }
+}
+
+async function navigateToUrlInternalTab(url, addHistory = true) {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const parsed = parseNomadNetUrl(url);
+    if (!parsed) {
+        showNotification(
+            'Invalid NomadNet URL format.<br><br><strong>Examples:</strong><br>• abcd1234...:/page/index.mu<br>• nomadnetwork://abcd1234.../page/index.mu',
+            'error',
+            6000
+        );
+        return;
+    }
+
+    if (addHistory) {
+        tab.addToHistory(url);
+    }
+
+    tab.setUrl(url);
+    
+    try {
+        const response = await fetch('/api/nodes');
+        const nodes = await response.json();
+        cachedNodes = nodes;
+
+    } catch (error) {
+        console.warn('Failed to refresh cached nodes:', error);
+    }
+
+    if (parsed.formData && Object.keys(parsed.formData).length > 0) {
+        console.log('URL contains parameters, using POST method:', parsed.formData);
+        fetchPageByUrlTabWithFormData(parsed.hash, parsed.path, url, parsed.formData, false); // false = URL params (var_)
+    } else {
+        console.log('No parameters, using GET method');
+        fetchPageByUrlTab(parsed.hash, parsed.path, url);
+    }
+    
+    updateStarButtonState();
+}
+
+function toggleViewTab() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const content = document.querySelector(`#${tab.id} .page-content`);
+    const toggle = document.querySelector(`#${tab.id} .view-toggle`);
+    const asciiSwitch = document.querySelector(`#${tab.id} .ascii-switch`);
+    
+    if (tab.isRawView) {
+        // Switching back to rendered view
+        const renderedHtml = parseMicronContent(tab.currentRawContent);
+        content.innerHTML = renderedHtml;
+        content.className = 'page-content';
+        
+        // Restore the ASCII optimization state if it was enabled
+        if (tab.asciiOptimized) {
+            content.classList.add('ascii-optimized');
+        }
+        
+        addClickHandlersToCurrentTab();
+        
+        toggle.textContent = 'Raw Page';
+        tab.isRawView = false;
+        
+        // Re-enable ASCII switch
+        if (asciiSwitch) {
+            asciiSwitch.disabled = false;
+        }
+    } else {
+        // Switching to raw view
+        content.innerHTML = escapeHtml(tab.currentRawContent);
+        content.className = 'page-content raw';
+        toggle.textContent = 'Rendered';
+        tab.isRawView = true;
+        
+        // Disable ASCII switch in raw view
+        if (asciiSwitch) {
+            asciiSwitch.disabled = true;
+        }
+    }
+}
+
+// Notification system
+function showNotification(message, type = 'info', duration = 4000, stackPosition = null) {
+    const notification = document.createElement('div');
+    
+    const styles = {
+        info: { bg: '#0969da', color: 'white' },
+        warning: { bg: '#fb8500', color: 'white' },
+        error: { bg: '#da3633', color: 'white' },
+        success: { bg: '#238636', color: 'white' }
+    };
+    
+    const style = styles[type] || styles.info;
+
+    let bottomPosition = '40px';
+    if (stackPosition !== null) {
+        bottomPosition = `${40 + (stackPosition * 90)}px`; 
+    }
+    
+    notification.style.cssText = `
+        position: fixed; bottom: ${bottomPosition}; right: 50px; z-index: 10000;
+        background: ${style.bg}; color: ${style.color}; 
+        padding: 12px 16px; border-radius: 6px; font-size: 13px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 350px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.4; transition: opacity 0.3s ease;
+    `;
+    notification.innerHTML = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, duration);
+    
+    return notification;
+}
+
+function showCurrentNodeInfo() {
+    const tab = getActiveTab();
+    if (!tab || !tab.selectedNode) {
+        showNotification(
+            'No current node selected',
+            'warning',
+            4000
+        );
+        return;
+    }
+
+    const nodeHash = tab.selectedNode;
+    const nodeName = tab.knownNodeName || getNodeName(nodeHash);
+    
+    // Get node data from cached nodes
+    const nodeData = cachedNodes.find(n => n.hash === nodeHash);
+    
+    if (nodeData) {
+        showNodeInfo(
+            nodeData.hash, 
+            nodeData.name, 
+            nodeData.last_seen, 
+            nodeData.app_data_length, 
+            nodeData.announce_count, 
+            nodeData.last_seen_relative
+        );
+    } else {
+        showNotification(
+            `Node ${nodeName} info not available`,
+            'warning',
+            4000
+        );
+    }
+}
+
+function showConfirmDialog(message, onConfirm, onCancel = null) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10001;
+        background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+    `;
+    
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: #161b22; border: 2px solid #30363d; color: #e6edf3;
+        padding: 20px; border-radius: 8px; max-width: 400px; min-width: 300px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    `;
+    
+    dialog.innerHTML = `
+        <div style="margin-bottom: 16px; line-height: 1.5; font-size: 14px;">${message}</div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button id="cancel-btn" style="
+                background: #6e7681; color: white; border: none; 
+                padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px;
+            ">Cancel</button>
+            <button id="confirm-btn" style="
+                background: #238636; color: white; border: none; 
+                padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px;
+            ">Open</button>
+        </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    dialog.querySelector('#confirm-btn').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        onConfirm();
+    });
+    
+    dialog.querySelector('#cancel-btn').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        if (onCancel) onCancel();
+    });
+    
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+            if (onCancel) onCancel();
+        }
+    });
+    
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.removeEventListener('keydown', escapeHandler);
+            if (overlay.parentNode) {
+                document.body.removeChild(overlay);
+                if (onCancel) onCancel();
+            }
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
+function addClickHandlersToCurrentTab() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const links = document.querySelectorAll(`#${tab.id} .page-content a`);
+    
+    function handleClick(event) {
+        event.preventDefault();
+        const href = this.getAttribute('href');
+        const action = this.getAttribute('data-action');
+        const destination = this.getAttribute('data-destination');
+        const fields = this.getAttribute('data-fields');
+        
+        console.log('Link clicked, href:', href, 'destination:', destination, 'fields:', fields);
+        
+        // Check if this is a link with fields specification
+        if (fields && destination) {
+            console.log('Detected link with fields specification');
+            
+            // Parse the fields to determine if it's a form submission or URL parameters
+            const fieldsList = fields.split('|').filter(f => f.trim());
+            
+            // Check if any field references form inputs:
+            // - Contains "*" (wildcard for all form fields)
+            // - Contains field names without "=" (references to form inputs)
+            const hasFormFieldReferences = fieldsList.some(field => {
+                const trimmed = field.trim();
+                return trimmed === '*' || (!trimmed.includes('=') && trimmed.length > 0);
+            });
+            
+            if (hasFormFieldReferences) {
+                // This is a form submission - references actual form fields
+                console.log('Link references form fields, treating as form submission');
+                handleFormSubmit(destination, fields);
+                return;
+            } else {
+                // Only static parameters (like "var=value"), treat as URL navigation
+                console.log('Link has only static parameters, constructing URL');
+                let urlWithParams = destination;
+                if (fields) {
+                    urlWithParams += '`' + fields.replace(/\|/g, '|');
+                }
+                navigateToLinkTab(urlWithParams);
+                return;
+            }
+        }
+
+        if ((destination && destination.includes(':/file/')) || (href && href.includes(':/file/'))) {
+            const fileUrl = destination || href;
+            this.setAttribute('href', fileUrl);
+            handleFileClick.call(this, event);
+            return;
+        }
+        
+        // Check if this is a NomadNet URL with parameters (even if it contains HTTP)
+        const urlToCheck = destination || href;
+        if (isNomadNetUrlWithParams(urlToCheck)) {
+            console.log('Detected NomadNet URL with parameters:', urlToCheck);
+            navigateToLinkTab(urlToCheck);
+            return;
+        }
+        
+        // Handle other link types with notifications
+        if (destination && destination.includes('lxmf@')) {
+            const lxmfAddress = destination.match(/lxmf@[a-fA-F0-9]+/)?.[0] || destination;
+            
+            showNotification(
+                "This is an LXMF address. Use official LXMF clients to open this link and chat with the peer (MeshChat, Sideband).",
+                'warning',
+                7000,
+                1
+            );
+            
+            navigator.clipboard.writeText(lxmfAddress).then(() => {
+                setTimeout(() => {
+                    showNotification(
+                        `LXMF address copied to clipboard!<br><br><strong>${lxmfAddress}</strong>`,
+                        'success',
+                        6500,
+                        0
+                    );
+                }, 500); 
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = lxmfAddress;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                setTimeout(() => {
+                    showNotification(
+                        `LXMF address copied to clipboard!<br><br><strong>${lxmfAddress}</strong>`,
+                        'success',
+                        4000,
+                        1
+                    );
+                }, 100);
+            });
+            return;
+        }
+
+        if (destination && destination.includes('[')) {
+            showNotification(
+                "Error! This is not a valid link or address!",
+                'error'
+            );
+            return;
+        }
+
+        // Now check for standalone HTTP URLs (not part of NomadNet URLs)
+        if (destination && isStandaloneHttpUrl(destination)) {
+            let httpUrl = destination;
+            if (destination.startsWith('nomadnetwork://')) {
+                httpUrl = destination.replace('nomadnetwork://', '');
+            }
+            
+            showConfirmDialog(
+                `Open HTTP/HTTPS URL in a new window?<br><br><strong>URL:</strong> ${httpUrl}`,
+                () => {
+                    window.open(httpUrl, '_blank', 'noopener,noreferrer');
+                }
+            );
+            return;
+        }
+        
+        const urlToNavigate = destination || href;
+        if (urlToNavigate) {
+            navigateToLinkTab(urlToNavigate);
+        }
+    }
+    
+    links.forEach(link => {
+        link.addEventListener('click', handleClick);
+    });
+    
+    addFileDownloadHandlers();
+}
+
+function isNomadNetUrlWithParams(url) {
+    // Check if it's a NomadNet URL format with backtick parameters
+    // Examples: hash:/page/web.mu`url=https://example.com
+    //          /page/web.mu`url=https://example.com
+    
+    if (!url) return false;
+    
+    // Check for backtick indicating parameters
+    if (url.includes('`')) {
+        // Split at backtick to get the base path
+        const basePath = url.split('`')[0];
+        
+        // Check if base path looks like a NomadNet URL
+        return (
+            basePath.match(/^[a-fA-F0-9<>:]{32,}[:\/]/) ||  // Full hash format
+            basePath.startsWith('/page/') ||                 // Relative page path
+            basePath.startsWith(':') ||                      // Relative with colon
+            basePath.match(/\.mu$/)                          // Ends with .mu
+        );
+    }
+    
+    return false;
+}
+
+function isStandaloneHttpUrl(url) {
+    // Check if it's a standalone HTTP URL (not part of NomadNet parameters)
+    if (!url) return false;
+    
+    // If it contains a backtick, it's likely a NomadNet URL with parameters
+    if (url.includes('`')) {
+        return false;
+    }
+    
+    // Check for HTTP/HTTPS URLs
+    return url.includes('http://') || url.includes('https://');
+}
+
+function navigateToLinkTab(url, addHistory = true) {
+    const tab = getActiveTab();
+    if (!tab) return;
+   
+    const parsedCurrent = parseNomadNetUrl(tab.currentUrl);
+    if (!parsedCurrent) {
+        showNotification(
+            'Invalid NomadNet URL format.<br><br><strong>Examples:</strong><br>• abcd1234...:/page/index.mu<br>• nomadnetwork://abcd1234.../page/index.mu',
+            'error',
+            6000
+        );
+        return;
+    }
+    
+    let parsed = parseNomadNetUrl(url);
+    if (!parsed) {
+        if (url.startsWith(':')) {
+            const relativePath = url.substring(1);
+            const fullUrl = `${parsedCurrent.hash}:${relativePath}`;
+            console.log('Constructed full URL from relative:', fullUrl);
+            parsed = parseNomadNetUrl(fullUrl);
+            url = fullUrl; 
+        } else if (url.startsWith('/')) {
+            const fullUrl = `${parsedCurrent.hash}:${url}`;
+            console.log('Constructed full URL from path:', fullUrl);
+            parsed = parseNomadNetUrl(fullUrl);
+            url = fullUrl; 
+        } else {
+            const fullUrl = `${parsedCurrent.hash}:/${url}`;
+            console.log('Constructed full URL from relative path:', fullUrl);
+            parsed = parseNomadNetUrl(fullUrl);
+            url = fullUrl; 
+        }
+    }
+    
+    if (!parsed) {
+        console.error('Failed to parse URL after all attempts:', url);
+        return;
+    }
+    
+    if (addHistory) {
+        tab.addToHistory(url);
+    }
+    
+    console.log('Final parsed result:', parsed);
+    console.log('Final URL being used:', url);
+   
+    tab.setUrl(url);
+    
+    // Check if we have form data - these are URL parameters, NOT form submissions
+    if (parsed.formData && Object.keys(parsed.formData).length > 0) {
+        console.log('URL contains parameters (from link), submitting with var_ prefix:', parsed.formData);
+        fetchPageByUrlTabWithFormData(parsed.hash, parsed.path, url, parsed.formData, false); // false = URL params
+    } else {
+        fetchPageByUrlTab(parsed.hash, parsed.path, url);
+    }
+}
+
+function navigateHome() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const currentParsed = parseNomadNetUrl(tab.currentUrl);
+    if (!currentParsed) {
+        showNotification(
+            'No current node - please browse to a node first',
+            'warning',
+            4000
+        );
+        return;
+    }
+    
+    const homeUrl = `${currentParsed.hash}:/page/index.mu`;
+    console.log('Navigating to home:', homeUrl);
+    
+    const addressBar = document.querySelector(`#${tab.id} .address-bar`);
+    if (addressBar) addressBar.value = homeUrl;
+    
+    navigateToUrlInternalTab(homeUrl, true);
+}
+
+function addHomeButtonToExistingTabs() {
+    document.querySelectorAll('.nav-controls').forEach(navControls => {
+        if (!navControls.querySelector('.home-btn')) {
+            const refreshBtn = navControls.querySelector('.nav-btn:nth-child(3)');
+            const homeBtn = document.createElement('button');
+            homeBtn.className = 'nav-btn home-btn';
+            homeBtn.onclick = navigateHome;
+            homeBtn.title = 'Go to home page';
+            homeBtn.textContent = '🏠';
+            refreshBtn.insertAdjacentElement('afterend', homeBtn);
+        }
+    });
+}
+
+// Fingerprint functions system
+
+function sendFingerprintToNode(hash, name) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10001;
+        background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+    `;
+    
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: #161b22; border: 2px solid #30363d; color: #e6edf3;
+        padding: 20px; border-radius: 8px; max-width: 400px; min-width: 300px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    `;
+    
+    dialog.innerHTML = `
+        <div style="margin-bottom: 16px; line-height: 1.5; font-size: 14px;">
+            Send your identity fingerprint to this node?<br><br>
+            <strong>Node:</strong> ${name}<br>
+            <strong>Hash:</strong> ${hash}<br><br>
+            This will transmit your identity directly to the remote host. The node operator will be able to see your RNS identity hash and LXMF address.
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button id="cancel-btn" style="
+                background: #6e7681; color: white; border: none; 
+                padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px;
+            ">Cancel</button>
+            <button id="send-btn" style="
+                background: #7c3aed; color: white; border: none; 
+                padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px;
+            ">Send</button>
+        </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    dialog.querySelector('#send-btn').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        performFingerprintSend(hash, name);
+    });
+    
+    dialog.querySelector('#cancel-btn').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+    });
+    
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    });
+    
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.removeEventListener('keydown', escapeHandler);
+            if (overlay.parentNode) {
+                document.body.removeChild(overlay);
+            }
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
+function performFingerprintSend(hash, name) {
+    // Show immediate feedback
+    const notification = showNotification(
+        `Sending identity fingerprint to ${name}...<br>Please wait while your identity is transmitted.`,
+        'info',
+        10000  // Long duration since this might take time
+    );
+
+    fetch(`/api/fingerprint/${hash}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remove the sending notification
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+
+        if (data.status === 'success') {
+            showNotification(
+                `Identity fingerprint sent successfully to ${name}!<br><br><strong>Response:</strong> ${data.message || 'Identity transmitted'} <br><br>Page Reloaded!`,
+                'success',
+                7000
+            );
+            
+            // Reload the current page like MeshChat does
+            // This allows the remote node to show the identity data on refresh
+            setTimeout(() => {
+                refreshPageTab();
+            }, 1000);
+            
+        } else {
+            showNotification(
+                `Failed to send identity fingerprint to ${name}<br><br><strong>Error:</strong> ${data.error || 'Unknown error'}`,
+                'error',
+                8000
+            );
+        }
+    })
+    .catch(error => {
+        // Remove the sending notification
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+
+        console.error('Identity fingerprint send error:', error);
+        showNotification(
+            `Network error sending identity fingerprint to ${name}<br><br><strong>Error:</strong> ${error.message}`,
+            'error',
+            6000
+        );
+    });
+}
+
+function sendFingerprintToCurrentNode() {
+    const tab = getActiveTab();
+    if (!tab || !tab.selectedNode) {
+        showNotification(
+            'No current node selected for fingerprint',
+            'warning',
+            4000
+        );
+        return;
+    }
+
+    const nodeName = tab.knownNodeName || getNodeName(tab.selectedNode);
+    sendFingerprintToNode(tab.selectedNode, nodeName);
+}
+
+function fetchPageByUrlTab(hash, path, originalUrl) {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    if (tab.currentRequest) {
+        tab.currentRequest.abort();
+        tab.currentRequest = null;
+    }
+    
+    tab.selectedNode = hash;
+    tab.setLoading(true);
+
+    const nodeName = getNodeName(hash);
+    tab.knownNodeName = nodeName;
+    
+    const pageTitle = document.querySelector(`#${tab.id} .page-title`);
+    const pageUrl = document.querySelector(`#${tab.id} .page-url`);
+    const pageContent = document.querySelector(`#${tab.id} .page-content`);
+    const viewToggle = document.querySelector(`#${tab.id} .view-toggle`);
+    const addressBar = document.querySelector(`#${tab.id} .address-bar`);
+    
+    if (pageTitle) {
+        pageTitle.innerHTML = `<span class="label">Loading:</span> <span class="value">${nodeName}</span>`;
+    }
+    const pageDetails = document.querySelector(`#${tab.id} .page-details`);
+    if (pageDetails) {
+        pageDetails.innerHTML = `<span class="label">Page Path:</span> <span class="value">${path}</span> <span class="label">Full Address:</span> <span class="value">${originalUrl}</span>`;
+    }
+    if (pageContent) pageContent.innerHTML = `<div style="color: #58a6ff; text-align: center; padding: 40px; font-size: 16px;">Loading NomadNet page:<br><br><strong>${nodeName}</strong><br><br>Please wait...</div>`;
+    if (viewToggle) viewToggle.style.display = 'none';
+    if (addressBar) addressBar.value = originalUrl;
+    
+    // Only update tab title if this is the active tab
+    if (tab.id === activeTabId) {
+        tab.setTitle(`Loading ${nodeName}...`);
+    } else {
+        // Silently update without triggering display changes
+        tab.title = `Loading ${nodeName}...`;
+    }
+    
+    document.querySelectorAll('.node-item').forEach(item => item.classList.remove('selected'));
+    const nodeItem = document.querySelector(`[data-hash="${hash}"]`);
+    if (nodeItem) {
+        nodeItem.classList.add('selected');
+    }
+    
+    const controller = new AbortController();
+    tab.currentRequest = controller;
+
+    console.log('Sending request to server:', `/api/fetch/${hash}?path=${encodeURIComponent(path)}`);
+    console.log('Raw path before encoding:', path);
+
+    fetch(`/api/fetch/${hash}?path=${encodeURIComponent(path)}`, { signal: controller.signal })
+        .then(r => r.json())
+        .then(response => {
+            if (tab.currentRequest === controller) {
+                if (response.status === 'success') {
+                    tab.currentRawContent = response.content;
+                    tab.isRawView = false;
+                    
+                    const renderedHtml = parseMicronContent(response.content);
+                    if (pageContent) pageContent.innerHTML = renderedHtml;
+                    if (pageContent) pageContent.className = 'page-content';
+                    
+                    if (pageTitle) {
+                        pageTitle.innerHTML = `<span class="node-name">${nodeName}</span>`;
+                    }
+                    const pageDetails = document.querySelector(`#${tab.id} .page-details`);
+                    if (pageDetails) {
+                        pageDetails.innerHTML = `<span class="path-info">${path}</span> <span class="label">- Address:</span> <span class="address-info">${originalUrl}</span>`;
+                    }
+                    
+                    if (viewToggle) {
+                        viewToggle.style.display = 'block';
+                        viewToggle.textContent = 'Raw View';
+                    }
+
+                    // Show ASCII control
+                    const asciiControl = document.querySelector(`#${tab.id} .ascii-control`);
+                    if (asciiControl) {
+                        asciiControl.style.display = 'flex';
+                    }
+
+                    // Reset to default state
+                    const asciiSwitch = document.querySelector(`#${tab.id} .ascii-switch`);
+                    const asciiStatus = document.querySelector(`#${tab.id} .ascii-status`);
+                    if (asciiSwitch && asciiStatus) {
+                        asciiSwitch.checked = false;
+                        asciiStatus.textContent = 'Text Mode';
+                    }
+
+                    tab.asciiOptimized = false;
+
+                    // Auto-detect and apply
+                    const contentType = detectContentType(tab.currentRawContent);
+                    if (contentType === 'ascii') {
+                        asciiSwitch.checked = true;
+                        toggleAsciiOptimization();
+                        showNotification(
+                            '🎨 <strong>Page Mode Detected: ASCII Art</strong>',
+                            'success',
+                            3000
+                        );
+                    } else {
+                        showNotification(
+                            '📄 <strong>Page Mode Detected: TEXT</strong>',
+                            'success',
+                            3000
+                        );
+                    }
+
+                    // Only update title if this tab is still active
+                    if (tab.id === activeTabId) {
+                        tab.setTitle(nodeName);
+                    } else {
+                        // Silently update title without triggering display update
+                        tab.title = nodeName;
+                    }
+                    
+                    updateAutoReloadButton();
+                    addClickHandlersToCurrentTab();
+                    
+                } else {
+                    if (pageContent) pageContent.innerHTML = `<div class="error">Failed to load page: ${escapeHtml(response.error)}<br><br>This could be due to network issues or, more commonly, the node being offline / unreachable.<br><br>Check your connection and logs to ensure you are connected and script is running.<br><br>Send a ping to the remote host to check if it's alive or not.</div>`;
+                    if (pageTitle) pageTitle.textContent = `Error loading ${originalUrl}`;
+                    if (pageUrl) pageUrl.textContent = '';
+                    if (viewToggle) viewToggle.style.display = 'none';
+                    
+                    const asciiToggle = document.querySelector(`#${tab.id} .ascii-toggle`);
+                    if (asciiToggle) {
+                        asciiToggle.style.display = 'none';
+
+                    updateAutoReloadButton();
+                    }
+
+                    // Only update title if this tab is still active
+                    if (tab.id === activeTabId) {
+                        tab.setTitle('Error');
+                    } else {
+                        tab.title = 'Error';
+                    }
+                }
+                tab.currentRequest = null;
+                tab.setLoading(false);
+            }
+        })
+        .catch(err => {
+            if (tab.currentRequest === controller && !controller.signal.aborted) {
+                if (pageContent) pageContent.innerHTML = `<div class="error">Network error: ${escapeHtml(err.message)}<br><br>Please check your connection and try again.</div>`;
+                if (pageTitle) pageTitle.textContent = `Error loading ${originalUrl}`;
+                if (pageUrl) pageUrl.textContent = '';
+                if (viewToggle) viewToggle.style.display = 'none';
+                tab.currentRequest = null;
+                tab.setLoading(false);
+                
+                // Only update title if this tab is still active
+                if (tab.id === activeTabId) {
+                    tab.setTitle('Network Error');
+                } else {
+                    tab.title = 'Network Error';
+                }
+            }
+        });
+}
+
+        function getNodeName(hash) {
+            console.log('Looking for hash:', hash);
+            console.log('Cached nodes available:', cachedNodes.length);
+
+            const nodeItem = document.querySelector(`[data-hash="${hash}"]`);
+            if (nodeItem) {
+                const nodeName = nodeItem.getAttribute('data-name');
+                console.log('Getting node name for hash:', hash, '-> Name (from DOM):', nodeName);
+                return nodeName;
+            }
+
+            const cachedNode = cachedNodes.find(node => {
+                console.log('Comparing:', hash, 'vs', node.hash);
+                return node.hash === hash;
+            });
+    
+            if (cachedNode) {
+                console.log('Getting node name for hash:', hash, '-> Name (from cache):', cachedNode.name);
+                return cachedNode.name;
+            }
+    
+            console.log('Getting node name for hash:', hash, '-> Name (fallback):', hash);
+            return hash;
+        }
+
+        async function initializeMicronParser() {
+            try {
+                console.log('Initializing MicronParser...');
+                
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './script/micron-parser_original.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                if (typeof window.MicronParser === 'function') {
+                    micronParser = new window.MicronParser(true, true);
+                    isOriginalParser = true;
+                    console.log('✅ Original MicronParser loaded successfully');
+                } else {
+                    throw new Error('MicronParser not available');
+                }
+            } catch (error) {
+                console.warn('⚠️ Original parser failed, using fallback:', error.message);
+                micronParser = createFallbackParser();
+                isOriginalParser = false;
+            }
+        }
+
+        function createFallbackParser() {
+            return {
+                convertMicronToHtml: function(text) {
+                    let html = text;
+
+                    html = html.replace(/`!([^`]*)`!/g, '<strong style="color: #58a6ff; font-weight: bold;">$1</strong>');
+                    html = html.replace(/`\*([^`]*)`\*/g, '<em style="color: #ffa657; font-style: italic;">$1</em>');
+                    html = html.replace(/`_([^`]*)`_/g, '<span style="text-decoration: underline; color: #79c0ff;">$1</span>');
+                    html = html.replace(/^>([^\n]*)/gm, '<div style="color: #58a6ff; font-weight: bold; font-size: 18px; margin: 16px 0 8px 0; border-bottom: 1px solid #30363d; padding-bottom: 4px;">$1</div>');
+                    html = html.replace(/\n/g, '<br>');
+
+                    html = escapeHtml(html);
+                    
+                    return `<div style="font-family: 'Courier New', 'Liberation Mono', 'DejaVu Sans Mono', Courier, monospace; line-height: 1.6;">${html}</div>`;
+                }
+            };
+        }
+
+        function parseMicronContent(content) {
+            if (!content) return '';
+            
+            console.log('Parsing Micron content, length:', content.length);
+            
+            if (micronParser) {
+                let html = micronParser.convertMicronToHtml(content);
+                
+                html = addFormFieldSupport(html);
+                
+                html = addClickHandlersToLinks(html);
+                
+                console.log('Micron parsing complete');
+                return html;
+            } else {
+                console.log('No parser available, returning escaped HTML');
+                return escapeHtml(content);
+            }
+        }
+
+        function addFormFieldSupport(html) {
+            console.log('Searching for form elements in HTML...');
+            
+            if (html.includes('ref')) {
+                console.log('Found "ref" in HTML');
+                const refIndex = html.indexOf('ref');
+                console.log('Context around "ref":', html.substring(refIndex - 100, refIndex + 100));
+            }
+            
+            if (html.includes('Search')) {
+                console.log('Found "Search" in HTML');
+                const searchIndex = html.indexOf('Search');
+                console.log('Context around "Search":', html.substring(searchIndex - 100, searchIndex + 100));
+            }
+            
+            if (html.includes('version')) {
+                console.log('Found "version" in HTML');
+                const versionIndex = html.indexOf('version');
+                console.log('Context around "version":', html.substring(versionIndex - 100, versionIndex + 100));
+            }
+            
+            const linkMatches = html.match(/<a[^>]*>.*?<\/a>/g);
+            if (linkMatches) {
+                console.log('Found links:', linkMatches);
+            }
+            
+            return html;
+        }
+
+        function handleFormSubmit(path, fieldsSpec) {
+            const tab = getActiveTab();
+            if (!tab) return;
+            
+            console.log('handleFormSubmit called with path:', path, 'fields:', fieldsSpec);
+            
+            const currentParsed = parseNomadNetUrl(tab.currentUrl);
+            if (!currentParsed) {
+                showNotification('Cannot submit form - no current node context', 'error', 4000);
+                return;
+            }
+            
+            console.log('Current node hash:', currentParsed.hash);
+            
+            // Parse the path to check if it already contains a hash
+            let fullPath = path;
+            let targetHash = currentParsed.hash;
+            
+            const hashMatch = path.match(/^([a-fA-F0-9]{32}):(.*)/);
+            if (hashMatch) {
+                targetHash = hashMatch[1];
+                fullPath = hashMatch[2];
+                console.log('Path already contains hash:', targetHash);
+            } else if (path.startsWith(':')) {
+                fullPath = path.substring(1);
+            } else if (!path.startsWith('/')) {
+                fullPath = '/' + path;
+            }
+            
+            let cleanPath = fullPath;
+            let urlStaticParams = {};
+            
+            if (fullPath.includes('`')) {
+                const [pathPart, paramsPart] = fullPath.split('`', 2);
+                cleanPath = pathPart;
+                
+                if (paramsPart) {
+                    const params = paramsPart.split('|');
+                    params.forEach(param => {
+                        if (param.includes('=')) {
+                            const [key, value] = param.split('=', 2);
+                            urlStaticParams[key.trim()] = value.trim();
+                        }
+                    });
+                }
+            }
+            
+            console.log('URL static params from path:', urlStaticParams);
+            console.log('Clean path:', cleanPath);
+            console.log('Target hash:', targetHash);
+            
+            // Collect form data from inputs
+            const formData = {};
+            const inputs = document.querySelectorAll(`#${tab.id} .page-content input[name], #${tab.id} .page-content textarea[name]`);
+            
+            inputs.forEach(input => {
+                if (input.type === 'radio' && !input.checked) return;
+                if (input.type === 'checkbox') {
+                    formData[input.name] = input.checked ? (input.value || '1') : '0';
+                } else {
+                    formData[input.name] = input.value;
+                }
+            });
+            
+            console.log('Collected form data from inputs:', formData);
+            
+            // Process fieldsSpec
+            const fields = fieldsSpec.split('|').filter(f => f.trim());
+            let submitData = {};
+            const metadata = {}; // Track which params are static vs form fields
+            
+            // Add URL static params with metadata
+            for (const [key, value] of Object.entries(urlStaticParams)) {
+                submitData[key] = value;
+                metadata[key] = 'static';
+            }
+            
+            fields.forEach(field => {
+                const trimmedField = field.trim();
+                
+                if (trimmedField.includes('=')) {
+                    // Static assignment
+                    const [key, value] = trimmedField.split('=', 2);
+                    const k = key.trim();
+                    submitData[k] = value.trim();
+                    metadata[k] = 'static';
+                } else if (trimmedField === '*') {
+                    // Include all form fields
+                    for (const [key, value] of Object.entries(formData)) {
+                        submitData[key] = value;
+                        metadata[key] = 'field';
+                    }
+                } else if (formData.hasOwnProperty(trimmedField)) {
+                    // Include specific form field
+                    submitData[trimmedField] = formData[trimmedField];
+                    metadata[trimmedField] = 'field';
+                } else {
+                    console.warn(`Field '${trimmedField}' referenced but not found in form. Sending empty value.`);
+                    submitData[trimmedField] = '';
+                    metadata[trimmedField] = 'field';
+                }
+            });
+            
+            // Add metadata to submitData
+            submitData._meta = metadata;
+            
+            console.log('Final merged submit data:', submitData);
+            console.log('Metadata:', metadata);
+            
+            submitFormData(targetHash, cleanPath, submitData);
+        }
+
+        function submitFormData(nodeHash, path, data) {
+            const tab = getActiveTab();
+            if (!tab) return;
+            
+            console.log('submitFormData called with:', {nodeHash, path, data});
+            console.log('Data object size:', Object.keys(data).length, 'parameters');
+            
+            const cleanPath = path.startsWith(':') ? path.substring(1) : path;
+            const fullUrl = `${nodeHash}:${cleanPath}`;
+            
+            console.log('Final URL to navigate to:', fullUrl);
+            console.log('Form data to submit:', data);
+            
+            navigateToUrlInternalTabWithFormData(fullUrl, data, true); // true = form submission (field_)
+        }
+
+        function navigateToUrlInternalTabWithFormData(url, formData, addHistory = true) {
+            const tab = getActiveTab();
+            if (!tab) return;
+            
+            const parsed = parseNomadNetUrl(url);
+            if (!parsed) {
+                showNotification(
+                    'Invalid NomadNet URL format',
+                    'error',
+                    4000
+                );
+                return;
+            }
+
+            if (addHistory) {
+                tab.addToHistory(url);
+            }
+
+            tab.setUrl(url);
+            
+            fetchPageByUrlTabWithFormData(parsed.hash, parsed.path, url, formData, true); // true = form submission
+        }
+
+        function addClickHandlersToLinks(html) {
+            return html.replace(/<a([^>]*?)href=["']([^"']*?)["']([^>]*?)>/g, function(match, before, href, after) {
+                if (isNomadNetUrl(href)) {
+                    const url = normalizeNomadNetUrl(href);
+                    return `<a${before} href="#" class="nomadnet-link" onclick="navigateToNomadNetUrl('${url}'); return false;" title="Navigate to ${url}"${after}>`;
+                }
+                return match; 
+            });
+        }
+
+        function isNomadNetUrl(url) {
+            return url.match(/^(nomadnetwork:\/\/|[a-fA-F0-9<>:]{32,}[:\/])/);
+        }
+
+        function normalizeNomadNetUrl(url) {
+            if (url.startsWith('nomadnetwork://')) {
+                const match = url.match(/nomadnetwork:\/\/([a-fA-F0-9<>:]+)(\/.*)?/);
+                if (match) {
+                    const cleanHash = match[1].replace(/[<>:]/g, '');
+                    const path = match[2] || '/page/index.mu';
+                    return `${cleanHash}:${path}`;
+                }
+            }
+            return url;
+        }
+
+        function navigateToNomadNetUrl(url) {
+            console.log('Link clicked! Navigating to:', url);
+            const tab = getActiveTab();
+            if (tab) {
+                const addressBar = document.querySelector(`#${tab.id} .address-bar`);
+                if (addressBar) addressBar.value = url;
+                navigateToUrl();
+            }
+        }
+
+        function parseNomadNetUrl(url) {
+            console.log('Parsing URL:', url);
+
+            // Remove nomadnetwork:// prefix if present
+            url = url.replace(/^nomadnetwork:\/\//, '');
+
+            // Match hash and everything after the colon/slash
+            const match = url.match(/^([a-fA-F0-9<>:]{32,})(?:[:\/](.*))?$/);
+            if (match) {
+                const cleanHash = match[1].replace(/[<>:]/g, '');
+                let fullPath = match[2];
+
+                if (!fullPath || fullPath === '') {
+                    fullPath = 'page/index.mu';
+                }
+
+                let path = fullPath;
+                let formData = {};
+
+                // Check if there are backtick parameters
+                if (fullPath.includes('`')) {
+                    // Find the LAST occurrence of .mu to split path from parameters
+                    const muIndex = fullPath.lastIndexOf('.mu');
+                    
+                    if (muIndex !== -1) {
+                        // Check if there's a backtick after .mu
+                        const afterMu = fullPath.substring(muIndex + 3); // +3 for ".mu"
+                        
+                        if (afterMu.startsWith('`')) {
+                            // Split at this point
+                            path = fullPath.substring(0, muIndex + 3); // Include .mu
+                            const varsPart = afterMu.substring(1); // Remove leading backtick
+                            
+                            if (varsPart) {
+                                // Split by pipe to get individual parameters
+                                const vars = varsPart.split('|');
+                                for (const varPair of vars) {
+                                    if (varPair.includes('=')) {
+                                        const [key, value] = varPair.split('=', 2);
+                                        formData[key.trim()] = value.trim();
+                                    }
+                                }
+                            }
+                        } else {
+                            // No backtick after .mu, treat entire thing as path
+                            path = fullPath;
+                        }
+                    } else {
+                        // No .mu found, use original splitting logic
+                        const [pathPart, varsPart] = fullPath.split('`', 2);
+                        path = pathPart;
+                        
+                        if (varsPart) {
+                            const vars = varsPart.split('|');
+                            for (const varPair of vars) {
+                                if (varPair.includes('=')) {
+                                    const [key, value] = varPair.split('=', 2);
+                                    formData[key] = value;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Ensure path starts with /
+                if (!path.startsWith('/')) {
+                    path = '/' + path;
+                }
+
+                console.log('Parsed URL - Hash:', cleanHash.substring(0, 16) + '...', 'Path:', path);
+                if (Object.keys(formData).length > 0) {
+                    console.log('Form data from URL:', formData);
+                }
+                
+                return { hash: cleanHash, path: path, formData: formData };
+            }
+
+            console.log('Failed to parse URL:', url);
+            return null;
+        }
+
+        function addToHistory(url) {
+            const tab = getActiveTab();
+            if (tab) {
+                tab.addToHistory(url);
+            }
+        }
+
+        function updateNavigationButtons() {
+            const tab = getActiveTab();
+            if (tab) {
+                tab.updateNavigationButtons();
+            }
+        }
+
+        function navigateBack() {
+            navigateBackTab();
+        }
+
+        function navigateForward() {
+            navigateForwardTab();
+        }
+
+        function refreshPage() {
+            refreshPageTab();
+        }
+
+        function handleAddressBarEnter(event) {
+            if (event.key === 'Enter') {
+                navigateToUrlTab();
+            }
+        }
+
+        function navigateToUrl() {
+            navigateToUrlTab();
+        }
+
+        function navigateToUrlInternal(url, addHistory = true) {
+            navigateToUrlInternalTab(url, addHistory);
+        }
+
+        function navigateToLink(url, addHistory = true) {
+            navigateToLinkTab(url, addHistory);
+        }
+
+        function fetchPageByUrl(hash, path, originalUrl) {
+            fetchPageByUrlTab(hash, path, originalUrl);
+        }
+
+        function toggleView() {
+            toggleViewTab();
+        }
+
+        function updateNodes() {
+            fetch('/api/nodes')
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.json();
+                })
+                .then(nodes => {
+                    const nodesHash = JSON.stringify(nodes.map(n => ({
+                        hash: n.hash, 
+                        name: n.name,
+                        app_data_length: n.app_data_length
+                    })));
+                    
+                    if (nodesHash === lastNodesHash) {
+                        nodes.forEach(node => {
+                            const nodeItem = document.querySelector(`[data-hash="${node.hash}"]`);
+                            if (nodeItem) {
+                                const infoDiv = nodeItem.querySelector('.node-info');
+                                if (infoDiv) {
+                                    infoDiv.textContent = `📊 ${node.app_data_length} bytes announced • ${node.last_seen_relative}`;
+                                }
+                            }
+                        });
+                        cachedNodes = nodes;
+                        document.getElementById('node-count').textContent = nodes.length;
+                        return;
+                    }
+                    
+                    lastNodesHash = nodesHash;
+                    cachedNodes = nodes;
+                    
+                    const list = document.getElementById('node-list');
+                    const searchTerm = document.getElementById('node-search').value.toLowerCase();
+
+                    if (nodes.length === 0) {
+                        list.innerHTML = '<div style="text-align: center; padding: 20px; color: #7d8590; font-size: 12px;">Scanning for NomadNet Nodes...</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    nodes.forEach((node, i) => {
+                        const isFavorite = favoriteNodes.some(fav => fav.hash === node.hash);
+                        const starIcon = isFavorite ? '★' : '☆';
+                        const starColor = isFavorite ? '#ffa657' : '#7d8590';
+                    
+                        html += `
+                            <div class="node-item" id="node-${i}" data-hash="${escapeHtml(node.hash)}" data-name="${escapeHtml(node.name)}" style="padding: 6px 8px; margin-bottom: 4px;">
+                                <div style="position: relative;">
+                                    <div style="position: absolute; top: 0; right: 0; display: flex; flex-direction: column; z-index: 10;">
+                                        <button class="info-btn" 
+                                                data-hash="${node.hash}" 
+                                                data-name="${escapeHtml(node.name)}" 
+                                                data-last-seen="${node.last_seen}" 
+                                                data-data-length="${node.app_data_length}" 
+                                                data-announce-count="${node.announce_count}" 
+                                                data-relative-time="${node.last_seen_relative}"
+                                                style="background: none; border: none; color: #58a6ff; cursor: pointer; font-size: 15px; padding: 1px; margin-bottom: 1px;" 
+                                                title="Show node information">ℹ️</button>
+                                        <button class="star-btn" 
+                                                data-hash="${node.hash}" 
+                                                data-name="${escapeHtml(node.name)}"
+                                                style="background: none; border: none; color: ${starColor}; cursor: pointer; font-size: 26px; padding: 2px;"
+                                                title="Toggle favorite">${starIcon}</button>
+                                    </div>
+                                    <div class="node-title" style="font-size: 12px; line-height: 1.2; margin-bottom: 4px;" title="NomadNet Node Name">🖥️ ${escapeHtml(node.name)}</div>
+                                    <div class="node-hash" style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;" title="Node Hash Address">
+                                        <span class="copy-icon" onclick="copyHashToClipboard('${node.hash}'); event.stopPropagation();" 
+                                            style="cursor: pointer; color: #7d8590; font-size: 12px; padding: 2px;" title="Copy hash to clipboard">📋</span>
+                                        <span>${node.hash}</span>
+                                    </div>
+                                    <div class="node-info" title="Announce info">📊 ${node.app_data_length} bytes announced • ${node.last_seen_relative}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    list.innerHTML = html;
+                    
+                    // Apply current sort and filter
+                    sortAndFilterNodes();
+                    
+                    document.getElementById('node-count').textContent = nodes.length;
+                    updateNodeSelection();
+                })
+                .catch(error => {
+                    console.warn('Nodes API error:', error);
+                });
+            updateStarButtonState();
+        }
+        function updateStatus() {
+            fetch('/api/status')
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.json();
+                })
+                .then(data => {
+                    document.getElementById('announce-count').textContent = data.total_announces;
+                })
+                .catch(error => {
+                    console.warn('Basic status API error:', error);
+                });
+            
+            fetch('/api/connection-status')
+                .then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r.json();
+                })
+                .then(data => {
+
+                    const wasInErrorState = statusFetchFailures >= maxStatusFailures;
+                    statusFetchFailures = 0;
+                    lastStatusFetch = Date.now();
+
+                    if (wasInErrorState) {
+                        console.log('Backend connection recovered! Status:', data.status);
+                    }
+
+                    updateConnectionStatus(data.status, data.message, data.color);
+                })
+                .catch(error => {
+                    statusFetchFailures++;
+                    const currentTime = Date.now();
+                    
+                    console.warn(`Connection status fetch failed (${statusFetchFailures}/${maxStatusFailures}):`, error);
+                    
+                    if (statusFetchFailures >= maxStatusFailures) {
+                        updateConnectionStatus('connerror', 'Error! Python script stopped?', 'red');
+                    } else {
+                        if (statusFetchFailures === 1) {
+                            updateConnectionStatus('waiting', 'Checking connection...', 'yellow');
+                        } else if (statusFetchFailures === 2) {
+                            updateConnectionStatus('waiting', 'Retrying connection check...', 'yellow');
+                        }
+                    }
+                });
+        }
+
+        function forceStatusUpdate() {
+            console.log('🔄 Forcing immediate status update...');            
+            statusFetchFailures = 0;            
+            updateStatus();
+        }
+
+        function updateConnectionStatus(status, message, color) {
+            const statusElement = document.getElementById('connection-status') || document.querySelector('.status-indicator');
+            if (statusElement) {
+                statusElement.className = `status-indicator ${status}`;
+                statusElement.innerHTML = `<strong style="color: ${getStatusColor(color)};"> ● ${message}</strong>`;
+            }
+        }
+
+        function getStatusColor(color) {
+            switch(color) {
+                case 'green': return '#40ed3a';
+                case 'yellow': return '#f59e0b'; 
+                case 'red': return '#ef4444';
+                default: return '#7d8590';
+            }
+        }
+        
+        function browseNode(hash, name) {
+            const url = `${hash}:/page/index.mu`;
+            console.log('Browsing node:', name, 'URL:', url);
+            
+            const currentTab = getActiveTab();
+            let targetTab;
+            
+            if (currentTab && currentTab.title === 'New Tab' && !currentTab.currentUrl) {
+                targetTab = currentTab;
+            } else {
+                targetTab = createNewTab();
+            }
+            
+            const addressBar = document.querySelector(`#${targetTab.id} .address-bar`);
+            if (addressBar) addressBar.value = url;
+            
+            targetTab.knownNodeName = name;
+            
+            navigateToUrlInternalTab(url, true);
+        }
+                
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+    function handleFileDownload(nodeHash, filePath) {
+        const startUrl = `/api/download/${nodeHash}/start?path=${encodeURIComponent(filePath)}`;
+        const filename = filePath.split('/').pop();
+        
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed; bottom: 60px; right: 60px; z-index: 10000;
+            background: #1a1a1a; border: 3px solid #333333; color: #ffffff;
+            padding: 16px 20px; border-radius: 0px; font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); min-width: 320px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+        
+        notification.innerHTML = `
+            <div>📁 Downloading ${filename}...</div>
+            <div style="margin: 8px 0; background: #333; height: 6px; border-radius: 3px; overflow: hidden;">
+                <div id="progress-bar" style="background: #58a6ff; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <div id="progress-text" style="font-size: 12px; color: #7d8590;">Connecting to node...</div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        const progressBar = notification.querySelector('#progress-bar');
+        const progressText = notification.querySelector('#progress-text');
+        
+        // Start the download
+        fetch(startUrl)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                const downloadId = data.download_id;
+                
+                // Poll for progress
+                const pollInterval = setInterval(() => {
+                    fetch(`/api/download/progress/${downloadId}`)
+                        .then(r => r.json())
+                        .then(progressData => {
+                            const progress = progressData.progress || 0;
+                            const status = progressData.status;
+                            
+                            progressBar.style.width = progress + '%';
+                            
+                            if (status === 'starting') {
+                                progressText.textContent = 'Connecting to node...';
+                            } else if (status === 'downloading') {
+                                progressText.textContent = `Downloading from network... ${progress.toFixed(1)}%`;
+                            } else if (status === 'complete') {
+                                clearInterval(pollInterval);
+                                progressText.textContent = 'Saving file...';
+                                
+                                // Download the completed file
+                                fetch(`/api/download/result/${downloadId}`)
+                                    .then(r => {
+                                        if (!r.ok) throw new Error('Download failed');
+                                        return r.blob();
+                                    })
+                                    .then(blob => {
+                                        progressBar.style.background = '#7c3aed';
+                                        progressText.textContent = 'Download completed!';
+                                        notification.querySelector('div').innerHTML = `✅ Downloaded ${filename}`;
+                                        
+                                        // Save file
+                                        const url = window.URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = filename;
+                                        link.click();
+                                        window.URL.revokeObjectURL(url);
+                                        
+                                        setTimeout(() => {
+                                            if (notification.parentNode) {
+                                                notification.parentNode.removeChild(notification);
+                                            }
+                                        }, 3000);
+                                    })
+                                    .catch(err => {
+                                        progressBar.style.background = '#ff7b72';
+                                        progressText.textContent = 'Save failed!';
+                                        console.error(err);
+                                    });
+                            } else if (status === 'error') {
+                                clearInterval(pollInterval);
+                                progressBar.style.background = '#ff7b72';
+                                progressText.textContent = 'Download failed!';
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Progress poll error:', err);
+                        });
+                }, 100); // Poll every 100ms
+            })
+            .catch(err => {
+                progressBar.style.background = '#ff7b72';
+                progressText.textContent = 'Connection error!';
+                notification.querySelector('div').innerHTML = `❌ ${err.message}`;
+                console.error(err);
+            });
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }        
+
+    function parseFileURL(url) {
+        
+        let nodeHash = '';
+        let filePath = '';
+        
+        if (url.startsWith('nomadnetwork://')) {
+            const parts = url.replace('nomadnetwork://', '').split(':');
+            nodeHash = parts[0] || '';
+            filePath = parts.slice(1).join(':');
+        } else if (url.includes(':/file/')) {
+            const parts = url.split(':');
+            nodeHash = parts[0];
+            filePath = parts.slice(1).join(':');
+        }
+        
+        return { nodeHash, filePath };
+    }
+
+    function addFileDownloadHandlers() {
+        const tab = getActiveTab();
+        if (!tab) return;
+        
+        const fileLinks = document.querySelectorAll(`#${tab.id} .page-content a[href*=":/file/"]`);
+        
+        fileLinks.forEach(link => {
+            link.removeEventListener('click', handleFileClick);
+            link.addEventListener('click', handleFileClick);
+        });
+    }
+
+    function handleFileClick(event) {
+        event.preventDefault();
+        const href = this.getAttribute('href');
+        const tab = getActiveTab();
+        
+        if (!tab) return;
+        
+        const parsed = parseFileURL(href);
+        let nodeHash = parsed.nodeHash;
+        let filePath = parsed.filePath;
+
+        if (!nodeHash && tab.selectedNode) {
+            nodeHash = tab.selectedNode;
+        }
+
+        if (!nodeHash && tab.currentUrl) {
+            const currentParsed = parseNomadNetUrl(tab.currentUrl);
+            if (currentParsed) {
+                nodeHash = currentParsed.hash;
+            }
+        }
+        
+        if (nodeHash && filePath) {
+            console.log(`File link clicked: ${filePath} from ${nodeHash.substring(0, 16)}...`);
+            handleFileDownload(nodeHash, filePath);
+        } else {
+            console.warn('Could not parse file URL:', href);
+            showNotification(
+                'Unable to download file - invalid URL format',
+                'error',
+                4000
+            );
+        }
+    }
+
+        function filterNodes() {
+            const searchTerm = document.getElementById('node-search').value.toLowerCase();
+            const nodeItems = document.querySelectorAll('.node-item');
+    
+            nodeItems.forEach(item => {
+                const name = item.getAttribute('data-name').toLowerCase();
+                const hash = item.getAttribute('data-hash').toLowerCase();
+        
+                if (name.includes(searchTerm) || hash.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+    
+            const visibleNodes = document.querySelectorAll('.node-item[style*="block"], .node-item:not([style*="none"])').length;
+            if (searchTerm) {
+                console.log(`Filtered to ${visibleNodes} nodes matching "${searchTerm}"`);
+            }
+        }
+
+        function toggleClearButton() {
+            const searchInput = document.getElementById('node-search');
+            const clearButton = document.getElementById('search-clear');
+            
+            if (searchInput.value.length > 0) {
+                clearButton.style.display = 'flex';
+            } else {
+                clearButton.style.display = 'none';
+            }
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('node-search');
+            const clearButton = document.getElementById('search-clear');
+            
+            searchInput.value = '';
+            clearButton.style.display = 'none';
+            filterNodes(); 
+            searchInput.focus(); 
+        }
+
+        function saveFavorites() {
+            fetch('/api/favorites', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({favorites: favoriteNodes})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Favorites saved to file');
+                } else {
+                    console.error('Failed to save favorites:', data.error);
+                }
+            })
+            .catch(err => {
+                console.error('Error saving favorites:', err);
+            });
+        }
+
+        function loadFavorites() {
+            // Don't show the list initially, keep it hidden until we know if there are favorites
+            const list = document.getElementById('favorites-list');
+            const button = document.getElementById('favorites-toggle');
+            
+            if (list && button) {
+                list.style.display = 'none';
+                button.textContent = 'Show';
+            }
+            
+            fetch('/api/favorites')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        favoriteNodes = data.favorites || [];
+                        updateFavoritesDisplay();
+                        
+                        // Keep it hidden after loading
+                        if (list && button) {
+                            list.style.display = 'none';
+                            button.textContent = 'Show';
+                        }
+                    } else {
+                        console.error('Failed to load favorites:', data.error);
+                        favoriteNodes = [];
+                        updateFavoritesDisplay();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading favorites:', err);
+                    favoriteNodes = [];
+                    updateFavoritesDisplay();
+                });
+        }
+
+        function toggleFavorite(hash, name) {
+            console.log('toggleFavorite called with:', hash, name);
+            const existing = favoriteNodes.findIndex(fav => fav.hash === hash);
+
+            if (existing >= 0) {
+                favoriteNodes.splice(existing, 1);
+                console.log('Removed favorite, new count:', favoriteNodes.length);
+
+                const starBtn = document.querySelector(`[data-hash="${hash}"].star-btn`);
+                if (starBtn) {
+                    starBtn.style.color = '#7d8590';
+                    starBtn.textContent = '☆';
+                }
+                
+            } else {
+                favoriteNodes.push({ hash: hash, name: name });
+                console.log('Added favorite, new count:', favoriteNodes.length);
+
+                const starBtn = document.querySelector(`[data-hash="${hash}"].star-btn`);
+                if (starBtn) {
+                    starBtn.style.color = '#ffa657';
+                    starBtn.textContent = '★';
+                }
+            }
+
+            saveFavorites();
+            updateFavoritesDisplay();
+            
+            // NEW: Update nav bar star button state
+            updateStarButtonState();
+        }
+
+        function updateFavoritesDisplay() {
+            console.log('updateFavoritesDisplay called, favoriteNodes:', favoriteNodes);
+            const list = document.getElementById('favorites-list');
+            
+            if (favoriteNodes.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #7d8590; font-size: 11px; padding: 8px;">No favorites yet</div>';
+                return;
+            }
+            
+            let html = '';
+            favoriteNodes.forEach((fav, index) => {
+                // Escape for JavaScript string (replace single quotes with escaped version)
+                const jsEscapedName = fav.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                
+                html += `
+                    <div class="favorite-item" style="background: #0d1117; padding: 4px 6px; margin: 2px 0; border-radius: 3px; border: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
+                        <span onclick="browseNode('${fav.hash}', '${jsEscapedName}')" style="cursor: pointer; font-size: 11px; color: #58a6ff; flex: 1;">${escapeHtml(fav.name)}</span>
+                        <button onclick="removeFavorite('${fav.hash}'); event.stopPropagation();" style="background: none; border: none; color: #ff7b72; cursor: pointer; font-size: 12px; padding: 2px 4px; margin-left: 6px;">×</button>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+            // Don't change visibility here - let toggleFavoritesSection handle that
+        }
+
+        function toggleFavoritesSection() {
+            const list = document.getElementById('favorites-list');
+            const button = document.getElementById('favorites-toggle');
+            
+            if (list.style.display === 'none') {
+                list.style.display = 'block';
+                button.textContent = 'Hide';
+            } else {
+                list.style.display = 'none';
+                button.textContent = 'Show';
+            }
+            setTimeout(updateNodeListPosition, 10);
+        }
+
+        function removeFavorite(hash) {
+            console.log('removeFavorite called with hash:', hash);
+            const index = favoriteNodes.findIndex(fav => fav.hash === hash);
+            
+            if (index >= 0) {
+                favoriteNodes.splice(index, 1);
+                console.log('Removed favorite, new count:', favoriteNodes.length);
+                saveFavorites();
+                updateFavoritesDisplay();
+                updateNodes(); 
+            }
+        }
+
+        function fetchPageByUrlTabWithFormData(hash, path, originalUrl, formData, isFormSubmission = false) {
+            const tab = getActiveTab();
+            if (!tab) return;
+            
+            if (tab.currentRequest) {
+                tab.currentRequest.abort();
+                tab.currentRequest = null;
+            }
+            
+            tab.selectedNode = hash;
+            tab.setLoading(true);
+
+            const nodeName = getNodeName(hash);
+            tab.knownNodeName = nodeName;
+            
+            const pageTitle = document.querySelector(`#${tab.id} .page-title`);
+            const pageContent = document.querySelector(`#${tab.id} .page-content`);
+            const viewToggle = document.querySelector(`#${tab.id} .view-toggle`);
+            const addressBar = document.querySelector(`#${tab.id} .address-bar`);
+            
+            if (pageTitle) {
+                pageTitle.innerHTML = `<span class="label">Loading:</span> <span class="value">${nodeName}</span>`;
+            }
+            const pageDetails = document.querySelector(`#${tab.id} .page-details`);
+            if (pageDetails) {
+                pageDetails.innerHTML = `<span class="label">Page Path:</span> <span class="value">${path}</span> <span class="label">Full Address:</span> <span class="value">${originalUrl}</span>`;
+            }
+            if (pageContent) {
+                pageContent.innerHTML = `<div style="color: #58a6ff; text-align: center; padding: 40px; font-size: 16px;">
+                    Loading page with parameters...<br><br>
+                    <strong>${nodeName}</strong><br><br>
+                    Sending ${Object.keys(formData).length} parameter(s)
+                </div>`;
+            }
+            if (viewToggle) viewToggle.style.display = 'none';
+            if (addressBar) addressBar.value = originalUrl;
+            
+            if (tab.id === activeTabId) {
+                tab.setTitle(`Loading ${nodeName}...`);
+            } else {
+                tab.title = `Loading ${nodeName}...`;
+            }
+            
+            document.querySelectorAll('.node-item').forEach(item => item.classList.remove('selected'));
+            const nodeItem = document.querySelector(`[data-hash="${hash}"]`);
+            if (nodeItem) {
+                nodeItem.classList.add('selected');
+            }
+            
+            const controller = new AbortController();
+            tab.currentRequest = controller;
+
+            // Extract metadata BEFORE processing
+            const metadata = formData._meta || {};
+            
+            // PREFIX form data keys appropriately
+            const prefixedFormData = {};
+            
+            for (const [key, value] of Object.entries(formData)) {
+                // Skip the metadata object
+                if (key === '_meta') continue;
+                
+                // Check if key already has a prefix
+                if (key.startsWith('var_') || key.startsWith('field_')) {
+                    prefixedFormData[key] = value;
+                } else {
+                    // Check metadata to determine type
+                    if (metadata[key]) {
+                        const type = metadata[key];
+                        const prefix = type === 'static' ? 'var_' : 'field_';
+                        prefixedFormData[prefix + key] = value;
+                    } else {
+                        // Default: if isFormSubmission, use field_, otherwise var_
+                        const prefix = isFormSubmission ? 'field_' : 'var_';
+                        prefixedFormData[prefix + key] = value;
+                    }
+                }
+            }
+
+            console.log('🚀 Original form data:', formData);
+            console.log('🔄 Prefixed form data:', prefixedFormData);
+            console.log('📝 Is form submission:', isFormSubmission);
+            console.log('📍 URL:', `/api/fetch/${hash}?path=${encodeURIComponent(path)}`);
+
+            fetch(`/api/fetch/${hash}?path=${encodeURIComponent(path)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(prefixedFormData),
+                signal: controller.signal
+            })
+            .then(r => {
+                console.log('📥 Response status:', r.status);
+                return r.json();
+            })
+            .then(response => {
+                console.log('📦 Response received:', response.status);
+                
+                if (tab.currentRequest === controller) {
+                    if (response.status === 'success') {
+                        console.log('✅ Page loaded successfully');
+                        tab.currentRawContent = response.content;
+                        tab.isRawView = false;
+                        
+                        const renderedHtml = parseMicronContent(response.content);
+                        if (pageContent) pageContent.innerHTML = renderedHtml;
+                        if (pageContent) pageContent.className = 'page-content';
+                        
+                        if (pageTitle) {
+                            pageTitle.innerHTML = `<span class="node-name">${nodeName}</span>`;
+                        }
+                        const pageDetails = document.querySelector(`#${tab.id} .page-details`);
+                        if (pageDetails) {
+                            pageDetails.innerHTML = `<span class="path-info">${path}</span> <span class="label">- Address:</span> <span class="address-info">${originalUrl}</span>`;
+                        }
+                        
+                        if (viewToggle) {
+                            viewToggle.style.display = 'block';
+                            viewToggle.textContent = 'Raw View';
+                        }
+
+                        const asciiControl = document.querySelector(`#${tab.id} .ascii-control`);
+                        if (asciiControl) {
+                            asciiControl.style.display = 'flex';
+                        }
+
+                        const asciiSwitch = document.querySelector(`#${tab.id} .ascii-switch`);
+                        const asciiStatus = document.querySelector(`#${tab.id} .ascii-status`);
+                        if (asciiSwitch && asciiStatus) {
+                            asciiSwitch.checked = false;
+                            asciiStatus.textContent = 'Text Mode';
+                        }
+
+                        tab.asciiOptimized = false;
+
+                        const contentType = detectContentType(tab.currentRawContent);
+                        if (contentType === 'ascii') {
+                            asciiSwitch.checked = true;
+                            toggleAsciiOptimization();
+                            showNotification(
+                                '🎨 <strong>Page Mode Detected: ASCII Art</strong>',
+                                'success',
+                                3000
+                            );
+                        } else {
+                            showNotification(
+                                '📄 <strong>Page Mode Detected: TEXT</strong>',
+                                'success',
+                                3000
+                            );
+                        }
+
+                        if (tab.id === activeTabId) {
+                            tab.setTitle(nodeName);
+                        } else {
+                            tab.title = nodeName;
+                        }
+                        
+                        addClickHandlersToCurrentTab();
+                        
+                    } else {
+                        console.error('❌ Page load failed:', response.error);
+                        if (pageContent) {
+                            pageContent.innerHTML = `<div class="error">Failed to load page: ${escapeHtml(response.error)}<br><br>
+                                Parameters sent: ${Object.keys(prefixedFormData).length}<br>
+                                ${Object.entries(prefixedFormData).map(([k,v]) => `${k}=${v}`).join('<br>')}
+                            </div>`;
+                        }
+                        if (pageTitle) pageTitle.textContent = `Error loading ${originalUrl}`;
+                        if (viewToggle) viewToggle.style.display = 'none';
+                        
+                        const asciiToggle = document.querySelector(`#${tab.id} .ascii-toggle`);
+                        if (asciiToggle) {
+                            asciiToggle.style.display = 'none';
+                        }
+
+                        if (tab.id === activeTabId) {
+                            tab.setTitle('Error');
+                        } else {
+                            tab.title = 'Error';
+                        }
+                    }
+                    tab.currentRequest = null;
+                    tab.setLoading(false);
+                }
+            })
+            .catch(err => {
+                console.error('❌ Network error:', err);
+                if (tab.currentRequest === controller && !controller.signal.aborted) {
+                    if (pageContent) {
+                        pageContent.innerHTML = `<div class="error">Network error: ${escapeHtml(err.message)}<br><br>
+                            Please check your connection and try again.<br><br>
+                            Parameters that were being sent: ${Object.keys(prefixedFormData).length}
+                        </div>`;
+                    }
+                    if (pageTitle) pageTitle.textContent = `Error loading ${originalUrl}`;
+                    if (viewToggle) viewToggle.style.display = 'none';
+                    tab.currentRequest = null;
+                    tab.setLoading(false);
+                    
+                    if (tab.id === activeTabId) {
+                        tab.setTitle('Network Error');
+                    } else {
+                        tab.title = 'Network Error';
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+                switch (e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        switchToPreviousTab();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        switchToNextTab();
+                        break;
+                    case 'x': 
+                        e.preventDefault();
+                        closeOtherTabs();
+                        break;
+                }
+            }
+            
+            if (e.altKey && !e.ctrlKey && !e.metaKey) {
+                switch (e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        createNewTab();
+                        break;
+                    case 'x':
+                        e.preventDefault();
+                        if (activeTabId && tabs.length > 1) {
+                            closeTab(activeTabId);
+                        }
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        refreshPageTab();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        addFavoriteFromUrl();
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        sendFingerprintToCurrentNode();
+                        break;
+
+                }
+            }
+        });
+
+        function switchToPreviousTab() {
+            if (tabs.length <= 1) return;
+            
+            const currentIndex = tabs.findIndex(tab => tab.id === activeTabId);
+            const previousIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+            switchToTab(tabs[previousIndex].id);
+        }
+
+        function switchToNextTab() {
+            if (tabs.length <= 1) return;
+            
+            const currentIndex = tabs.findIndex(tab => tab.id === activeTabId);
+            const nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+            switchToTab(tabs[nextIndex].id);
+        }
+
+        function closeOtherTabs() {
+            if (tabs.length <= 1) return; 
+            
+            const currentActiveTab = getActiveTab();
+            if (!currentActiveTab) return;
+            
+            const tabsToClose = tabs.filter(tab => tab.id !== activeTabId);
+            
+            tabsToClose.forEach(tab => {
+                document.querySelector(`[data-tab-id="${tab.id}"]`)?.remove();
+                document.getElementById(tab.id)?.remove();
+            });
+            
+            tabs = [currentActiveTab];
+            
+            console.log('Closed all tabs except active tab:', currentActiveTab.title);
+        }
+
+        function updateNodeSelection() {
+            const activeTab = getActiveTab();
+            if (!activeTab || !activeTab.selectedNode) return;
+            
+            document.querySelectorAll('.node-item').forEach(item => item.classList.remove('selected'));
+
+            const nodeItem = document.querySelector(`[data-hash="${activeTab.selectedNode}"]`);
+            if (nodeItem) {
+                nodeItem.classList.add('selected');
+            }
+        }
+
+        function copyHashToClipboard(hash) {
+            navigator.clipboard.writeText(hash).then(() => {
+                showCopyConfirmation();
+            }).catch(err => {
+                const textArea = document.createElement('textarea');
+                textArea.value = hash;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyConfirmation();
+            });
+        }
+
+        function showCopyConfirmation() {
+            showNotification('Hash copied to clipboard!', 'success', 2000);
+        }
+
+        function showNodeInfo(hash, name, lastSeen, dataLength, announceCount, relativeTime) {
+            const nodeData = cachedNodes.find(n => n.hash === hash);
+            const hops = nodeData ? nodeData.hops : 'Unknown';
+            const nextHopInterface = nodeData ? nodeData.next_hop_interface : 'Unknown';
+            const nodeAnnounceCount = nodeData ? nodeData.node_announce_count : 'Unknown';
+
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;
+                background: #161b22; border: 2px solid #30363d; color: #e6edf3; 
+                padding: 16px 20px; border-radius: 6px; font-size: 13px; 
+                box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 350px; max-width: 500px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            `;
+
+            let formattedTime = 'Unknown';
+            if (lastSeen && lastSeen !== 'undefined') {
+                try {
+                    const date = new Date(lastSeen);
+                    formattedTime = date.toLocaleString();
+                } catch (e) {
+                    formattedTime = lastSeen;
+                }
+            }
+            
+            notification.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin: 0; color: #58a6ff; font-size: 16px;">Node Information</h3>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #7d8590; cursor: pointer; font-size: 18px;">&times;</button>
+                </div>
+                <div style="line-height: 1.6;">
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Node Name:</strong> ${name}</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Hash Address:</strong> <span style="font-family: monospace; font-size: 11px; background: #21262d; padding: 2px 4px; border-radius: 3px;">${hash}</span></div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Network Hops:</strong> ${hops === 'Unknown' ? 'Unknown' : hops + (hops === 1 ? ' hop' : ' hops')} away</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Interface:</strong> ${nextHopInterface}</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Announce Data:</strong> ${dataLength} bytes</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Last Announced:</strong> ${relativeTime}</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Last Received:</strong> ${formattedTime}</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #ffa657;">Node Announced:</strong> ${nodeAnnounceCount} time(s)</div>
+                </div>
+                <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
+                    <button onclick="pingNode('${hash}', '${name}'); this.parentElement.parentElement.remove();" 
+                            style="background: #0969da; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        Ping Node
+                    </button>
+                    <button onclick="copyHashToClipboard('${hash}');" 
+                            style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        Copy Hash
+                    </button>
+                    <button onclick="this.parentElement.parentElement.remove();" 
+                            style="background: #7d8599; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 30000);
+        }
+
+function pingCurrentNode() {
+    const tab = getActiveTab();
+    if (!tab || !tab.selectedNode) {
+        showNotification(
+            'No current node selected for ping',
+            'warning',
+            4000
+        );
+        return;
+    }
+
+    const nodeName = tab.knownNodeName || getNodeName(tab.selectedNode);
+    pingNode(tab.selectedNode, nodeName);
+}
+
+function pingNode(hash, name) {
+    const notification = showNotification(
+        `Pinging ${name}...<br>Measuring round-trip time...`,
+        'info',
+        15000
+    );
+
+    const pingStart = Date.now();
+
+    fetch(`/api/ping/${hash}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+
+        if (data.status === 'success') {
+            const rtt = data.rtt || ((Date.now() - pingStart) / 1000);
+            
+            // Get hop information
+            const nodeData = cachedNodes.find(n => n.hash === hash);
+            const hops = nodeData ? nodeData.hops : 'Unknown';
+            
+            showPingAlert(name, hash, rtt, hops);
+        } else {
+            showNotification(
+                `❌ Ping failed to ${name}<br><br><strong>Error:</strong> ${data.error || 'Unknown error'}`,
+                'error',
+                8000
+            );
+        }
+    })
+    .catch(error => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+
+        console.error('Ping error:', error);
+        showNotification(
+            `Network error pinging ${name}<br><br><strong>Error:</strong> ${error.message}`,
+            'error',
+            6000
+        );
+    });
+}
+
+function showPingAlert(nodeName, nodeHash, rtt, hops) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10001;
+        background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+    `;
+    
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: #161b22; border: 2px solid #30363d; color: #e6edf3;
+        padding: 20px; border-radius: 8px; max-width: 450px; min-width: 350px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    `;
+    
+    const hopsDisplay = hops === 'Unknown' ? 'Unknown' : `${hops} ${hops === 1 ? 'hop' : 'hops'}`;
+    
+    dialog.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; color: #3fb950; font-size: 18px;">✓ Valid Ping Reply!</h3>
+            <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; color: #7d8590; cursor: pointer; font-size: 20px; padding: 0;">&times;</button>
+        </div>
+        <div style="line-height: 1.8; font-size: 14px;">
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #ffa657;">Node:</strong> 
+                <span style="color: #e6edf3;">${nodeName}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #ffa657;">Address:</strong> 
+                <span style="font-family: monospace; font-size: 12px; background: #21262d; padding: 2px 6px; border-radius: 3px;">${nodeHash}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #ffa657;">Ping Duration:</strong> 
+                <span style="color: #3fb950; font-weight: bold;">${rtt.toFixed(3)}s</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #ffa657;">Hops There:</strong> 
+                <span style="color: #58a6ff;">${hopsDisplay}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #ffa657;">Hops Back:</strong> 
+                <span style="color: #58a6ff;">${hopsDisplay}</span>
+            </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+            <button onclick="this.parentElement.parentElement.parentElement.remove();" 
+                    style="background: #238636; color: white; border: none; padding: 8px 24px; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                OK
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    });
+    
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.removeEventListener('keydown', escapeHandler);
+            if (overlay.parentNode) {
+                document.body.removeChild(overlay);
+            }
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
+// Cached Search Engine system
+
+function createSearchTab() {
+    const searchTabId = 'search-tab';
+    
+    // Don't create if already exists
+    if (document.getElementById(searchTabId)) {
+        switchToTab(searchTabId);
+        return;
+    }
+    
+    // Create search tab object
+    const searchTab = new BrowserTab(searchTabId);
+    searchTab.title = '🔍 Search Engine';
+    searchTab.isSearchTab = true;
+    tabs.push(searchTab);
+    
+    createTabElement(searchTab);
+    createSearchTabContent(searchTab);
+    switchToTab(searchTabId);
+}
+
+function createSearchTabContent(tab) {
+    const wrapper = document.getElementById('tab-content-wrapper');
+    const content = document.createElement('div');
+    content.className = 'tab-content';
+    content.id = tab.id;
+    
+    content.innerHTML = `
+         <div class="search-interface" style="padding: 20px 20px 0 20px; margin: 0; height: 100%; display: flex; flex-direction: column; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="color: #f0f6fc; margin: 0;">NomadNet Search Engine</h2>
+                    <p style="color: #7d8590; margin: 3px 0 0 0;">Search through local cached pages from announced nodes, edit your preferences in ⚙️Settings</p>
+                </div>
+                <button id="toggle-settings-btn" onclick="toggleSearchSettings()" 
+                        style="background: #21262d; border: 1px solid #30363d; color: #e6edf3; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                    ⚙️ Show Settings
+                </button>
+            </div>
+            
+            <!-- Settings Panel (Hidden by default) -->
+            <div id="search-settings-panel" style="display: none; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+                <h3 style="color: #f0f6fc; margin: 0 0 15px 0;">Search Engine Settings</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    
+                    <!-- Left Column -->
+                    <div>
+                        <label style="display: flex; align-items: center; margin-bottom: 10px; color: #e6edf3;">
+                            <input type="checkbox" id="auto-cache-enabled" checked onchange="toggleAutoCaching()">
+                            <span style="margin-left: 8px;">Enable Search Engine (Auto-Caching index.mu)</span>
+                        </label>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="color: #e6edf3; display: block; margin-bottom: 5px;">Cache Size Limit:</label>
+                            <select id="cache-size-limit" onchange="updateCacheSizeLimit()" style="background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 5px; border-radius: 3px; width: 100%;">
+                                <option value="50">50 MB</option>
+                                <option value="100" selected>100 MB</option>
+                                <option value="200">200 MB</option>
+                                <option value="500">500 MB</option>
+                                <option value="-1">Unlimited</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="color: #e6edf3; display: block; margin-bottom: 5px;">Auto-delete cache older than:</label>
+                            <select id="cache-expiry" onchange="updateCacheExpiry()" style="background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 5px; border-radius: 3px; width: 100%;">
+                                <option value="-1">Never</option>
+                                <option value="7">7 days</option>
+                                <option value="30" selected>30 days</option>
+                                <option value="90">90 days</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="color: #e6edf3; display: block; margin-bottom: 5px;">Search Result Limit Per Search:</label>
+                            <input type="number" id="search-result-limit" value="50" min="10" max="200" onchange="updateSearchLimit()" 
+                                   style="background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 5px; border-radius: 3px; width: 100%;">
+                        </div>
+                        
+                        <label style="display: flex; align-items: center; margin-bottom: 10px; color: #e6edf3;">
+                            <input type="checkbox" id="cache-additional-pages" onchange="toggleAdditionalPages()">
+                            <span style="margin-left: 8px;">Cache additional pages (home, about, menu, info, etc.)</span>
+                        </label>
+                        
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px;">
+                            <button onclick="clearAllCache()" style="background: #da3633; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                Clear All Cached Pages
+                            </button>
+                            <button onclick="refreshAllCache()" style="background: #0969da; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                Refresh All Cached Pages
+                            </button>
+                            <button onclick="exportCache()" style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                Export Full Cache in Zip File (Download)
+                            </button>
+                            <button onclick="cacheAdditionalForAll()" style="background: #7c3aed; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                Start Manual Caching of Additional Pages for All Nodes
+                            </button>
+                            <button onclick="toggleSearchSettings()" style="background: #da3633; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                Save & Close Search Engine Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="cache-search-input" placeholder="Enter search terms..." 
+                        style="flex: 1; padding: 12px; font-size: 16px; background: #0d1117; border: 1px solid #30363d; color: #e6edf3; border-radius: 4px;"
+                        onkeypress="if(event.key==='Enter') searchCachedPages()">
+                    <button onclick="searchCachedPages()" 
+                            style="padding: 12px 20px; background: #0969da; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Search
+                    </button>
+                </div>
+                
+                <!-- Search Mode Options -->
+                <div style="display: flex; gap: 20px; align-items: center; padding: 8px 12px; background: #161b22; border-radius: 4px; border: 1px solid #30363d;">
+                    <span style="color: #7d8590; font-size: 13px; font-weight: 600;">Search Mode:</span>
+                    <label style="display: flex; align-items: center; color: #e6edf3; cursor: pointer; font-size: 13px;">
+                        <input type="radio" name="search-mode" value="partial" checked style="margin-right: 6px;">
+                        <span>All Results (includes partial matches)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; color: #e6edf3; cursor: pointer; font-size: 13px;">
+                        <input type="radio" name="search-mode" value="exact" style="margin-right: 6px;">
+                        <span>Exact Words Only</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="search-results" style="
+                flex: 1; 
+                overflow-y: auto; 
+                margin-top: 20px;
+                margin-bottom: 0;
+                border: 1px solid #30363d;
+                border-radius: 6px 6px 0 0;
+                padding: 10px;
+                background: #0d1117;
+            "></div>
+            
+            <div id="cache-stats" style="
+                margin: 0;
+                padding: 10px 12px 15px 12px;
+                color: #7d8590;
+                font-size: 14px;
+                flex-shrink: 0;
+                background: #161b22;
+                border-top: 1px solid #30363d;
+                border-radius: 0 0 6px 6px;
+            "></div>
+
+        </div>
+    `;
+    
+    wrapper.appendChild(content);
+    loadCacheSettings();
+    loadCacheStats();
+}
+
+// Settings Functions
+function toggleSearchSettings() {
+    const panel = document.getElementById('search-settings-panel');
+    const btn = document.getElementById('toggle-settings-btn');
+    
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.textContent = '⚙️ Hide S.E. Settings';
+    } else {
+        panel.style.display = 'none';
+        btn.textContent = '⚙️ Show S.E. Settings';
+    }
+}
+
+function toggleAutoCaching() {
+    const enabled = document.getElementById('auto-cache-enabled').checked;
+    fetch('/api/cache-settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'toggle_auto_cache', enabled: enabled})
+    })
+    .then(() => {
+        showNotification(
+            enabled ? 'Auto-caching enabled' : 'Auto-caching disabled', 
+            enabled ? 'success' : 'info',
+            3000
+        );
+        loadCacheStats();
+    });
+}
+
+function clearAllCache() {
+    if (confirm('Are you sure you want to delete all cached pages? This cannot be undone.')) {
+        fetch('/api/cache-settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'clear_cache'})
+        })
+        .then(r => r.json())
+        .then(data => {
+            showNotification(data.message, 'success');
+            loadCacheStats();
+        });
+    }
+}
+
+function refreshAllCache() {
+    if (confirm('Re-cache all nodes? This may take time and generate network traffic.')) {
+        fetch('/api/cache-settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'refresh_cache'})
+        })
+        .then(r => r.json())
+        .then(data => {
+            showNotification(data.message, 'info');
+        });
+    }
+}
+
+function loadCacheSettings() {
+    fetch('/api/cache-settings')
+        .then(r => r.json())
+        .then(settings => {
+            document.getElementById('auto-cache-enabled').checked = settings.auto_cache_enabled;
+            document.getElementById('cache-size-limit').value = settings.size_limit_mb;
+            document.getElementById('cache-expiry').value = settings.expiry_days;
+            document.getElementById('search-result-limit').value = settings.search_limit;
+            document.getElementById('cache-additional-pages').checked = settings.cache_additional;
+        })
+        .catch(() => {
+            // Use defaults if settings not available
+        });
+}
+
+async function searchCachedPages() {
+    const query = document.getElementById('cache-search-input').value.trim();
+    if (!query) return;
+    
+    // Get the selected search mode
+    const searchMode = document.querySelector('input[name="search-mode"]:checked').value;
+    
+    const resultsDiv = document.getElementById('search-results');
+    resultsDiv.innerHTML = '<div style="color: #58a6ff; padding: 20px;">Searching...</div>';
+    
+    try {
+        // Add search mode to the API request
+        const response = await fetch(`/api/search-cache?q=${encodeURIComponent(query)}&mode=${searchMode}`);
+        const results = await response.json();
+        
+        displaySearchResults(results, query, searchMode);
+    } catch (error) {
+        resultsDiv.innerHTML = `<div style="color: #ff7b72; padding: 20px;">Search failed: ${error.message}</div>`;
+    }
+}
+
+function displaySearchResults(results, query, searchMode) {
+    const resultsDiv = document.getElementById('search-results');
+   
+    if (results.length === 0) {
+        const modeText = searchMode === 'exact' ? ' (exact word match)' : '';
+        resultsDiv.innerHTML = `
+            <div style="color: #7d8590; padding: 20px; text-align: center;">
+                <h3>No results found for "${query}"${modeText}</h3>
+                <p>${searchMode === 'exact' ? 'Try switching to "All Results" mode for partial matches, or use' : 'Try'} different search terms or browse more nodes to expand the cache.</p>
+            </div>
+        `;
+        return;
+    }
+   
+    // Show search mode in results header
+    const modeLabel = searchMode === 'exact' 
+        ? '<span style="background: #7c3aed; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 8px;">EXACT MATCH</span>' 
+        : '<span style="background: #0969da; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 8px;">ALL MATCHES</span>';
+    
+    let html = `<h3 style="color: #f0f6fc; margin-bottom: 15px; font-size: 14px;">Found ${results.length} result(s) for "<span style="background-color: #ffd700; color: #0d1117; padding: 2px 4px; border-radius: 2px; font-weight: 600;">${escapeHtml(query)}</span>" ${modeLabel}</h3>`;
+   
+    results.forEach(result => {
+        // Determine status badge
+        let statusBadge = '';
+        if (result.cache_status === 'fresh') {
+            statusBadge = '<span style="background: #238636; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">FRESH</span>';
+        } else if (result.cache_status === 'good') {
+            statusBadge = '<span style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">GOOD</span>';
+        } else if (result.cache_status === 'moderate') {
+            statusBadge = '<span style="background: #fb8500; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">MODERATE</span>';
+        } else if (result.cache_status === 'old') {
+            statusBadge = '<span style="background: #da3633; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">OLD</span>';
+        }
+       
+        // Escape node name for use in onclick
+        const safeNodeName = escapeHtml(result.node_name).replace(/'/g, "\\'");
+        
+        // Enhanced highlighting based on search mode
+        let highlightedSnippet = result.snippet;
+        
+        // Check if the snippet contains the placeholder pattern
+        if (highlightedSnippet.includes('\\1') || highlightedSnippet.includes('$1')) {
+            highlightedSnippet = highlightedSnippet.replace(/\\\d+|\$\d+/g, (match) => {
+                return `<mark style="background-color: #ffd700; color: #0d1117; padding: 2px 4px; border-radius: 2px; font-weight: 600;">${escapeHtml(query)}</mark>`;
+            });
+        } else {
+            // Client-side highlighting
+            const queryWords = query.trim().split(/\s+/);
+            
+            queryWords.forEach(word => {
+                const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                
+                let regex;
+                if (searchMode === 'exact') {
+                    // For exact mode, match whole words only using word boundaries
+                    regex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
+                } else {
+                    // For partial mode, match anywhere in the text
+                    regex = new RegExp(`(${escapedWord})`, 'gi');
+                }
+                
+                highlightedSnippet = highlightedSnippet.replace(regex, 
+                    '<mark style="background-color: #ffd700; color: #0d1117; padding: 2px 4px; border-radius: 2px; font-weight: 600;">$1</mark>'
+                );
+            });
+        }
+       
+        html += `
+            <div style="background: #21262d; border: 1px solid #30363d; padding: 15px; margin: 10px 0; border-radius: 6px;" data-node-hash="${result.node_hash}">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                    <h4 style="color: #58a6ff; margin: 0; font-size: 16px;">${escapeHtml(result.node_name)}</h4>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="pingNodeFromSearch('${result.node_hash}', '${safeNodeName}')" 
+                                style="background: #7c3aed; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;" 
+                                title="Ping node to check if online">
+                            Ping Node
+                        </button>
+                        <button onclick="browseToSearchResult('${result.url}')"
+                                style="background: #0969da; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            Visit Page
+                        </button>
+                    </div>
+                </div>
+                <div style="color: #7d8590; font-size: 12px; font-family: monospace; margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <span>Node Address: <span style="color: #ffffff;">${result.node_hash}</span></span>
+                    <span>• Result from page: <span style="color: #ffa657;">${result.page_path}</span></span>
+                    <span>• Cached on: <span class="cached-at-text" style="color: #ffffff;">${result.cached_at}</span></span>
+                    <span>• Cache Freshness: <span class="cache-freshness-badge">${statusBadge}</span></span>
+                    <button onclick="refreshNodeCache('${result.node_hash}', '${safeNodeName}')"
+                            style="background: #121416; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 10px;" title="Click here to manually refresh cached page now">
+                        Update Page Cache
+                    </button>
+                </div>
+                <div style="color: #e6edf3; line-height: 1.5; background: #0d1117; padding: 10px; border-radius: 4px; font-size: 13px;">
+                    ${highlightedSnippet}
+                </div>
+            </div>
+        `;
+    });
+   
+    resultsDiv.innerHTML = html;
+}
+
+function pingNodeFromSearch(nodeHash, nodeName) {
+    showNotification(`Pinging ${nodeName}...<br>Waiting for node reply...`, 'info', 3000);
+    
+    fetch(`/api/ping/${nodeHash}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const rtt = data.rtt || 0;
+            showNotification(
+                `✅ Node is online!<br><strong>${nodeName}</strong><br>Round-trip time: ${rtt.toFixed(3)}s`,
+                'success',
+                5000
+            );
+        } else {
+            showNotification(
+                `❌ Ping failed to ${nodeName}<br><br><strong>Error:</strong> ${data.error || 'Unknown error'}<br>Node may be offline.`,
+                'error',
+                6000
+            );
+        }
+    })
+    .catch(error => {
+        console.error('Ping error:', error);
+        showNotification(
+            `Network error pinging ${nodeName}<br><br><strong>Error:</strong> ${error.message}`,
+            'error',
+            5000
+        );
+    });
+}
+
+function refreshNodeCache(nodeHash, nodeName) {
+    const url = `/api/refresh-node-cache/${nodeHash}`;
+    
+    showNotification(`Requesting cache refresh for ${nodeName} <br>Please wait...`, 'info', 3000);
+                
+    
+    fetch(url, {
+        method: 'POST'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+
+            
+            // Poll for cache update (check every 2 seconds for up to 30 seconds)
+            pollCacheUpdate(data.node_hash, 15);
+        } else {
+            showNotification(
+                `❌ Failed: ${data.message}`, 
+                'error', 
+                6000
+            );
+        }
+    })
+    .catch(err => {
+        console.error('Fetch error:', err);
+        showNotification(`Network error: ${err.message}`, 'error', 5000);
+    });
+}
+
+function pollCacheUpdate(nodeHash, maxAttempts) {
+    let attempts = 0;
+    
+    const checkInterval = setInterval(() => {
+        attempts++;
+        
+        // Check if cache was updated
+        fetch(`/api/check-cache-status/${nodeHash}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.updated || attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    
+                    if (data.updated) {
+                        // Update the UI with new freshness status
+                        updateSearchResultFreshness(nodeHash, data.cache_status, data.cached_at);
+                        showNotification(
+                            `✅ Cache updated successfully!<br>Status: ${data.cache_status.toUpperCase()}`,
+                            'success',
+                            4000
+                        );
+                    } else {
+                        showNotification(
+                            '⏱️ Cache update is taking longer than expected...<br><br> (Node offline or unreachable?)',
+                            'warning',
+                            4000
+                        );
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Poll error:', err);
+                clearInterval(checkInterval);
+            });
+    }, 2000); // Check every 2 seconds
+}
+
+function updateSearchResultFreshness(nodeHash, cacheStatus, cachedAt) {
+    // Find all search results for this node hash
+    const results = document.querySelectorAll(`[data-node-hash="${nodeHash}"]`);
+    
+    results.forEach(resultDiv => {
+        // Find the freshness badge
+        const freshnessSpan = resultDiv.querySelector('.cache-freshness-badge');
+        const cachedAtSpan = resultDiv.querySelector('.cached-at-text');
+        
+        if (freshnessSpan) {
+            // Update badge color and text
+            let badgeHTML = '';
+            if (cacheStatus === 'fresh') {
+                badgeHTML = '<span class="cache-freshness-badge" style="background: #238636; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">FRESH</span>';
+            } else if (cacheStatus === 'good') {
+                badgeHTML = '<span class="cache-freshness-badge" style="background: #1f6feb; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">GOOD</span>';
+            } else if (cacheStatus === 'moderate') {
+                badgeHTML = '<span class="cache-freshness-badge" style="background: #fb8500; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">MODERATE</span>';
+            } else if (cacheStatus === 'old') {
+                badgeHTML = '<span class="cache-freshness-badge" style="background: #da3633; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;">OLD</span>';
+            }
+            
+            freshnessSpan.outerHTML = badgeHTML;
+        }
+        
+        if (cachedAtSpan) {
+            cachedAtSpan.textContent = cachedAt;
+        }
+    });
+}
+
+function updateCacheSizeLimit() {
+    const limit = document.getElementById('cache-size-limit').value;
+    const limitText = limit === '-1' ? 'Unlimited' : `${limit} MB`;
+    fetch('/api/cache-settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'update_size_limit', value: parseInt(limit)})
+    })
+    .then(() => {
+        showNotification(`Cache size limit set to ${limitText}`, 'success', 3000);
+        loadCacheStats();
+    });
+}
+
+function updateCacheExpiry() {
+    const expiry = document.getElementById('cache-expiry').value;
+    const expiryText = expiry === '-1' ? 'Never' : `${expiry} days`;
+    fetch('/api/cache-settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'update_expiry', value: parseInt(expiry)})
+    })
+    .then(() => {
+        showNotification(`Cache expiry set to ${expiryText}`, 'success', 3000);
+        loadCacheStats();
+    });
+}
+
+function updateSearchLimit() {
+    const limit = document.getElementById('search-result-limit').value;
+    fetch('/api/cache-settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'update_search_limit', value: parseInt(limit)})
+    })
+    .then(() => {
+        showNotification(`Search result limit set to ${limit}`, 'success', 3000);
+        loadCacheStats();
+    });
+}
+
+function toggleAdditionalPages() {
+    const enabled = document.getElementById('cache-additional-pages').checked;
+    console.log('Toggling additional pages to:', enabled);
+    
+    fetch('/api/cache-settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'toggle_additional_pages', enabled: enabled})
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server response:', data);
+        showNotification(
+            enabled ? 'Additional page caching enabled' : 'Additional page caching disabled', 
+            'success',
+            3000
+        );
+        loadCacheStats();
+    })
+    .catch(error => {
+        console.error('Error updating setting:', error);
+    });
+}
+
+function openSearchFromNav() {
+    createSearchTab();
+}
+
+function cacheAdditionalForAll() {
+    if (confirm('Cache additional pages for all existing nodes? This may take time.')) {
+        fetch('/api/cache-settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'cache_additional_all'})
+        })
+        .then(r => r.json())
+        .then(data => {
+            showNotification(data.message, 'info');
+        });
+    }
+}
+
+function exportCache() {
+    window.open('/api/export-cache', '_blank');
+}
+
+function browseToSearchResult(url) {
+    // Create new tab and navigate to the result
+    const newTab = createNewTab();
+    const addressBar = document.querySelector(`#${newTab.id} .address-bar`);
+    if (addressBar) {
+        addressBar.value = url;
+        navigateToUrlTab();
+    }
+}
+
+async function loadCacheStats() {
+    try {
+        const [statsResponse, settingsResponse] = await Promise.all([
+            fetch('/api/cache-stats'),
+            fetch('/api/cache-settings')
+        ]);
+       
+        const stats = await statsResponse.json();
+        const settings = await settingsResponse.json();
+       
+        // Build settings summary
+        const autoCacheStatus = settings.auto_cache_enabled ? 'ON' : 'OFF';
+        const autoCacheColor = settings.auto_cache_enabled ? '#3fb950' : '#ff7b72';
+        const sizeLimit = settings.size_limit_mb === -1 ? 'Unlimited' : `${settings.size_limit_mb} MB`;
+        const expiry = settings.expiry_days === -1 ? 'Never' : `${settings.expiry_days} days`;
+        const additionalPages = settings.cache_additional ? 'Yes' : 'No';
+       
+        document.getElementById('cache-stats').innerHTML = `
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="font-size: 12px;">
+                    <strong style="color: #58a6ff;">Search Engine Statistics:</strong>
+                    <span style="color: #3fb950;">${stats.node_count}</span> <span style="color: #e6edf3;">nodes found</span> •
+                    <span style="color: #3fb950;">${stats.page_count}</span> <span style="color: #e6edf3;">cached pages</span> (<span style="color: #3fb950;">${stats.valid_page_count}</span> <span style="color: #e6edf3;">valid pages</span>) •
+                    <span style="color: #e6edf3;">Local cache size: </span><span style="color: #3fb950;">${stats.cache_size}</span>
+                </div>
+                <div style="color: #e6edf3; font-size: 12px;">
+                    <strong style="color: #ffa657;">Settings:</strong>
+                    <span style="color: #e6edf3;">Auto-cache:</span> <span style="color: ${autoCacheColor};">${autoCacheStatus}</span> <span style="color: #e6edf3;">|</span>
+                    <span style="color: #e6edf3;">Limit:</span> <span style="color: #3fb950;">${sizeLimit}</span> <span style="color: #e6edf3;">|</span>
+                    <span style="color: #e6edf3;">Expiry:</span> <span style="color: #3fb950;">${expiry}</span> <span style="color: #e6edf3;">|</span>
+                    <span style="color: #e6edf3;">Additional pages:</span> <span style="color: #3fb950;">${additionalPages}</span>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        document.getElementById('cache-stats').innerHTML = 'Cache stats unavailable';
+    }
+}
+
+function sortAndFilterNodes() {
+    const sortBy = document.getElementById('node-sort').value;
+    const list = document.getElementById('node-list');
+    const nodeItems = Array.from(list.querySelectorAll('.node-item'));
+    
+    // Sort the nodes
+    nodeItems.sort((a, b) => {
+        const hashA = a.getAttribute('data-hash');
+        const hashB = b.getAttribute('data-hash');
+        const nodeA = cachedNodes.find(n => n.hash === hashA);
+        const nodeB = cachedNodes.find(n => n.hash === hashB);
+        
+        if (!nodeA || !nodeB) return 0;
+        
+        switch(sortBy) {
+            case 'recent':
+                return new Date(nodeB.last_seen) - new Date(nodeA.last_seen);
+            
+            case 'frequent':
+                return nodeB.node_announce_count - nodeA.node_announce_count;
+            
+            case 'alphabetical':
+                return nodeA.name.localeCompare(nodeB.name);
+            
+            case 'original':
+            default:
+                return nodeA.announce_count - nodeB.announce_count;
+        }
+    });
+    
+    // Re-append in sorted order
+    nodeItems.forEach(item => list.appendChild(item));
+    
+    // Apply search filter
+    filterNodes();
+}
+
+
+function toggleAsciiOptimization() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const content = document.querySelector(`#${tab.id} .page-content`);
+    const asciiSwitch = document.querySelector(`#${tab.id} .ascii-switch`);
+    const asciiStatus = document.querySelector(`#${tab.id} .ascii-status`);
+    
+    if (!content || !asciiSwitch || !asciiStatus) return;
+    
+    // Toggle the optimization mode
+    content.classList.toggle('ascii-optimized');
+    
+    // Update status text based on state
+    if (content.classList.contains('ascii-optimized')) {
+        asciiStatus.textContent = 'Ascii Mode';
+    } else {
+        asciiStatus.textContent = 'Text Mode';
+    }
+    
+    // Store preference in tab object
+    tab.asciiOptimized = content.classList.contains('ascii-optimized');
+}
+
+function detectContentType(content) {
+    if (!content) return 'text';
+   
+    // Count lines
+    const lines = content.split('\n');
+    const totalLines = lines.length;
+    if (totalLines < 3) return 'text';
+   
+    let asciiArtLines = 0;
+    let textLines = 0;
+    let emptyLines = 0;
+   
+    // Comprehensive character sets - ensure all box drawing chars are included
+    const boxDrawingChars = /[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬┏┓┗┛┣┫┳╋━┃╒╓╕╖╘╙╛╜╞╟╡╢╤╥╧╨╪╫]/g;
+    const blockChars = /[█▓▒░▀▄▌▐▖▗▘▙▚▛▜▝▞▟■□▪▫●○◆◇]/g;
+    
+    // Extended: Include emoji, decorative Unicode, and mathematical alphanumeric symbols
+    const emojiChars = /[\u{1F100}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1D400}-\u{1D7FF}]|[★☆▲△▼▽▶◀™🔍♦]/gu;
+    
+    const repeatedSpecialChars = /([█▓▒░▀▄■●○◆◇★☆▲△▼▽═─│┃━=\-_#@*▀▄])\1{8,}/;
+   
+    // Text indicators - common words and sentence patterns
+    const hasCommonWords = (line) => {
+        const commonWords = /\b(the|is|are|was|were|have|has|will|can|this|that|with|from|for|and|or|but|to|in|on|at|be|by|as|of)\b/i;
+        return commonWords.test(line);
+    };
+   
+    const hasSentenceStructure = (line) => {
+        // Check for sentence-like patterns (capital letter followed by words and punctuation)
+        return /^[A-Z][a-z\s]{10,}[.!?]/.test(line.trim());
+    };
+   
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed.length === 0) {
+            emptyLines++;
+            return;
+        }
+        
+        if (trimmed.length < 3) return;
+       
+        // Count character types
+        const boxCount = (trimmed.match(boxDrawingChars) || []).length;
+        const blockCount = (trimmed.match(blockChars) || []).length;
+        const emojiCount = (trimmed.match(emojiChars) || []).length;
+        const hasRepeated = repeatedSpecialChars.test(trimmed);
+       
+        // Calculate ratios
+        const alphanumeric = trimmed.replace(/[^a-zA-Z0-9]/g, '').length;
+        const alphaRatio = alphanumeric / trimmed.length;
+        const specialRatio = 1 - alphaRatio;
+       
+        // Total decorative characters
+        const totalDecorative = boxCount + blockCount + emojiCount;
+        const decorativeRatio = totalDecorative / trimmed.length;
+       
+        // Check for text characteristics
+        const looksLikeText = hasCommonWords(trimmed) || hasSentenceStructure(trimmed);
+        const isVeryLongLine = trimmed.length > 60;
+       
+        // ASCII art scoring - prioritize high decorative content
+        if ((boxCount >= 3 || blockCount >= 3 || emojiCount >= 3 || 
+             totalDecorative >= 5 || hasRepeated || 
+             decorativeRatio > 0.3 || specialRatio > 0.6) &&
+            !looksLikeText) {
+            asciiArtLines++;
+        }
+        // Text scoring - strong text indicators only
+        else if (looksLikeText && alphaRatio > 0.5 && trimmed.length > 15) {
+            textLines++;
+        }
+        // Long lines with ASCII chars but also text
+        else if (isVeryLongLine && totalDecorative > 0 && !looksLikeText) {
+            asciiArtLines += 0.5;
+        }
+        // Mixed content - slight preference for ASCII if decorative chars present
+        else if (totalDecorative >= 2) {
+            asciiArtLines += 0.3;
+        }
+    });
+   
+    // Check for ASCII art concentration at the beginning
+    let consecutiveAsciiLines = 0;
+    let maxConsecutive = 0;
+    let earlyAsciiLines = 0;
+    
+    for (let i = 0; i < Math.min(15, lines.length); i++) {
+        const line = lines[i].trim();
+        if (line.length === 0) continue;
+        
+        const boxCount = (line.match(boxDrawingChars) || []).length;
+        const blockCount = (line.match(blockChars) || []).length;
+        const emojiCount = (line.match(emojiChars) || []).length;
+        const totalDec = boxCount + blockCount + emojiCount;
+        const decRatio = totalDec / line.length;
+       
+        if (boxCount >= 3 || blockCount >= 3 || emojiCount >= 3 || decRatio > 0.3) {
+            consecutiveAsciiLines++;
+            maxConsecutive = Math.max(maxConsecutive, consecutiveAsciiLines);
+            if (i < 5) earlyAsciiLines++; // Count ASCII in first 5 lines
+        } else {
+            consecutiveAsciiLines = 0;
+        }
+    }
+   
+    const asciiRatio = asciiArtLines / (totalLines - emptyLines);
+    const textRatio = textLines / (totalLines - emptyLines);
+   
+    console.log(`ASCII detection: ${asciiArtLines.toFixed(1)} ASCII lines, ${textLines} text lines out of ${totalLines} total (${emptyLines} empty)`);
+    console.log(`Ratios: ASCII ${(asciiRatio * 100).toFixed(1)}%, Text ${(textRatio * 100).toFixed(1)}%`);
+    console.log(`Max consecutive: ${maxConsecutive}, Early ASCII lines: ${earlyAsciiLines}`);
+   
+    // Decision logic - favor ASCII if there's a strong header/banner
+    if (earlyAsciiLines >= 2 || maxConsecutive >= 3) {
+        // Strong ASCII art header/banner present
+        return 'ascii';
+    } else if (textRatio > 0.6 && asciiRatio < 0.15) {
+        // Overwhelming text content with minimal ASCII
+        return 'text';
+    } else if (asciiRatio > 0.2 || maxConsecutive >= 4) {
+        // Significant ASCII art present
+        return 'ascii';
+    } else if (asciiRatio > textRatio) {
+        // More ASCII than text
+        return 'ascii';
+    } else {
+        // Default to text for ambiguous cases
+        return 'text';
+    }
+}
+
+
+// Dynamic sidebar resizing
+function adjustSidebarWidth() {
+    const screenWidth = window.innerWidth;
+    const sidebar = document.querySelector('.sidebar');
+    const content = document.querySelector('.content');
+    
+    if (!sidebar || !content) return;
+    
+    // Don't adjust on mobile
+    if (isMobileDevice() || screenWidth <= 767) return;
+    
+    let sidebarWidth = 320; // default
+    
+    if (screenWidth >= 1920) {
+        sidebarWidth = 400;
+    } else if (screenWidth >= 1440) {
+        sidebarWidth = 320;
+    } else if (screenWidth >= 1200) {
+        sidebarWidth = 280;
+    } else if (screenWidth >= 768) {
+        sidebarWidth = 260;
+    }
+    
+    sidebar.style.width = sidebarWidth + 'px';
+    sidebar.style.minWidth = sidebarWidth + 'px';
+    sidebar.style.maxWidth = sidebarWidth + 'px';
+    
+    const contentWidth = screenWidth - sidebarWidth;
+    content.style.width = contentWidth + 'px';
+    content.style.minWidth = contentWidth + 'px';
+    content.style.maxWidth = contentWidth + 'px';
+}
+
+// Enhanced mobile detection including Ubuntu Touch/Morph browser
+function isMobileDevice() {
+    // Check multiple conditions
+    const touchDevice = ('ontouchstart' in window) || 
+                       (navigator.maxTouchPoints > 0) || 
+                       (navigator.msMaxTouchPoints > 0);
+    
+    const smallScreen = window.innerWidth <= 768;
+    
+    // Enhanced user agent detection including Ubuntu Touch
+    const mobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Ubuntu.*Mobile|Mobile.*Ubuntu/i.test(navigator.userAgent);
+    
+    const noHover = window.matchMedia('(hover: none)').matches;
+    
+    // Pocophone F1 and similar devices detection
+    const pointerCoarse = window.matchMedia('(pointer: coarse)').matches;
+    
+    // Specific Ubuntu Touch/Morph browser detection
+    const isUbuntuTouch = /Ubuntu.*Touch|QtWebEngine/i.test(navigator.userAgent);
+    
+    // Check for Morph browser specifically
+    const isMorphBrowser = navigator.userAgent.includes('QtWebEngine') || 
+                          navigator.userAgent.includes('Ubuntu') ||
+                          (window.navigator.platform === 'Linux armv7l');
+    
+    return (touchDevice && smallScreen) || 
+           mobileUserAgent || 
+           (noHover && pointerCoarse) || 
+           isUbuntuTouch || 
+           isMorphBrowser;
+}
+
+// Create mobile nodes button function
+function createMobileNodesButton() {
+    console.log('Creating mobile nodes button...');
+    
+    // Remove any existing button first
+    const existingBtn = document.querySelector('.mobile-nodes-btn');
+    if (existingBtn) {
+        existingBtn.remove();
+    }
+    
+    const nodesBtn = document.createElement('button');
+    nodesBtn.className = 'mobile-nodes-btn';
+    nodesBtn.innerHTML = '📋 Nodes';
+    nodesBtn.style.display = 'block';
+    
+    const tabBar = document.querySelector('.tab-bar');
+    const newTabBtn = document.querySelector('.new-tab-btn');
+    
+    if (tabBar && newTabBtn) {
+        tabBar.insertBefore(nodesBtn, newTabBtn);
+        console.log('Mobile nodes button inserted');
+    } else {
+        console.error('Could not find tab-bar or new-tab-btn');
+    }
+    
+    const sidebar = document.querySelector('.sidebar');
+    
+    nodesBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('mobile-show');
+        nodesBtn.innerHTML = sidebar.classList.contains('mobile-show') ? '✕ Close' : '📋 Nodes';
+        console.log('Nodes button clicked, sidebar visible:', sidebar.classList.contains('mobile-show'));
+    });
+    
+    // Close when clicking outside sidebar
+    document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('mobile-show') && 
+            !sidebar.contains(e.target) && 
+            !nodesBtn.contains(e.target)) {
+            sidebar.classList.remove('mobile-show');
+            nodesBtn.innerHTML = '📋 Nodes';
+        }
+    });
+    
+    // Close when node clicked
+    document.getElementById('node-list').addEventListener('click', (e) => {
+        if (e.target.closest('.node-item')) {
+            setTimeout(() => {
+                sidebar.classList.remove('mobile-show');
+                nodesBtn.innerHTML = '📋 Nodes';
+            }, 200);
+        }
+    });
+}
+
+// Apply mobile class if detected
+if (isMobileDevice()) {
+    document.documentElement.classList.add('mobile-device');
+    document.body.classList.add('mobile-device');
+}
+
+// Call on load and resize
+window.addEventListener('resize', adjustSidebarWidth);
+
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('NomadNet Browser starting...');
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Platform:', navigator.platform);
+    console.log('Touch support:', 'ontouchstart' in window);
+    console.log('Max touch points:', navigator.maxTouchPoints);
+    console.log('Screen width:', window.innerWidth);
+    console.log('Is mobile detected:', isMobileDevice());
+    
+    // FORCE mobile mode detection - aggressive approach
+    const forceMinimalMobile = window.innerWidth <= 768 || 
+                               ('ontouchstart' in window && window.innerWidth <= 1024);
+    
+    if (forceMinimalMobile || isMobileDevice()) {
+        document.documentElement.classList.add('mobile-device');
+        document.body.classList.add('mobile-device');
+        console.log('Mobile mode FORCED');
+        
+        // Create mobile nodes button immediately
+        setTimeout(() => {
+            createMobileNodesButton();
+        }, 100);
+    }
+    
+    await initializeMicronParser();
+    loadFavorites();
+    updateNodeListPosition();
+    document.getElementById('node-list').addEventListener('click', function(e) {
+
+        if (e.target.classList.contains('info-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const hash = e.target.getAttribute('data-hash');
+            const name = e.target.getAttribute('data-name');
+            const lastSeen = e.target.getAttribute('data-last-seen');
+            const dataLength = e.target.getAttribute('data-data-length');
+            const announceCount = e.target.getAttribute('data-announce-count');
+            const relativeTime = e.target.getAttribute('data-relative-time');
+            
+            showNodeInfo(hash, name, lastSeen, dataLength, announceCount, relativeTime);
+            return;
+        }
+        
+        if (e.target.classList.contains('star-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const hash = e.target.getAttribute('data-hash');
+            const name = e.target.getAttribute('data-name');
+            toggleFavorite(hash, name);
+            return;
+        }
+
+        const nodeItem = e.target.closest('.node-item');
+        if (nodeItem && !e.target.closest('.star-btn') && !e.target.closest('.info-btn') && !e.target.closest('.copy-icon')) {
+            const hash = nodeItem.getAttribute('data-hash');
+            const name = nodeItem.getAttribute('data-name');
+            browseNode(hash, name);
+        }
+
+        if (e.target.classList.contains('fingerprint-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const hash = e.target.getAttribute('data-hash');
+            const name = e.target.getAttribute('data-name');
+            sendFingerprintToNode(hash, name);
+            return;
+        }
+
+    });
+
+    createNewTab();
+
+    setInterval(() => {
+        updateNodes();
+        updateStatus();
+
+        if (statusFetchFailures >= maxStatusFailures) {
+            if (Math.random() < 0.2) {  
+                console.log('Attempting connection recovery...');
+                setTimeout(() => {
+                    statusFetchFailures = Math.max(0, statusFetchFailures - 1); 
+                    updateStatus();
+                }, 1000); 
+            }
+        }
+    }, 2000);
+
+    updateNodes();
+    updateStatus();
+
+    console.log('Browser initialization complete');
+
+    // Enhanced URL Parameter Support - Multiple formats
+    function checkAndLoadURLParameter() {
+        // Check for ?url= parameter first
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlParam = urlParams.get('url');
+        
+        if (urlParam) {
+            console.log('URL parameter detected:', urlParam);
+            loadPageFromParameter(urlParam);
+            return;
+        }
+        
+        // Check for path-based hash (e.g., /hash or /hash/page/path)
+        const path = window.location.pathname;
+        if (path && path !== '/' && path.length > 1) {
+            const pathWithoutSlash = path.substring(1); // Remove leading /
+            console.log('Path-based URL detected:', pathWithoutSlash);
+            
+            // Check if it starts with a valid hash (32 hex characters)
+            const hashMatch = pathWithoutSlash.match(/^([a-fA-F0-9]{32})(.*)?$/);
+            
+            if (hashMatch) {
+                const hash = hashMatch[1];
+                const pagePath = hashMatch[2]; // Could be empty, /page/about.mu, etc.
+                
+                let nomadnetUrl;
+                if (pagePath && pagePath.length > 0) {
+                    // Has a specific page path: /hash/page/about.mu
+                    nomadnetUrl = `${hash}:${pagePath}`;
+                } else {
+                    // Just hash: /hash → default to index.mu
+                    nomadnetUrl = `${hash}:/page/index.mu`;
+                }
+                
+                console.log('Constructed NomadNet URL:', nomadnetUrl);
+                loadPageFromParameter(nomadnetUrl);
+                return;
+            }
+        }
+    }
+
+    function loadPageFromParameter(nomadnetUrl) {
+        // Wait for the first tab to be created and ready
+        setTimeout(() => {
+            const tab = getActiveTab();
+            if (tab) {
+                const addressBar = document.querySelector(`#${tab.id} .address-bar`);
+                if (addressBar) {
+                    addressBar.value = nomadnetUrl;
+                    
+                    // Navigate to the URL
+                    navigateToUrlInternalTab(nomadnetUrl, true);
+                    
+                    // Clean the URL bar (remove parameters/path) without page reload
+                    window.history.replaceState({}, document.title, window.location.origin);
+                }
+            }
+        }, 500);
+    }
+
+    // Call the function after initialization
+    checkAndLoadURLParameter();
+
+    // Orientation alert for mobile devices - auto-hide after 5 seconds
+    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches || isMobileDevice()) {
+        let alertTimeout = null;
+        
+        function checkOrientation() {
+            const isPortrait = window.innerHeight > window.innerWidth;
+            
+            if (isPortrait) {
+                // Create alert if it doesn't exist
+                if (!document.getElementById('orientation-alert')) {
+                    const alert = document.createElement('div');
+                    alert.id = 'orientation-alert';
+                    alert.style.cssText = `
+                        position: fixed;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        background: #fb8500;
+                        color: white;
+                        padding: 12px;
+                        text-align: center;
+                        z-index: 3000;
+                        font-size: 14px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        transition: opacity 0.3s ease;
+                    `;
+                    alert.innerHTML = '📱 For better experience, please rotate your device to landscape mode';
+                    document.body.appendChild(alert);
+                    
+                    // Auto-hide after 5 seconds
+                    alertTimeout = setTimeout(() => {
+                        alert.style.opacity = '0';
+                        setTimeout(() => {
+                            if (alert.parentNode) {
+                                alert.remove();
+                            }
+                        }, 300); // Wait for fade animation
+                    }, 5000);
+                }
+            } else {
+                // Remove alert in landscape
+                if (alertTimeout) {
+                    clearTimeout(alertTimeout);
+                    alertTimeout = null;
+                }
+                const alert = document.getElementById('orientation-alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }
+        }
+        
+        // Check on load
+        checkOrientation();
+        
+        // Check on orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(checkOrientation, 100);
+        });
+        
+        // Check on resize
+        window.addEventListener('resize', checkOrientation);
+    }
+});
+
+// mobile devices support
+let touchStartX = 0;
+let touchEndX = 0;
+let touchStartY = 0;
+let touchEndY = 0;
+let touchStartTime = 0;
+
+document.addEventListener('touchstart', e => {
+    // Only track swipes that start from the edge of the screen or tab bar
+    const touch = e.changedTouches[0];
+    const isFromEdge = touch.clientX < 50 || touch.clientX > window.innerWidth - 50;
+    const isFromTabBar = touch.target.closest('.tab-bar') !== null;
+    
+    if (isFromEdge || isFromTabBar) {
+        touchStartX = touch.screenX;
+        touchStartY = touch.screenY;
+        touchStartTime = Date.now();
+    } else {
+        touchStartX = 0;
+        touchStartY = 0;
+    }
+});
+
+document.addEventListener('touchend', e => {
+    if (touchStartX === 0) return; // Ignore if not started from edge/tab bar
+    
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const swipeThreshold = 80; // Increased from 50
+    const maxSwipeTime = 300; // Maximum time for a swipe gesture (ms)
+    const maxVerticalMovement = 50; // Maximum vertical movement to still count as horizontal swipe
+    
+    const horizontalDiff = touchStartX - touchEndX;
+    const verticalDiff = Math.abs(touchStartY - touchEndY);
+    const swipeTime = Date.now() - touchStartTime;
+    
+    // Only trigger if:
+    // 1. Horizontal movement is above threshold
+    // 2. Vertical movement is minimal (not scrolling)
+    // 3. Swipe was fast enough
+    if (Math.abs(horizontalDiff) > swipeThreshold && 
+        verticalDiff < maxVerticalMovement && 
+        swipeTime < maxSwipeTime) {
+        
+        if (horizontalDiff > 0) {
+            // Swipe left - next tab
+            switchToNextTab();
+        } else {
+            // Swipe right - previous tab
+            switchToPreviousTab();
+        }
+    }
+    
+    // Reset
+    touchStartX = 0;
+    touchStartY = 0;
+}
+
+// Auto-reload Functions
+function showAutoReloadSettings() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'auto-reload-modal';
+    overlay.id = 'auto-reload-modal';
+    
+    const dialog = document.createElement('div');
+    dialog.className = 'auto-reload-dialog';
+    
+    dialog.innerHTML = `
+        <h3>⏱️ Auto-Reload Settings</h3>
+        
+        <div class="auto-reload-setting">
+            <div class="auto-reload-toggle">
+                <label>Enable Auto-Reload</label>
+                <div class="toggle-switch ${tab.autoReloadEnabled ? 'active' : ''}" onclick="toggleAutoReloadInModal()">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auto-reload-setting" id="interval-setting" style="${tab.autoReloadEnabled ? '' : 'opacity: 0.5; pointer-events: none;'}">
+            <label>Reload Interval (seconds)</label>
+            <input type="number" class="interval-input" id="reload-interval-input" 
+                   min="5" max="3600" value="${tab.autoReloadInterval}"
+                   placeholder="Enter seconds (5-3600)">
+            
+            <div class="interval-presets">
+                <button class="preset-btn" onclick="setIntervalPreset(10)">10s</button>
+                <button class="preset-btn" onclick="setIntervalPreset(30)">30s</button>
+                <button class="preset-btn" onclick="setIntervalPreset(60)">1m</button>
+                <button class="preset-btn" onclick="setIntervalPreset(120)">2m</button>
+                <button class="preset-btn" onclick="setIntervalPreset(300)">5m</button>
+                <button class="preset-btn" onclick="setIntervalPreset(600)">10m</button>
+            </div>
+        </div>
+        
+        <div class="auto-reload-info">
+            ℹ️ The current page will automatically reload at the specified interval. This is useful for monitoring live content.
+        </div>
+        
+        <div class="auto-reload-actions">
+            <button class="btn-cancel" onclick="closeAutoReloadModal()">Cancel</button>
+            <button class="btn-save" onclick="saveAutoReloadSettings()">Save Settings</button>
+        </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            closeAutoReloadModal();
+        }
+    });
+    
+    // Close on Escape key
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.removeEventListener('keydown', escapeHandler);
+            closeAutoReloadModal();
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
+function toggleAutoReloadInModal() {
+    const toggle = document.querySelector('.toggle-switch');
+    const intervalSetting = document.getElementById('interval-setting');
+    
+    toggle.classList.toggle('active');
+    
+    if (toggle.classList.contains('active')) {
+        intervalSetting.style.opacity = '1';
+        intervalSetting.style.pointerEvents = 'auto';
+    } else {
+        intervalSetting.style.opacity = '0.5';
+        intervalSetting.style.pointerEvents = 'none';
+    }
+}
+
+function setIntervalPreset(seconds) {
+    document.getElementById('reload-interval-input').value = seconds;
+}
+
+function saveAutoReloadSettings() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const toggle = document.querySelector('.toggle-switch');
+    const intervalInput = document.getElementById('reload-interval-input');
+    const interval = parseInt(intervalInput.value) || 60;
+    
+    // Validate interval
+    if (interval < 5 || interval > 3600) {
+        showNotification('Interval must be between 5 and 3600 seconds', 'error', 3000);
+        return;
+    }
+    
+    const enabled = toggle.classList.contains('active');
+    
+    tab.setAutoReloadInterval(interval);
+    
+    if (enabled) {
+        tab.startAutoReload();
+        showNotification(
+            `Auto-reload enabled: ${interval}s interval`,
+            'success',
+            3000
+        );
+    } else {
+        tab.stopAutoReload();
+        showNotification('Auto-reload disabled', 'info', 3000);
+    }
+    
+    updateAutoReloadButton();
+    closeAutoReloadModal();
+}
+
+function closeAutoReloadModal() {
+    const modal = document.getElementById('auto-reload-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function updateAutoReloadButton() {
+    const tab = getActiveTab();
+    if (!tab) return;
+    
+    const btn = document.querySelector(`#${tab.id} .auto-reload-btn`);
+    const countdown = document.querySelector(`#${tab.id} .reload-countdown`);
+    
+    if (!btn || !countdown) return;
+    
+    // Hide button if no page is loaded (new tab or error state)
+    if (!tab.currentUrl || tab.currentUrl === '') {
+        btn.style.display = 'none';
+        return;
+    }
+    
+    // Show button when a page is loaded
+    btn.style.display = 'flex';
+    
+    if (tab.autoReloadEnabled) {
+        btn.classList.add('active');
+        countdown.textContent = `${tab.autoReloadCountdown}s`;
+        btn.title = `Auto-reload active: ${tab.autoReloadCountdown}s until next reload`;
+    } else {
+        btn.classList.remove('active');
+        countdown.textContent = '';
+        btn.title = 'Auto-reload settings (click to configure)';
+    }
+}
+
+
+    </script>
+</body>
+</html>
