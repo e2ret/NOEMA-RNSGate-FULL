@@ -429,7 +429,8 @@ pip install \
     requests \
     geopy \
     bleak \
-    pexpect
+    pexpect \
+    maxminddb
 # Force reinstall rns to ensure the RNS library is properly linked in the venv
 # (dashboard.py imports it directly now — there's no separate rnsd process)
 pip install --force-reinstall rns -q
