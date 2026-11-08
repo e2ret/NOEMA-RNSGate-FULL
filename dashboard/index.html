@@ -16,34 +16,34 @@
 
 :root{
   color-scheme:dark;
-  --bg:#070f09;
-  --bg-wash:repeating-linear-gradient(0deg,rgba(61,220,132,.025) 0px,rgba(61,220,132,.025) 1px,transparent 1px,transparent 3px),radial-gradient(ellipse 1100px 650px at 50% -12%,rgba(61,220,132,.09),transparent 60%);
-  --s1:rgba(61,220,132,.035);
-  --s2:rgba(61,220,132,.06);
-  --s3:#101a13;
-  --bd:rgba(61,220,132,.16);
-  --bd-hi:rgba(61,220,132,.5);
-  --tx:#cdf3d6;
-  --mu:#5e7d68;
-  --gr:#3ddc84;
-  --am:#e8a33d;
-  --rd:#ff5c5c;
-  --bl:#4fd1c5;
-  --teal:#4de892;
-  --purple:#c98fb3;
+  --bg:#060a1a;
+  --bg-wash:repeating-linear-gradient(0deg,rgba(56,189,248,.025) 0px,rgba(56,189,248,.025) 1px,transparent 1px,transparent 3px),radial-gradient(ellipse 1100px 650px at 50% -12%,rgba(56,189,248,.09),transparent 60%);
+  --s1:rgba(56,189,248,.035);
+  --s2:rgba(56,189,248,.06);
+  --s3:#0c101e;
+  --bd:rgba(56,189,248,.16);
+  --bd-hi:rgba(56,189,248,.5);
+  --tx:#cfe8f5;
+  --mu:#4e7988;
+  --gr:#38bdf8;
+  --am:#a9dcf0;
+  --rd:#ffffff;
+  --bl:#00aeff;
+  --teal:#5ccbfa;
+  --purple:#6fb4e0;
   --indigo:#7d93b3;
-  --sky:#7fd4d4;
-  --pink:#e08a6a;
-  --slate:#7a9382;
-  --slate2:#c5d4c0;
-  --i2ptl:#5ee0a3;
-  --off:#3c4f42;
-  --chart-grid:rgba(61,220,132,.12);
+  --sky:#78cce2;
+  --pink:#eaf9ff;
+  --slate:#658ca8;
+  --slate2:#b7cddd;
+  --i2ptl:#78cce2;
+  --off:#2d4a5e;
+  --chart-grid:rgba(56,189,248,.12);
   --fn:'Inter',system-ui,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,monospace;
   --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 24px rgba(0,0,0,.6);
   --shadow-lg:0 20px 48px rgba(0,0,0,.7);
-  --glow:0 0 0 4px rgba(61,220,132,.25);
+  --glow:0 0 0 4px rgba(56,189,248,.25);
   --radius:4px;
   --ease:cubic-bezier(.4,0,.2,1)
 }
@@ -51,6 +51,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 html{background:var(--bg)}
+input[type=checkbox],input[type=radio],input[type=range],progress{accent-color:var(--gr)}
 
 body{
   background:var(--bg-wash);
@@ -66,15 +67,15 @@ body{
 
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(61,220,132,.22);border-radius:8px}
-::-webkit-scrollbar-thumb:hover{background:rgba(61,220,132,.4)}
+::-webkit-scrollbar-thumb{background:rgba(56,189,248,.22);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,.4)}
 
 :focus-visible{outline:1.5px solid var(--teal);outline-offset:-1.5px}
 
 .skel{
   display:inline-block;min-width:3em;height:1em;vertical-align:-0.15em;
   color:transparent!important;border-radius:6px;
-  background:linear-gradient(90deg,rgba(61,220,132,.08) 25%,rgba(61,220,132,.18) 37%,rgba(61,220,132,.08) 63%);
+  background:linear-gradient(90deg,rgba(56,189,248,.08) 25%,rgba(56,189,248,.18) 37%,rgba(56,189,248,.08) 63%);
   background-size:400% 100%;
   animation:skel-shimmer 1.6s ease-in-out infinite
 }
@@ -92,7 +93,7 @@ body{
 }
 
 .logo{font-size:15px;font-weight:800;color:var(--teal);letter-spacing:.06em;font-family:var(--mono);text-transform:uppercase;text-shadow:0 0 8px currentColor}
-.logo b{color:var(--tx);font-weight:800;text-shadow:0 0 6px rgba(61,220,132,.35)}
+.logo b{color:var(--tx);font-weight:800;text-shadow:0 0 6px rgba(56,189,248,.35)}
 
 .pill{
   display:flex;align-items:center;gap:7px;
@@ -108,7 +109,7 @@ body{
 
 .theme-toggle{
   display:inline-flex;align-items:center;justify-content:center;
-  width:32px;height:32px;flex-shrink:0;border-radius:50%;
+  width:32px;height:32px;flex-shrink:0;border-radius:var(--radius);
   border:1px solid var(--bd);background:var(--s2);color:var(--mu);
   cursor:pointer;transition:border-color .15s var(--ease),color .15s var(--ease),background-color .15s var(--ease)
 }
@@ -140,7 +141,7 @@ body{
 }
 .mc:last-child{border-right:none}
 .mc::before{content:none}
-.mc:hover{background:rgba(61,220,132,.06)}
+.mc:hover{background:rgba(56,189,248,.06)}
 .mc-inner{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
 .mc .lb{color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.14em;font-weight:600;margin-bottom:0;font-family:var(--mono);flex:1}
 .mc .vl{font-size:22px;font-weight:700;line-height:1;font-family:var(--mono);letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-shadow:0 0 6px currentColor}
@@ -203,12 +204,12 @@ body{
   padding-right:6px;
   scrollbar-gutter:stable;
   scrollbar-width:thin;
-  scrollbar-color:rgba(61,220,132,.28) transparent;
+  scrollbar-color:rgba(56,189,248,.28) transparent;
 }
 .rns-iface-scroll::-webkit-scrollbar{width:7px}
-.rns-iface-scroll::-webkit-scrollbar-track{background:rgba(61,220,132,.05);border-radius:8px}
-.rns-iface-scroll::-webkit-scrollbar-thumb{background:rgba(61,220,132,.28);border-radius:8px}
-.rns-iface-scroll::-webkit-scrollbar-thumb:hover{background:rgba(61,220,132,.5)}
+.rns-iface-scroll::-webkit-scrollbar-track{background:rgba(56,189,248,.05);border-radius:8px}
+.rns-iface-scroll::-webkit-scrollbar-thumb{background:rgba(56,189,248,.28);border-radius:8px}
+.rns-iface-scroll::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,.5)}
 
 .sys-btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -229,10 +230,10 @@ body{
   touch-action:manipulation;
 }
 .sys-btn:hover{background:var(--s3);border-color:var(--bd-hi)}
-.sys-btn:active{background:rgba(61,220,132,.16);border-color:var(--teal)}
-.sys-btn.teal{color:var(--teal);background:rgba(61,220,132,.09);border-color:rgba(61,220,132,.35);}
-.sys-btn.am{color:var(--am);border-color:rgba(245,166,35,.3)}
-.sys-btn.rd{color:var(--rd);border-color:rgba(255,92,92,.3)}
+.sys-btn:active{background:rgba(56,189,248,.16);border-color:var(--teal)}
+.sys-btn.teal{color:var(--teal);background:rgba(56,189,248,.09);border-color:rgba(56,189,248,.35);}
+.sys-btn.am{color:var(--am);border-color:rgba(169,220,240,.3)}
+.sys-btn.rd{color:var(--rd);border-color:rgba(234,249,255,.3)}
 .main{overflow-y:auto;padding:20px 20px;background:transparent;display:flex;flex-direction:column;flex:1;min-height:0}
 .main:has(#panel-nodes.active){overflow-y:hidden}
 .main:has(#panel-system.active){overflow-y:hidden}
@@ -251,13 +252,13 @@ body{
   transition:background-color .15s,border-color .15s
 }
 .btn:hover{background:var(--s3);border-color:var(--bd-hi)}
-.btn.ok{background:rgba(61,220,132,.1);color:var(--gr);border-color:rgba(61,220,132,.3)}
-.btn.ok:hover{background:rgba(61,220,132,.18)}
-.btn.wr{background:rgba(245,166,35,.1);color:var(--am);border-color:rgba(245,166,35,.3)}
-.btn.wr:hover{background:rgba(245,166,35,.18)}
-.btn.er{background:rgba(255,92,92,.1);color:var(--rd);border-color:rgba(255,92,92,.3)}
-.btn.er:hover{background:rgba(255,92,92,.18)}
-.btn.pr{background:var(--teal);color:#0b0f0c;border:1px solid var(--teal);font-weight:700;box-shadow:var(--glow)}
+.btn.ok{background:rgba(56,189,248,.1);color:var(--gr);border-color:rgba(56,189,248,.3)}
+.btn.ok:hover{background:rgba(56,189,248,.18)}
+.btn.wr{background:rgba(169,220,240,.1);color:var(--am);border-color:rgba(169,220,240,.3)}
+.btn.wr:hover{background:rgba(169,220,240,.18)}
+.btn.er{background:rgba(234,249,255,.1);color:var(--rd);border-color:rgba(234,249,255,.3)}
+.btn.er:hover{background:rgba(234,249,255,.18)}
+.btn.pr{background:var(--teal);color:#070a13;border:1px solid var(--teal);font-weight:700;box-shadow:var(--glow)}
 .btn.pr:hover{filter:brightness(1.08)}
 
 .brow{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
@@ -306,7 +307,7 @@ select{
 .cfg-tabs::-webkit-scrollbar{display:none}
 .ctab{font-size:12px;padding:8px 15px;cursor:pointer;color:var(--mu);border-radius:var(--radius);border:1px solid var(--bd);background:var(--s2);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:.15s;white-space:nowrap;flex-shrink:0}
 .ctab:hover{color:var(--tx);border-color:var(--mu)}
-.ctab.active{color:#0b0f0c;background:var(--teal);border-color:var(--teal);font-weight:700;box-shadow:var(--glow)}
+.ctab.active{color:#070a13;background:var(--teal);border-color:var(--teal);font-weight:700;box-shadow:var(--glow)}
 .ctab:hover:not(.active){color:var(--tx)}
 .cfg-path{font-size:11px;color:var(--mu);margin-bottom:8px;font-family:var(--mono)}
 
@@ -325,7 +326,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
 
 .toast{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:var(--teal);color:#0b0f0c;
+  background:var(--teal);color:#070a13;
   font-size:12px;font-weight:700;padding:10px 22px;
   border-radius:var(--radius);opacity:0;transition:opacity .2s;
   pointer-events:none;z-index:9999;font-family:var(--mono);letter-spacing:.03em;
@@ -368,7 +369,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
 .hub-pill{
   position:relative;display:flex;align-items:center;
   padding:8px;flex-shrink:0;
-  background:var(--s1);border:1px solid var(--bd);border-radius:999px;
+  background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius);
   box-shadow:var(--shadow);cursor:pointer;
   transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background-color .15s var(--ease),padding .2s var(--ease);
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
@@ -425,64 +426,300 @@ function chatShowMessages(){
   document.getElementById("chat-msgs-pane").style.display="flex";
 }
 </script>
+<style id="sidebar-layout">
+/* v1.1.13: left sidebar layout (grouped menu), page header, compact meters */
+.shell{grid-template-columns:252px minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
+.sidebar{grid-column:1;grid-row:1/4;display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;padding:14px 12px;background:var(--bg);border-right:1px solid var(--bd);z-index:30}
+.pagebar,.metrics,.body{grid-column:2;min-width:0}
+.pagebar{grid-row:1}
+.metrics{grid-row:2}
+.body{grid-row:3}
+.sb-overlay,.sb-burger{display:none}
+.sb-brand{display:flex;flex-direction:column;gap:6px;padding:2px 6px 10px;border-bottom:1px solid var(--bd)}
+.sb-meta{display:flex;flex-direction:column;gap:2px}
+.sb-ip{align-self:flex-start}
+.shell .hub-col{flex-direction:column;flex-wrap:nowrap;justify-content:flex-start;align-items:stretch;gap:2px;overflow:visible}
+.shell .hub-pill-ic{display:none}   /* no icons in the menu: text only */
+.shell .hub-pill{padding:7px 12px}
+.shell .hub-pill span,.shell .hub-pill:hover span,.shell .hub-pill.active span{margin-left:0}
+.shell .hub-pill-ic svg{width:14px;height:14px}
+.shell .hub-pill span{font-size:13px}
+.sb-brand .logo{font-size:13px}
+.sb-sec{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mu);padding:9px 8px 3px}
+.shell .hub-pill{border-radius:var(--radius);padding:4px 8px;background:transparent;border-color:transparent;box-shadow:none}
+.shell .hub-pill:hover{background:var(--s2);border-color:var(--bd);box-shadow:none}
+.shell .hub-pill.active{background:var(--s3);border-color:var(--teal);box-shadow:var(--glow)}
+.shell .hub-pill span,.shell .hub-pill:hover span,.shell .hub-pill.active span,.shell .hub-pill:focus-visible span{max-width:none;opacity:1;margin-left:10px;overflow:visible}
+.shell .hub-pill,.shell .hub-pill:hover,.shell .hub-pill.active,.shell .hub-pill:focus-visible{padding-right:8px}
+.sb-meters{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--bd)}
+.sb-meters .mc{border:1px solid var(--bd);border-radius:8px;padding:6px 10px;background:var(--s1)}
+.sb-meters .mc-inner{margin-bottom:5px}
+.sb-meters .mc .vl{font-size:15px}
+.pagebar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 24px;border-bottom:1px solid var(--bd);background:var(--bg)}
+.pg-title{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:.05em;color:var(--tx);text-transform:uppercase}
+.pg-right{display:flex;align-items:center;gap:8px}
+.shell:not(.on-home) .metrics{display:none}
+.shell .metrics{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
+@media(max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .pagebar,.metrics,.body{grid-column:1}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:272px;max-width:86vw;transform:translateX(-102%);transition:transform .22s var(--ease);box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:none}
+  .sb-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:25}
+  body.sb-open .sb-overlay{opacity:1;pointer-events:auto}
+  .sb-burger{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--radius);border:1px solid var(--bd);background:var(--s1);color:var(--tx);font-size:18px;cursor:pointer}
+  .pagebar{padding:10px 14px}
+  .pg-title{font-size:15px}
+  .shell .metrics{padding:0 8px}
+}
+@media(max-width:600px){
+  .shell .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .shell .metrics .mc{padding:7px 8px}
+  .shell .metrics .mc-inner{flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:6px}
+  .shell .metrics .mc .vl{font-size:15px}
+  .shell .metrics .mc .lb{font-size:8.5px;letter-spacing:.08em;flex:none}
+}
+</style>
+<style id="netmap-css">
+.nm-wrap{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px}
+.nm-globe-box{position:relative;min-height:340px;border:1px solid var(--bd);border-radius:12px;background:radial-gradient(circle at 50% 45%,rgba(56,189,248,.06),transparent 70%),var(--s1);overflow:hidden}
+.nm-globe-box canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+.nm-globe-box canvas:active{cursor:grabbing}
+.nm-legend{position:absolute;left:12px;bottom:10px;display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:var(--mu);pointer-events:none}
+.nm-legend span{display:inline-flex;align-items:center;gap:5px}
+.nm-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.nm-legend b{font-weight:600}
+.nm-credit{position:absolute;right:12px;bottom:10px;max-width:50%;text-align:right;font-family:var(--mono);font-size:9px;color:var(--mu);pointer-events:none}
+.nm-side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}
+.nm-card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;font-size:12px;flex-shrink:0}
+.nm-list{display:flex;flex-direction:column;gap:6px}
+.nm-item{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--s1);cursor:pointer;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+.nm-item:hover{border-color:var(--bd-hi)}
+.nm-item.sel{border-color:var(--teal);box-shadow:var(--glow)}
+.nm-item.off{opacity:.55}
+.nm-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.nm-name{font-weight:700;font-size:12.5px;color:var(--tx);overflow-wrap:anywhere}
+.nm-st{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-left:4px}
+.nm-sub{font-size:11px;color:var(--mu);overflow-wrap:anywhere}
+.nm-mono{font-family:var(--mono);font-size:10.5px}
+.nm-form{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.nm-form #nm-label{grid-column:1/-1}
+.nm-in{background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:12px;padding:6px 8px;min-width:0;width:100%}
+.nm-bar{height:6px;border-radius:3px;background:var(--s3);overflow:hidden;margin-top:6px}
+.nm-bar>div{height:100%;background:var(--teal);transition:width .4s}
+@media(max-width:900px){.nm-wrap{grid-template-columns:minmax(0,1fr);flex:none}.nm-globe-box{height:min(96vw,440px);min-height:0}.nm-side{overflow:visible}}
+</style>
+<style id="home-css">
+.home-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) clamp(360px,26vw,500px);gap:14px}
+.home-side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}
+.home-diag{flex:1;min-height:150px;display:flex;flex-direction:column}
+.home-diag .svc-arch-diagram{flex:1;min-height:0;max-width:none;margin:0;position:relative}
+.home-diag svg{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;height:100% !important;max-height:none !important}
+@media(max-width:900px){.home-diag{flex:none;min-height:0}.home-diag .svc-arch-diagram{position:static;max-width:360px;margin:0 auto}.home-diag svg{position:static;transform:none;left:auto;height:auto !important;max-height:420px !important}}
+.svc-mini{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.svc-mini:last-child{border-bottom:none}
+.svc-mini .svc-n{min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svc-mini .badge{padding:3px 7px;font-size:9px}
+.svc-ib{display:inline-flex;gap:4px}
+.svc-ib .sys-btn{width:var(--ctl-h);height:var(--ctl-h);padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
+.nm-hint{position:absolute;left:12px;right:12px;top:12px;z-index:2;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(5,8,16,.9);border:1px solid var(--bd-hi);border-radius:10px;padding:8px 10px;font-size:11.5px;color:var(--am)}
+@media(max-width:900px){.home-grid{grid-template-columns:minmax(0,1fr);flex:none}.home-grid .nm-globe-box{height:min(96vw,440px);min-height:0}.home-side{overflow:visible}}
+</style>
+<style id="svc-addr-css">
+.nm-pal-btn{position:absolute;top:10px;right:10px;z-index:3;width:28px;height:28px;padding:0;border-radius:8px;border:1px solid var(--bd-hi);background:rgba(5,8,16,.7);color:var(--tx);font-size:15px;line-height:1;cursor:pointer}
+.nm-pal-btn:hover{border-color:var(--teal)}
+.nm-hint{right:48px !important}
+.svc-block{border-bottom:1px solid var(--bd);padding:5px 0}
+.svc-block:last-child{border-bottom:none}
+.svc-block .svc-mini{border-bottom:none;padding:0}
+/* compact (default): one line per address, icon-only buttons, no description line */
+.svc-addr{margin:3px 0 0 17px;min-width:0;display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:8px;align-items:center}
+.svc-addr .addr-top{grid-column:1;display:flex;min-width:0}
+.svc-addr .addr-k{flex:none;font-size:10px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svc-addr .addr-d{display:none}
+.svc-addr .addr-row{grid-column:2;display:flex;align-items:center;gap:8px;min-width:0}
+.svc-addr .addr-v{flex:1;min-width:0;display:block;font-family:var(--fn);font-size:10.5px;color:var(--teal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svc-addr .sys-btn{flex-shrink:0;min-width:24px;height:24px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
+.svc-addr .b-t,.svc-mini .b-t{display:none}
+/* wide screens: three cards in a row; services keep their labelled buttons, addresses get a description line */
+@media(min-width:1300px){
+  .home-grid{grid-template-columns:minmax(0,1fr) clamp(400px,26vw,480px) minmax(0,.95fr)}
+  .home-side{display:contents}
+  .home-side>.nm-card:first-child{display:flex;flex-direction:column;min-height:0}
+  .home-side>.nm-card:first-child .brow{margin-top:10px !important;padding-top:8px;flex-shrink:0}
+  #svc-compact{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
+  .svc-block{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;padding:6px 0}
+  .svc-mini{display:flex;flex-wrap:nowrap;align-items:center;gap:8px}
+  .svc-mini .svc-n{flex:1 1 0;min-width:0;font-size:13px}
+  .svc-mini .badge{flex:0 0 auto;padding:3px 7px;font-size:9px}
+  .svc-mini .svc-ib{flex:0 0 auto;gap:4px}
+  .svc-mini .sys-btn{width:auto;height:auto;padding:4px 7px;font-size:10px;letter-spacing:.04em}
+  .svc-mini .b-t,.svc-addr .b-t{display:inline}
+  .svc-mini .b-i{font-size:9.5px}
+  .svc-addr{display:block;margin:4px 0 0 17px}
+  .svc-addr .addr-top{display:block;line-height:1.35}
+  .svc-addr .addr-k{display:inline;font-size:11px;color:var(--tx);margin-right:6px}
+  .svc-addr .addr-d{display:inline;font-size:10px;color:var(--mu);white-space:normal;overflow:visible}
+  .svc-mini .badge.active{display:none}
+  .svc-addr .addr-row{gap:8px;margin-top:1px}
+  .svc-addr .addr-v{font-size:11px}
+  .svc-addr .sys-btn{height:auto;min-width:0;padding:3px 8px;font-size:10px}
+  .home-diag{min-height:0}
+}
+
+/* 901..1299 px: globe + services side by side, the diagram keeps its natural size and the page scrolls */
+@media(min-width:901px) and (max-width:1299px){
+  #panel-home.active{flex:none;min-height:auto}
+  .home-grid{flex:none;grid-template-columns:minmax(0,1fr) 360px}
+  .home-grid #home-globe{min-height:520px}
+  .home-side{overflow:visible}
+  .home-diag{flex:none;min-height:0}
+  .home-diag .svc-arch-diagram{position:static;max-width:340px;margin:0 auto}
+  .home-diag svg{position:static;transform:none;left:auto;height:auto !important;max-height:none !important}
+}
+
+/* low windows (e.g. 140 % zoom on a 1080p screen): tighten the services card so it still fits without scrolling */
+@media(min-width:1300px) and (max-height:820px){
+  .svc-block{padding:3px 0}
+  .svc-addr{margin-top:2px}
+  .svc-addr .addr-top{line-height:1.25}
+  .svc-addr .addr-row{margin-top:0}
+  .svc-addr .sys-btn{padding:2px 7px}
+  .svc-mini .sys-btn{padding:3px 6px}
+  .home-side>.nm-card:first-child .brow{margin-top:6px !important;padding-top:4px}
+}
+
+/* the flash of the status dot must not be cut by the scrolling list: smaller ring and room around it */
+.svc-mini .dot::after{animation-name:radar-ping-sm}
+@keyframes radar-ping-sm{0%{transform:scale(1);opacity:.6}70%,100%{transform:scale(2.3);opacity:0}}
+#svc-compact{padding:6px 4px 0 8px}
+</style>
+<style id="metrics-css">
+/* sidebar header labels keep their height so the menu does not jump when a label is refreshed */
+#uptime-lbl,#clock-lbl,#rns-ver-lbl{min-height:1.3em;white-space:nowrap}
+/* counters (MQTT, LXMF sent / received) have no bar; the percentage bars are slimmer */
+.mc.nobar .pb{display:none}
+.mc.nobar{display:flex;align-items:center}
+.mc.nobar .mc-inner{width:100%;margin:0}
+.pb{height:8px;margin-top:6px}
+@media(max-width:600px){
+  .shell .metrics{grid-template-columns:repeat(12,minmax(0,1fr))}
+  .shell .metrics .mc{grid-column:span 3}
+  .shell .metrics .mc:nth-child(n+5){grid-column:span 4}
+  .shell .metrics .mc.nobar{display:block}
+  .shell .metrics .mc .pb{display:none}
+  .shell .metrics .mc .lb{white-space:nowrap;letter-spacing:.04em;font-size:8px}
+  .shell .metrics .mc-inner{margin-bottom:0}
+}
+</style>
+<style id="ctl-css">
+/* one height for every control: buttons, tabs, inputs and selects are all 32 px */
+:root{--ctl-h:32px}
+.sys-btn,.ctab,.prof-chip,.sys-side-btn,select,
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=color]){
+  height:var(--ctl-h);min-height:var(--ctl-h);box-sizing:border-box
+}
+.sys-btn,.ctab,.prof-chip,.sys-side-btn{padding-top:0;padding-bottom:0;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.sys-side-btn{justify-content:center}
+select,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=color]){padding-top:0;padding-bottom:0}
+.sb-diag,.pill,.sb-burger{height:var(--ctl-h);box-sizing:border-box}
+/* one text size for every control */
+.sys-btn,.ctab,.prof-chip,.sys-side-btn,.sb-diag,select,
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=color]){font-size:12px!important}
+</style>
+<style id="diag-css">
+.sb-iprow{display:flex;align-items:center;gap:8px}
+.sb-diag{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx);height:28px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--bd-hi);background:var(--s2);cursor:pointer}
+.sb-diag.err{color:#fff;border-color:#fff}
+.sb-diag.blink{animation:dg-blink 1.1s ease-in-out infinite}
+@keyframes dg-blink{0%,100%{box-shadow:0 0 0 0 rgba(234,249,255,0);opacity:1}50%{box-shadow:0 0 12px 3px rgba(234,249,255,.85);opacity:.45}}
+@media(prefers-reduced-motion:reduce){.sb-diag.blink{animation:none;box-shadow:0 0 10px 2px rgba(234,249,255,.8)}}
+.prof-chip{font-size:12px;padding:8px 15px;cursor:pointer;color:var(--mu);border-radius:var(--radius);border:1px solid var(--bd);background:var(--s2);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:.15s;white-space:nowrap}
+.prof-chip:hover{color:var(--tx);border-color:var(--mu)}
+.prof-chip.sel{color:#070a13;background:var(--teal);border-color:var(--teal);font-weight:700;box-shadow:var(--glow)}
+.prof-chip.act::after{content:" \25CF";font-size:8px;vertical-align:middle}
+.prof-ck{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx);padding:2px 0}
+.prof-in{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:6px 8px;margin:4px 0 6px}
+.dg-t{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin-bottom:8px}
+.dg-i{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:8px}
+.dg-i.err{border-color:var(--rd)}
+.dg-h{font-size:12px;font-weight:700;color:var(--tx);word-break:break-word}
+.dg-a{font-size:11px;color:var(--mu);margin-top:3px;line-height:1.5}
+</style>
 </head>
 <body>
 <canvas id="bg-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none"></canvas>
-<div class="shell">
-<div class="topbar">
-  <div>
-    <div class="logo" style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:28px;width:28px;object-fit:contain;border-radius:12px;border:1px solid var(--bd)"><b>NOEMA <span style="color:var(--teal)">RNSGATE</span> · FULL</b><span id="git-update-badge" onclick="if(confirm('Update NOEMA from GitHub and restart services?'))runCmd('noema_update')" style="display:none;background:var(--am);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;cursor:pointer;letter-spacing:0.5px">⬆ UPDATE</span></div>
-    <div style="display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:4px">
+<div class="shell on-home">
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="logo" style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:28px;width:28px;object-fit:contain;border-radius:12px;border:1px solid var(--bd)"><b>NOEMA <span style="color:var(--teal)">RNSGATE</span> · FULL</b><span id="git-update-badge" onclick="if(confirm('Update NOEMA from GitHub and restart services?'))runCmd('noema_update')" style="display:none;background:var(--am);color:#ffffff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;cursor:pointer;letter-spacing:0.5px">⬆ UPDATE</span></div>
+    <div class="sb-meta">
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="uptime-lbl">—</div>
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="rns-ver-lbl">—</div>
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="clock-lbl">—</div>
     </div>
+    <div class="sb-iprow"><div class="pill sb-ip" style="display:inline-flex"><div class="dot" id="dot"></div><span class="skel" id="ip-lbl">—</span></div><button class="sb-diag" id="diag-btn" onclick="diagToggle()" title="Interface diagnostics" aria-label="Interface diagnostics" style="display:none">&#9888;&#xFE0E; <span id="diag-n">0</span></button></div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="theme-toggle" onclick="toggleLang()" id="lang-toggle" title="Switch language" aria-label="Switch language" style="font-family:var(--fn);font-size:11px;font-weight:700;width:auto;padding:0 8px">EN</button>
-      <div class="pill" style="display:inline-flex"><div class="dot" id="dot"></div><span class="skel" id="ip-lbl">—</span></div>
-    </div>
+  <nav class="hub-col" aria-label="Main menu">
+    <div class="sb-sec" data-i18n="sec_monitoring">Monitoring</div>
+    <div class="hub-pill active" onclick="nav('home',this)"><div class="hub-pill-ic" style="color:var(--teal)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><span data-i18n="nav_services">Services</span></div>
+    <div class="hub-pill" onclick="nav('nodes',this);loadNodesPanel();"><div class="hub-pill-ic" style="color:var(--indigo)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 12h4m2-5.3L9.5 11M13 17.3L9.5 13"/></svg></div><span data-i18n="nav_nodes">Nodes</span></div>
+    <div class="hub-pill" onclick="nav('logs',this)"><div class="hub-pill-ic" style="color:var(--slate)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><span data-i18n="nav_logs">Logs</span></div>
+    <div class="sb-sec" data-i18n="sec_network">Network</div>
+    <div class="hub-pill" onclick="nav('rnode',this)"><div class="hub-pill-ic" style="color:var(--am)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></div><span data-i18n="nav_rnode">RNode</span></div>
+    <div class="hub-pill" onclick="nav('i2p',this)"><div class="hub-pill-ic" style="color:var(--i2ptl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z"/></svg></div><span data-i18n="nav_i2p">I2P</span></div>
+    <div class="hub-pill" onclick="nav('sdr',this)"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-6 4 3 4-8 4 5"/><path d="M3 20h18"/></svg></div><span data-i18n="nav_sdr">SDR</span></div>
+    <div class="sb-sec" data-i18n="sec_messaging">Messaging</div>
+    <div class="hub-pill" onclick="nav('chat',this);loadChatPanel();" id="chat-pill"><div class="hub-pill-ic" style="color:var(--pink)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span data-i18n="nav_chat">Chat</span></div>
+    <div class="hub-pill" onclick="nav('nomadnet',this);loadNomadnet();"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6 6-2Z"/></svg></div><span data-i18n="nav_nomadnet">Nomadnet</span></div>
+    <div class="sb-sec" data-i18n="sec_system">System</div>
+    <div class="hub-pill" onclick="nav('configs',this)"><div class="hub-pill-ic" style="color:var(--bl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="4" x2="5" y2="20"/><circle cx="5" cy="10" r="2.2"/><line x1="12" y1="4" x2="12" y2="20"/><circle cx="12" cy="16" r="2.2"/><line x1="19" y1="4" x2="19" y2="20"/><circle cx="19" cy="7" r="2.2"/></svg></div><span data-i18n="nav_configs">Configs</span></div>
+    <div class="hub-pill" onclick="nav('system',this)" id="system-pill"><div class="hub-pill-ic" style="color:var(--slate2)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/><line x1="9" y1="18" x2="9" y2="22"/><line x1="15" y1="18" x2="15" y2="22"/><line x1="2" y1="9" x2="6" y2="9"/><line x1="2" y1="15" x2="6" y2="15"/><line x1="18" y1="9" x2="22" y2="9"/><line x1="18" y1="15" x2="22" y2="15"/></svg></div><span data-i18n="nav_system">System</span></div>
+  </nav>
+</aside>
+<div class="sb-overlay" onclick="toggleSidebar(false)"></div>
+<header class="pagebar">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <button class="sb-burger" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
+    <div class="pg-title" id="page-title">Services</div>
   </div>
-</div>
+  <div class="pg-right"><button class="theme-toggle" onclick="toggleLang()" id="lang-toggle" title="Switch language" aria-label="Switch language" style="font-family:var(--fn);font-size:11px;font-weight:700;width:auto;padding:0 8px">EN</button></div>
+</header>
+<div id="diag-panel" style="display:none;position:fixed;top:54px;left:12px;width:min(440px,calc(100vw - 24px));max-height:70vh;overflow-y:auto;z-index:99998;background:var(--bg);border:1px solid var(--bd-hi);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px 14px"></div>
 <div class="metrics">
-  <div class="mc"><div class="mc-inner"><div class="lb">CPU</div><div class="vl a skel" id="m-cpu">—</div></div><div class="pb"><div class="pbf a" id="pb-cpu" style="width:0%"></div></div></div>
-  <div class="mc"><div class="mc-inner"><div class="lb">RAM</div><div class="vl skel" id="m-ram">—</div></div><div class="pb"><div class="pbf" id="pb-ram" style="width:0%"></div></div></div>
-  <div class="mc"><div class="mc-inner"><div class="lb">Disk</div><div class="vl skel" id="m-disk">—</div></div><div class="pb"><div class="pbf" id="pb-disk" style="width:0%"></div></div></div>
-  <div class="mc"><div class="mc-inner"><div class="lb">Temp.</div><div class="vl a skel" id="m-temp">—</div></div><div class="pb"><div class="pbf a" id="pb-temp" style="width:0%"></div></div></div>
-  <div class="mc"><div class="mc-inner"><div class="lb">MQTT broker</div><div class="vl skel" id="m-mqtt-status">—</div></div><div class="pb"><div class="pbf" id="pb-mqtt" style="width:0%"></div></div></div>
-  <div class="mc"><div class="mc-inner"><div class="lb">LXMF sent</div><div class="vl g" id="m-lxmf-sent">0</div></div><div class="pb"><div class="pbf g" id="pb-lxmf-sent" style="width:0%"></div></div></div>
-  <div class="mc"><div class="mc-inner"><div class="lb">LXMF received</div><div class="vl b" id="m-lxmf-recv">0</div></div><div class="pb"><div class="pbf b" id="pb-lxmf-recv" style="width:0%"></div></div></div>
+    <div class="mc"><div class="mc-inner"><div class="lb">CPU</div><div class="vl a skel" id="m-cpu">—</div></div><div class="pb"><div class="pbf a" id="pb-cpu" style="width:0%"></div></div></div>
+    <div class="mc"><div class="mc-inner"><div class="lb">RAM</div><div class="vl skel" id="m-ram">—</div></div><div class="pb"><div class="pbf" id="pb-ram" style="width:0%"></div></div></div>
+    <div class="mc"><div class="mc-inner"><div class="lb">Disk</div><div class="vl skel" id="m-disk">—</div></div><div class="pb"><div class="pbf" id="pb-disk" style="width:0%"></div></div></div>
+    <div class="mc"><div class="mc-inner"><div class="lb">Temp.</div><div class="vl a skel" id="m-temp">—</div></div><div class="pb"><div class="pbf a" id="pb-temp" style="width:0%"></div></div></div>
+  <div class="mc nobar"><div class="mc-inner"><div class="lb">MQTT broker</div><div class="vl skel" id="m-mqtt-status">—</div></div><div class="pb"><div class="pbf" id="pb-mqtt" style="width:0%"></div></div></div>
+  <div class="mc nobar"><div class="mc-inner"><div class="lb">LXMF sent</div><div class="vl g" id="m-lxmf-sent">0</div></div><div class="pb"><div class="pbf g" id="pb-lxmf-sent" style="width:0%"></div></div></div>
+  <div class="mc nobar"><div class="mc-inner"><div class="lb">LXMF received</div><div class="vl b" id="m-lxmf-recv">0</div></div><div class="pb"><div class="pbf b" id="pb-lxmf-recv" style="width:0%"></div></div></div>
 </div>
 <div class="body">
   <div class="hub-shell">
-    <div class="hub-col">
-      <div class="hub-pill active" onclick="nav('home',this)"><div class="hub-pill-ic" style="color:var(--teal)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><span data-i18n="nav_services">Services</span></div>
-      <div class="hub-pill" onclick="nav('addresses',this);loadAddressesPanel();"><div class="hub-pill-ic" style="color:var(--purple)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-4 7.5"/></svg></div><span data-i18n="nav_addresses">Addresses</span></div>
-      <div class="hub-pill" onclick="nav('rnode',this)"><div class="hub-pill-ic" style="color:var(--am)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></div><span data-i18n="nav_rnode">RNode</span></div>
-      <div class="hub-pill" onclick="nav('sdr',this)"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-6 4 3 4-8 4 5"/><path d="M3 20h18"/></svg></div><span data-i18n="nav_sdr">SDR</span></div>
-      <div class="hub-pill" onclick="nav('nodes',this);loadNodesPanel();"><div class="hub-pill-ic" style="color:var(--indigo)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 12h4m2-5.3L9.5 11M13 17.3L9.5 13"/></svg></div><span data-i18n="nav_nodes">Nodes</span></div>
-      <div class="hub-pill" onclick="nav('i2p',this)"><div class="hub-pill-ic" style="color:var(--i2ptl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z"/></svg></div><span data-i18n="nav_i2p">I2P</span></div>
-      <div class="hub-pill" onclick="nav('nomadnet',this);loadNomadnet();"><div class="hub-pill-ic" style="color:var(--sky)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6 6-2Z"/></svg></div><span data-i18n="nav_nomadnet">Nomadnet</span></div>
-      <div class="hub-pill" onclick="nav('logs',this)"><div class="hub-pill-ic" style="color:var(--slate)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><span data-i18n="nav_logs">Logs</span></div>
-      <div class="hub-pill" onclick="nav('chat',this);loadChatPanel();" id="chat-pill"><div class="hub-pill-ic" style="color:var(--pink)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span data-i18n="nav_chat">Chat</span></div>
-      <div class="hub-pill" onclick="nav('configs',this)"><div class="hub-pill-ic" style="color:var(--bl)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="4" x2="5" y2="20"/><circle cx="5" cy="10" r="2.2"/><line x1="12" y1="4" x2="12" y2="20"/><circle cx="12" cy="16" r="2.2"/><line x1="19" y1="4" x2="19" y2="20"/><circle cx="19" cy="7" r="2.2"/></svg></div><span data-i18n="nav_configs">Configs</span></div>
-      <div class="hub-pill" onclick="nav('system',this)" id="system-pill"><div class="hub-pill-ic" style="color:var(--slate2)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/><line x1="9" y1="18" x2="9" y2="22"/><line x1="15" y1="18" x2="15" y2="22"/><line x1="2" y1="9" x2="6" y2="9"/><line x1="2" y1="15" x2="6" y2="15"/><line x1="18" y1="9" x2="22" y2="9"/><line x1="18" y1="15" x2="22" y2="15"/></svg></div><span data-i18n="nav_system">System</span></div>
-    </div>
     <div class="main">
 
     <!-- HOME / SERVICES -->
     <div class="panel active" id="panel-home">
-      <div style="flex:1">
-      <div class="section-lbl" style="margin-bottom:10px" data-i18n="sec_arch_live">System architecture — live</div>
-      <div class="svc-arch-grid">
-        <div class="svc-arch-col">
-          <div id="svc-list-left"></div>
-          <div class="brow">
-            <button class="sys-btn am" onclick="restartAll()" data-i18n="btn_restart_all">restart all</button>
-            <button class="sys-btn teal" onclick="announceAll()" data-i18n="btn_announce">📡 Announce</button>
-          </div>
+      <div class="home-grid">
+        <div class="nm-globe-box" id="home-globe">
+          <canvas id="nm-canvas-home"></canvas>
+          <div class="nm-hint" id="nm-hint-home" style="display:none"></div>
+          <div class="nm-legend"><span><i class="lg-up" style="background:var(--gr)"></i><b data-i18n="nm_st_up">Connected</b></span><span><i class="lg-down" style="background:var(--rd)"></i><b data-i18n="nm_st_down">No link</b></span><span><i class="lg-home" style="background:var(--am)"></i><b data-i18n="nm_legend_home">Gateway</b></span></div>
+          <div class="nm-credit" data-i18n="nm_credit">IP geolocation by DB-IP.com (CC BY 4.0) · map: Natural Earth</div>
         </div>
+        <div class="home-side">
+          <div class="nm-card">
+            <div class="section-lbl" style="margin-bottom:6px" data-i18n="sec_svc_addr">Services &amp; addresses</div>
+            <div id="svc-compact"></div>
+            <div class="brow" style="margin-top:10px">
+              <button class="sys-btn am" onclick="restartAll()" data-i18n="btn_restart_all">restart all</button>
+              <button class="sys-btn teal" onclick="announceAll()" data-i18n="btn_announce">📡 Announce</button>
+            </div>
+            <div id="ap-toast" style="display:none;color:var(--gr);font-size:12px;margin-top:6px"><span data-i18n="txt_copied">✓ Copied</span></div>
+          </div>
+          <div class="nm-card home-diag">
+            <div class="section-lbl" style="margin-bottom:6px" data-i18n="sec_arch_live">System architecture — live</div>
         <div class="svc-arch-diagram">
         <style>
           @keyframes mg-ring { 0%,100%{r:26;opacity:.55} 50%{r:31;opacity:0} }
@@ -499,7 +736,7 @@ function chatShowMessages(){
           line#mg-l-rb.off ~ .mg-wave-rb { opacity: 0; }
           @media (prefers-reduced-motion: reduce) { .mg-wave { display: none; } }
         </style>
-        <svg viewBox="0 0 700 480" style="display:block;width:100%;height:auto;max-height:460px">
+        <svg viewBox="146 12 397 457" style="display:block;width:100%;height:auto;max-height:460px">
           <defs>
             <linearGradient id="mg-wg-rnode" gradientUnits="userSpaceOnUse" x1="350" y1="202" x2="350" y2="101">
               <stop offset="-0.35" stop-color="var(--am)" stop-opacity="0"><animate attributeName="offset" values="-0.35;1.65" dur="1.8s" begin="0s" repeatCount="indefinite"/></stop>
@@ -652,20 +889,13 @@ function chatShowMessages(){
           </g>
         </svg>
         </div>
-        <div class="svc-arch-col" id="svc-list-right"></div>
-      </div>
-      <div class="svc-mobile-only">
-        <div id="svc-list-mobile"></div>
-        <div class="brow">
-          <button class="sys-btn am" onclick="restartAll()" data-i18n="btn_restart_all">restart all</button>
-          <button class="sys-btn teal" onclick="announceAll()" data-i18n="btn_announce">📡 Announce</button>
+          </div>
+          <div style="display:none">
+            <div id="home-msgs">no messages</div>
+            <div id="home-nodes">—</div>
+            <div id="home-rns">—</div>
+          </div>
         </div>
-      </div>
-      <div style="display:none">
-        <div id="home-msgs">no messages</div>
-        <div id="home-nodes">—</div>
-        <div id="home-rns">—</div>
-      </div>
       </div>
     </div>
 
@@ -798,57 +1028,6 @@ function chatShowMessages(){
       </div>
     </div>
 
-    <!-- ADDRESSES -->
-    <div class="panel" id="panel-addresses">
-      <div class="section-lbl" style="margin-bottom:16px" data-i18n="sec_gateway_addresses">Gateway Addresses</div>
-      <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-
-      <!-- LXMF Bridge -->
-      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px">
-        <div style="font-size:11px;color:var(--mu);margin-bottom:4px">🔹 <span data-i18n="txt_lxmf_bridge">LXMF Bridge</span></div>
-        <div style="font-size:10px;color:var(--mu);margin-bottom:6px" data-i18n="txt_addr_bridge_desc">For receiving commands from Reticulum to MQTT / Home Assistant. Add to Sideband as a contact.</div>
-        <div id="ap-lxmf-bridge" style="font-family:var(--fn);font-size:12px;color:var(--teal);word-break:break-all;margin-bottom:8px">—</div>
-        <button class="sys-btn teal" onclick="apCopy('ap-lxmf-bridge')" data-i18n="btn_copy">COPY</button>
-      </div>
-
-
-
-      <!-- I2P -->
-      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px">
-        <div style="font-size:11px;color:var(--mu);margin-bottom:4px">🔹 <span data-i18n="txt_i2p_address">I2P Address (b32)</span></div>
-        <div style="font-size:10px;color:var(--mu);margin-bottom:6px" data-i18n="txt_addr_i2p_desc">Anonymous connection without public IP. Share with another gateway.</div>
-        <div id="ap-i2p" style="font-family:var(--fn);font-size:12px;color:var(--teal);word-break:break-all;margin-bottom:8px">—</div>
-        <button class="sys-btn teal" onclick="apCopy('ap-i2p')" data-i18n="btn_copy">COPY</button>
-      </div>
-
-      <!-- Nomadnet Node -->
-      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px">
-        <div style="font-size:11px;color:var(--mu);margin-bottom:4px">🌐 <span data-i18n="txt_nn_node">Nomadnet Node</span></div>
-        <div style="font-size:10px;color:var(--mu);margin-bottom:6px" data-i18n="txt_addr_nn_node_desc">Gateway info page in the Reticulum network.</div>
-        <div id="ap-nn-node" style="font-family:var(--fn);font-size:12px;color:var(--teal);word-break:break-all;margin-bottom:8px">—</div>
-        <button class="sys-btn teal" onclick="apCopy('ap-nn-node')" data-i18n="btn_copy">COPY</button>
-      </div>
-
-      <!-- Nomadnet Chat -->
-      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px">
-        <div style="font-size:11px;color:var(--mu);margin-bottom:4px">💬 <span data-i18n="txt_nn_chat">Nomadnet Chat</span></div>
-        <div style="font-size:10px;color:var(--mu);margin-bottom:6px" data-i18n="txt_addr_nn_chat_desc">IRC-style chat in the Nomadnet network. Open in Nomadnet browser.</div>
-        <div id="ap-nn-chat" style="font-family:var(--fn);font-size:12px;color:var(--teal);word-break:break-all;margin-bottom:8px">—</div>
-        <button class="sys-btn teal" onclick="apCopy('ap-nn-chat')" data-i18n="btn_copy">COPY</button>
-      </div>
-
-      <!-- NOEMA Chat -->
-      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px">
-        <div style="font-size:11px;color:var(--mu);margin-bottom:4px">💬 <span data-i18n="txt_noema_chat">NOEMA Chat</span></div>
-        <div style="font-size:10px;color:var(--mu);margin-bottom:6px" data-i18n="txt_addr_noema_chat_desc">LXMF address of the gateway chat. Add to Sideband or CrossTalk to message the gateway directly.</div>
-        <div id="ap-chat-addr" style="font-family:var(--fn);font-size:12px;color:var(--teal);word-break:break-all;margin-bottom:8px">—</div>
-        <button class="sys-btn teal" onclick="apCopy('ap-chat-addr')" data-i18n="btn_copy">COPY</button>
-      </div>
-
-      </div>
-      <div id="ap-toast" style="display:none;color:var(--gr);font-size:12px;margin-top:8px"><span data-i18n="txt_copied">✓ Copied</span></div>
-    </div>
-
     <!-- RBROWSER -->
     <div class="panel" id="panel-rbrowser">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0">
@@ -858,7 +1037,7 @@ function chatShowMessages(){
       <iframe id="rbrowser-frame" style="width:100%;height:calc(100vh - 200px);border:none;border-radius:12px;flex:1"></iframe>
       <script>
         var _rbHost = "http://"+window.location.hostname+":5000";
-        document.getElementById("rbrowser-frame").src = _rbHost;
+        // the frame is loaded only while the rBrowser panel is open (see nav()): a hidden page kept running and stalled this one every 2 s
         document.getElementById("rbrowser-link").href = _rbHost;
       </script>
     </div>
@@ -935,7 +1114,7 @@ function chatShowMessages(){
           <div class="log-box" id="log-box" style="flex:1"></div>
         </div>
         <!-- Terminal -->
-        <div style="display:flex;flex-direction:column;background:#0a0e0c;border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:0;min-width:0">
+        <div style="display:flex;flex-direction:column;background:#070911;border:1px solid var(--bd);border-radius:12px;overflow:hidden;min-height:0;min-width:0">
           <div style="padding:6px 12px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
             <span style="font-family:var(--mono);font-size:11px;color:var(--gr);letter-spacing:.05em">TERMINAL</span>
             <div style="display:flex;gap:6px">
@@ -986,6 +1165,30 @@ function chatShowMessages(){
             </div>
           </div>
 
+          <!-- Pending restart banner -->
+          <div id="rns-pending-bar" style="display:none;align-items:center;gap:8px;background:rgba(169,220,240,.08);border:1px solid rgba(169,220,240,.35);border-radius:10px;padding:8px 10px;margin-bottom:8px;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--am)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div style="flex:1;min-width:0;font-size:10px;color:var(--am);line-height:1.35">Config differs from the running instance — restart to apply</div>
+            <button class="sys-btn" style="padding:3px 10px;font-size:10px;border-color:rgba(169,220,240,.5);color:var(--am);flex-shrink:0" onclick="_rnsRestartDaemon()">RESTART</button>
+          </div>
+
+          <!-- interface profiles -->
+          <div id="prof-card" style="background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;flex-shrink:0">
+            <div class="dg-t" data-i18n="prof_title">Interface profiles</div>
+            <div class="dg-a" style="margin:0 0 8px" data-i18n="prof_hint">A profile is a set of interfaces that are on together. Applying it turns all other interfaces off. The configuration is backed up first; restart the dashboard afterwards.</div>
+            <div id="prof-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+            <div id="prof-detail" style="margin-top:8px"></div>
+          </div>
+
+          <!-- interfaces announced by other nodes (RNS 1.6+) -->
+          <div id="disc-card" style="background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;flex-shrink:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div class="dg-t" style="margin:0" data-i18n="disc_title">Discovered interfaces</div>
+              <button class="sys-btn" id="disc-toggle" onclick="discToggle()">▾</button>
+            </div>
+            <div id="disc-body" style="display:none;margin-top:6px"></div>
+          </div>
+
           <!-- enable_transport pill -->
           <div id="rns-transport-pill" style="background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:8px;flex-shrink:0">
             <div style="display:flex;align-items:center;gap:8px">
@@ -996,13 +1199,6 @@ function chatShowMessages(){
               </div>
               <button id="rns-transport-btn" class="sys-btn" style="padding:3px 10px;font-size:10px;flex-shrink:0" onclick="_rnsToggleTransport()">…</button>
             </div>
-          </div>
-
-          <!-- Pending restart banner -->
-          <div id="rns-pending-bar" style="display:none;align-items:center;gap:8px;background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.35);border-radius:10px;padding:8px 10px;margin-bottom:8px;flex-shrink:0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--am)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <div style="flex:1;min-width:0;font-size:10px;color:var(--am);line-height:1.35">Config differs from the running instance — restart to apply</div>
-            <button class="sys-btn" style="padding:3px 10px;font-size:10px;border-color:rgba(232,163,61,.5);color:var(--am);flex-shrink:0" onclick="_rnsRestartDaemon()">RESTART</button>
           </div>
 
           <!-- Add-interface form (inline, hidden by default) -->
@@ -1307,13 +1503,26 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
       </div>
 
       <div id="nodes-filter" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-        <button class="sys-btn active" style="border-radius:20px" onclick="setNodeFilter('all',this)" data-i18n="filter_all">All</button>
-        <button class="sys-btn" style="border-radius:20px;color:var(--pink)" onclick="setNodeFilter('LXMF',this)">LXMF</button>
-        <button class="sys-btn" style="border-radius:20px;color:var(--sky)" onclick="setNodeFilter('Nomadnet',this)">Nomadnet</button>
-        <button class="sys-btn" style="border-radius:20px;color:var(--am)" onclick="setNodeFilter('PropNode',this)">PropNode</button>
-        <button class="sys-btn" style="border-radius:20px;color:var(--mu)" onclick="setNodeFilter('RNS',this)">RNS</button>
+        <button class="sys-btn active" style="border-radius:var(--radius)" onclick="setNodeFilter('all',this)" data-i18n="filter_all">All</button>
+        <button class="sys-btn" style="border-radius:var(--radius);color:var(--pink)" onclick="setNodeFilter('LXMF',this)">LXMF</button>
+        <button class="sys-btn" style="border-radius:var(--radius);color:var(--sky)" onclick="setNodeFilter('Nomadnet',this)">Nomadnet</button>
+        <button class="sys-btn" style="border-radius:var(--radius);color:var(--am)" onclick="setNodeFilter('PropNode',this)">PropNode</button>
+        <button class="sys-btn" style="border-radius:var(--radius);color:var(--mu)" onclick="setNodeFilter('RNS',this)">RNS</button>
         <span style="width:1px;height:18px;background:var(--bd);margin:0 2px"></span>
-        <button id="nodes-lora-toggle" class="sys-btn" style="border-radius:20px;color:var(--teal)" onclick="toggleLoraFilter(this)" title="Show only nodes heard directly over LoRa (RNode) — works together with the type filter above">📡 LoRa</button>
+        <button id="nodes-lora-toggle" class="sys-btn" style="border-radius:var(--radius);color:var(--teal)" onclick="toggleLoraFilter(this)" title="Show only nodes heard directly over LoRa (RNode) — works together with the type filter above">📡 LoRa</button>
+      </div>
+
+      <div id="nodes-hops" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-6px 0 14px">
+        <span style="font-size:11px;color:var(--mu);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-right:2px" data-i18n="flt_hops">Hops</span>
+        <button class="sys-btn active" style="border-radius:var(--radius)" data-hop="any" onclick="setHopFilter('any',this)" data-i18n="flt_any">Any</button>
+        <button class="sys-btn" style="border-radius:var(--radius);min-width:34px" data-hop="0" onclick="setHopFilter('0',this)" title="Direct neighbours (0 hops)">0</button>
+        <button class="sys-btn" style="border-radius:var(--radius);min-width:34px" data-hop="1" onclick="setHopFilter('1',this)">1</button>
+        <button class="sys-btn" style="border-radius:var(--radius);min-width:34px" data-hop="2" onclick="setHopFilter('2',this)">2</button>
+        <button class="sys-btn" style="border-radius:var(--radius);min-width:34px" data-hop="3" onclick="setHopFilter('3',this)">3</button>
+        <button class="sys-btn" style="border-radius:var(--radius);min-width:34px" data-hop="4+" onclick="setHopFilter('4+',this)">4+</button>
+        <button class="sys-btn" style="border-radius:var(--radius);min-width:34px" data-hop="p03" onclick="setHopFilter('p03',this)" title="Everything within 3 hops">0–3</button>
+        <span style="width:1px;height:18px;background:var(--bd);margin:0 2px"></span>
+        <button id="nodes-tcp-toggle" class="sys-btn" style="border-radius:var(--radius);color:var(--bl)" onclick="toggleTcpFilter(this)" title="Show only nodes whose announces reached us over TCP / the network (not LoRa) — works together with the other filters" data-i18n-title="flt_tcp_hint">🌐 TCP</button>
       </div>
 
       <!-- Dartboard + Table two-column layout -->
@@ -1323,22 +1532,22 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
           <div style="font-size:10px;color:var(--mu);letter-spacing:.08em;margin-bottom:8px;font-family:var(--mono)">NETWORK MAP</div>
           <svg id="nodes-dartboard" viewBox="-160 -160 320 320" width="100%" style="display:block">
             <!-- Rings for hops 0-6 -->
-            <circle cx="0" cy="0" r="150" fill="none" stroke="#3ddc8408" stroke-width="1"/>
-            <circle cx="0" cy="0" r="125" fill="none" stroke="#3ddc8408" stroke-width="1"/>
-            <circle cx="0" cy="0" r="100" fill="none" stroke="#3ddc8410" stroke-width="1"/>
-            <circle cx="0" cy="0" r="75"  fill="none" stroke="#3ddc8410" stroke-width="1"/>
-            <circle cx="0" cy="0" r="50"  fill="none" stroke="#3ddc8415" stroke-width="1"/>
-            <circle cx="0" cy="0" r="25"  fill="none" stroke="#3ddc8420" stroke-width="1"/>
+            <circle cx="0" cy="0" r="150" fill="none" stroke="#3daddc08" stroke-width="1"/>
+            <circle cx="0" cy="0" r="125" fill="none" stroke="#3daddc08" stroke-width="1"/>
+            <circle cx="0" cy="0" r="100" fill="none" stroke="#3daddc10" stroke-width="1"/>
+            <circle cx="0" cy="0" r="75"  fill="none" stroke="#3daddc10" stroke-width="1"/>
+            <circle cx="0" cy="0" r="50"  fill="none" stroke="#3daddc15" stroke-width="1"/>
+            <circle cx="0" cy="0" r="25"  fill="none" stroke="#3daddc20" stroke-width="1"/>
             <!-- Hop labels -->
-            <text x="2"  y="-152" fill="#3ddc8440" font-size="7" font-family="monospace" text-anchor="middle">6</text>
-            <text x="2"  y="-127" fill="#3ddc8440" font-size="7" font-family="monospace" text-anchor="middle">5</text>
-            <text x="2"  y="-102" fill="#3ddc8440" font-size="7" font-family="monospace" text-anchor="middle">4</text>
-            <text x="2"  y="-77"  fill="#3ddc8440" font-size="7" font-family="monospace" text-anchor="middle">3</text>
-            <text x="2"  y="-52"  fill="#3ddc8440" font-size="7" font-family="monospace" text-anchor="middle">2</text>
-            <text x="2"  y="-27"  fill="#3ddc8440" font-size="7" font-family="monospace" text-anchor="middle">1</text>
-            <text x="2"  y="5"    fill="#3ddc8470" font-size="7" font-family="monospace" text-anchor="middle">0</text>
+            <text x="2"  y="-152" fill="#3daddc40" font-size="7" font-family="monospace" text-anchor="middle">6</text>
+            <text x="2"  y="-127" fill="#3daddc40" font-size="7" font-family="monospace" text-anchor="middle">5</text>
+            <text x="2"  y="-102" fill="#3daddc40" font-size="7" font-family="monospace" text-anchor="middle">4</text>
+            <text x="2"  y="-77"  fill="#3daddc40" font-size="7" font-family="monospace" text-anchor="middle">3</text>
+            <text x="2"  y="-52"  fill="#3daddc40" font-size="7" font-family="monospace" text-anchor="middle">2</text>
+            <text x="2"  y="-27"  fill="#3daddc40" font-size="7" font-family="monospace" text-anchor="middle">1</text>
+            <text x="2"  y="5"    fill="#3daddc70" font-size="7" font-family="monospace" text-anchor="middle">0</text>
             <!-- Center dot (this node) -->
-            <circle cx="0" cy="0" r="5" fill="#3ddc84" style="filter:drop-shadow(0 0 4px #3ddc84)"/>
+            <circle cx="0" cy="0" r="5" fill="#3daddc" style="filter:drop-shadow(0 0 4px #3daddc)"/>
             <!-- Nodes rendered by JS -->
             <g id="dartboard-nodes"></g>
           </svg>
@@ -1413,6 +1622,10 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
           <option value="slow" data-i18n="opt_slow">Slow / Low-power (4x slower)</option>
         </select>
       </div>
+
+      <div class="section-lbl" data-i18n="sec_globe">Globe (home page)</div>
+      <div class="nm-card" id="nm-origin" style="margin-bottom:10px"></div>
+      <div class="nm-card" id="nm-db" style="margin-bottom:20px"></div>
 
       <div class="section-lbl" data-i18n="sec_system">System</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
@@ -1607,8 +1820,8 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
 </div>
 </div>
 <div class="toast" id="toast"></div>
-<div id="chat-badge" style="display:none;position:fixed;min-width:16px;height:16px;background:#f87171;color:#fff;border-radius:8px;padding:0 4px;font-size:9px;font-weight:700;z-index:99999;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none"></div>
-<div id="update-badge" style="display:none;position:fixed;min-width:16px;height:16px;background:var(--am);color:#fff;border-radius:8px;padding:0 4px;font-size:9px;font-weight:700;z-index:99999;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none"></div>
+<div id="chat-badge" style="display:none;position:fixed;min-width:16px;height:16px;background:#eaf9ff;color:#060a1a;border-radius:8px;padding:0 4px;font-size:9px;font-weight:700;z-index:99999;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none"></div>
+<div id="update-badge" style="display:none;position:fixed;min-width:16px;height:16px;background:var(--am);color:#060a1a;border-radius:8px;padding:0 4px;font-size:9px;font-weight:700;z-index:99999;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none"></div>
 
 
 
@@ -1640,7 +1853,7 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
 <!-- Reboot Modal -->
 <div id="reset-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center">
   <div style="background:var(--s3);border:1px solid var(--rd);border-radius:12px;padding:24px;max-width:420px;text-align:center">
-    <div style="font-size:16px;font-weight:700;color:var(--rd);margin-bottom:12px" data-i18n="txt_reset_identity_title">⚠ Reset Identity</div>
+    <div style="font-size:16px;font-weight:700;color:var(--rd);margin-bottom:12px" data-i18n="txt_reset_identity_title">⚠︎ Reset Identity</div>
     <div style="font-size:13px;color:var(--mu);margin-bottom:20px" data-i18n="txt_reset_identity_desc">Reset: LXMF address, I2P tunnel, Reticulum identity, chat history.</div>
     <div style="display:flex;gap:8px;justify-content:center">
       <button class="sys-btn" onclick="closeModal('reset-modal')" data-i18n="btn_cancel_lc">Cancel</button>
@@ -1661,8 +1874,8 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
 </div>
 <!-- QR Modal -->
 <div id="qr-modal" onclick="this.style.display='none'">
-  <div id="qr-box" style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3)"></div>
-  <div style="color:#fff;font-size:12px;font-family:var(--fn)" id="qr-addr"></div>
+  <div id="qr-box" style="background:#ffffff;padding:20px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3)"></div>
+  <div style="color:#ffffff;font-size:12px;font-family:var(--fn)" id="qr-addr"></div>
 </div>
 <script>
 const API="";
@@ -1672,12 +1885,26 @@ let _nodeStatuses = {}; // host:port -> bool
 
 function toggleBurger(){const m=document.getElementById("burger-menu");m.classList.toggle("open");}
 function closeBurger(){document.getElementById("burger-menu").classList.remove("open");}
+function toggleSidebar(force){
+  const sb=document.getElementById("sidebar"); if(!sb) return;
+  const open=(typeof force==="boolean")?force:!sb.classList.contains("open");
+  sb.classList.toggle("open",open); document.body.classList.toggle("sb-open",open);
+}
+function _syncPageTitle(){
+  const sp=document.querySelector(".hub-pill.active span"), pt=document.getElementById("page-title");
+  if(sp&&pt) pt.textContent=sp.textContent;
+}
 function nav(id,el){
   document.querySelectorAll(".hub-pill").forEach(n=>n.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   el.classList.add("active");
   document.getElementById("panel-"+id).classList.add("active");
+  _syncPageTitle();
+  document.querySelector(".shell").classList.toggle("on-home", id==="home");
+  toggleSidebar(false);
   const main = document.querySelector(".main");
+  const _rbf = document.getElementById("rbrowser-frame");
+  if(_rbf){ if(id==="rbrowser"){ if(!_rbf.getAttribute("src") || _rbf.getAttribute("src")==="about:blank") _rbf.src = _rbHost; } else if(_rbf.getAttribute("src") && _rbf.getAttribute("src")!=="about:blank") _rbf.src = "about:blank"; }
   if(id==="rbrowser"){ main.style.overflow="hidden"; main.style.padding="0"; }
   else { main.style.overflow=""; main.style.padding=""; }
   // Закрываем PTY SSE если уходим с Logs
@@ -1686,12 +1913,14 @@ function nav(id,el){
   if(id==="logs") { loadLogs(); setTimeout(_ptyInit, 150); }
   if(id==="monitor"){ loadLxmf(); loadRns(); }
   if(id==="system") checkRnsVersion();
-  if(id==="configs") { loadConfigs(); _rnsIfacesLoad(); }
+  if(id==="configs") { loadConfigs(); _rnsIfacesLoad(); profLoad(); discLoad(); }
 
   if(id==="rnode") { loadRnodePanel(); loadInterference(); loadRfActivity(); }
   if(id==="sdr") sdrPanelOpen();
   if(id!=="sdr") sdrPanelClose();
   if(id==="nodes") loadNodesPanel();
+  if(id==="home"){ netmapOpen("home"); loadAddressesPanel(); } else netmapClose();
+  if(id==="system") nmSettingsOpen();
   if(id==="i2p") loadI2pStatus();
   if(id==="system"){ loadSystem(); loadSystemFiles(); loadTgSettings(); loadCronRnsd(); loadCronWatchdog(); loadAccessSettings(); loadChatAccessSettings(); _loadChatDisplayName(); _loadChatPropagationNode(); _initSysPanel(); const pm=document.getElementById("polling-mode"); if(pm) pm.value = localStorage.getItem("noema_polling_mode") || "fast"; }
 }
@@ -1710,7 +1939,16 @@ function cssVar(name){return getComputedStyle(document.documentElement).getPrope
 // ─── i18n ────────────────────────────────────────────────────────────────
 const I18N = {
   en: {
-    nav_services: "Services", nav_configs: "Configs", nav_addresses: "Addresses",
+    nav_netmap: "Map", nm_credit: "IP geolocation by DB-IP.com (CC BY 4.0) · map: Natural Earth", nm_legend_home: "Gateway", nm_home: "Gateway",
+    nm_st_up: "Connected", nm_st_down: "No link", nm_st_unknown: "Unknown", nm_st_off: "Off",
+    nm_no_links: "No interfaces with a remote host in the Reticulum config.",
+    nm_reason_private: "private address", nm_reason_dns: "name not resolved", nm_reason_no_db: "no geo database", nm_reason_no_lib: "maxminddb not installed", nm_reason_not_found: "not in the database", nm_reason_db_error: "database error",
+    nm_db_missing: "The geo database is not installed, so connections can't be placed on the map.", nm_db_upload: "Choose file…", nm_db_uploading: "Uploading and unpacking, this can take a minute…", nm_hint_origin: "Set where your gateway is (System → Globe) to draw the arcs.", nm_hint_db: "Install the geo database (System → Globe) to see cities.", nm_hint_open: "Open settings", sec_globe: "Globe (home page)", nm_origin_tip: "Tip: right-click your place on openstreetmap.org and copy the coordinates.", nm_db_hint: "Choose the geo database file: ipcity.bin (from Noema Snitch) or dbip-city-lite.mmdb (db-ip.com).", nm_db_download: "Download (~100 MB)", nm_db_update: "Update", nm_db_progress: "Downloading…", nm_db_ok: "Database: DB-IP City Lite, {date}",
+    nm_db_nolib: "The Python package maxminddb is missing: run pip install maxminddb in the dashboard environment and restart the dashboard.",
+    nm_origin_hint: "Set where this gateway is: the arcs start from this point.", nm_lat: "Latitude", nm_lon: "Longitude", nm_label: "Name", nm_pick: "Pick on globe", nm_save: "Save", nm_change: "Change",
+    flt_hops: "Hops", flt_any: "Any", flt_tcp_hint: "Show only nodes whose announces reached us over TCP / the network (not LoRa) — works together with the other filters",
+    sec_monitoring: "Monitoring", sec_network: "Network", sec_messaging: "Messaging", sec_system: "System",
+    nav_services: "Services", nav_configs: "Configs", nav_addresses: "Addresses",                                  
     nav_monitor: "Monitor", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Nodes", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
     nav_chat: "Chat", nav_logs: "Logs", nav_system: "System",
     nav_group_network: "Network", nav_group_monitoring: "Monitoring",
@@ -1720,7 +1958,7 @@ const I18N = {
     txt_chat_display_name: "Chat display name", txt_chat_display_name_hint: "Visible to others in Sideband / Crosstalk as your gateway name",
     txt_propagation_node: "LXMF Propagation Node", txt_propagation_node_hint: "Where offline messages are picked up from. Pick any node from the PropNode tab in Nodes — takes effect immediately, no restart needed.",
     sec_bridge_access: "Bridge Access Control", sec_chat_access: "Chat Access Control",
-    sys_tab_ops: "Operations", sys_tab_access: "Chat & Access",
+    sys_tab_ops: "Operations", sys_tab_access: "Chat & Access", sys_tab_globe: "Globe", sec_svc_addr: "Services & addresses",
     sec_telegram: "Telegram Notifications",
     col_type: "Type", col_hash: "Address", col_name: "Name", col_hops: "Hops", col_last_seen: "Last seen",
     col_region: "Region", col_tcp: "TCP", col_first_seen: "First seen",
@@ -1792,6 +2030,29 @@ const I18N = {
     txt_addr_nn_node_desc: "Gateway info page in the Reticulum network.",
     txt_addr_nn_chat_desc: "IRC-style chat in the Nomadnet network. Open in Nomadnet browser.",
     txt_addr_noema_chat_desc: "LXMF address of the gateway chat. Add to Sideband or CrossTalk to message the gateway directly.",
+    ifg_radio: "Radio", ifg_net: "Network", ifg_other: "Local", ifg_off: "Disabled ({n})",
+    prof_title: "Interface profiles", prof_hint: "A profile is a set of interfaces that are on together. Applying it turns all other interfaces off. The configuration is backed up first; restart the dashboard afterwards.",
+    prof_new: "+ New", prof_will: "Applying “{name}”:", prof_on: "turn on: {list}", prof_off: "turn off: {list}", prof_same: "Nothing to change: the interfaces already match this profile.",
+    prof_apply: "Apply", prof_edit: "Edit", prof_delete: "Delete", prof_confirm: "Change the interface settings and write the Reticulum config? A backup copy is made first.",
+    prof_done: "Done. Backup: {file}. Restart the dashboard for the change to take effect.", prof_restart: "Restart dashboard", prof_none: "no interfaces",
+    disc_search: "Search by name or address", disc_t_all: "All", disc_t_tcp: "TCP", disc_t_tor: "Tor", disc_t_i2p: "I2P", disc_t_radio: "Radio", disc_new: "Only new", disc_s_km: "By distance", disc_s_hops: "By hops", disc_s_age: "By freshness", disc_count: "Shown {n} of {all}",
+    reach_copy: "Copy address", reach_path: "Request path", reach_probe: "Probe", reach_wait_path: "Asking the network for a path…", reach_wait_probe: "Sending a probe, up to 15 s…",
+    reach_nopath: "No path found in {s} s. The node may be offline or too far; try again later.", reach_found: "Path found in {s} s: {hops} hops.", reach_known: "Path is known: {hops} hops.", reach_via: "Interface: {i}",
+    reach_probe_ok: "The node answered: round trip {ms} ms over {hops} hops.", reach_probe_silent: "No answer to the probe. Many nodes do not answer probes (only Reticulum transport nodes that allow it do), so silence does not mean the node is down.",
+    reach_probe_unknown: "The address is not known yet (no announce heard). Try Request path first.", reach_probe_no_path: "No path to the probe address of this node. It probably does not answer probes.", reach_probe_send: "The probe could not be sent.",
+    ago_min: "min", ago_h: "h", ago_d: "d", disc_km: "km from the gateway",
+    disc_title: "Discovered interfaces", disc_hint: "Other nodes announce their public interfaces (hubs, radio). Nothing is connected by itself: press Add to write one into the Reticulum config (backup first), then restart the dashboard.",
+    disc_off: "Interface discovery is off. Turn it on to listen for announcements; this writes discover_interfaces = yes to the config (backup first) and needs a restart.", disc_on_btn: "Turn on discovery",
+    disc_empty: "Nothing found yet. Announcements arrive slowly, give it a few hours.", disc_add: "Add", disc_added: "in config", disc_confirm: "Add “{name}” to the Reticulum config? A backup copy is made first.",
+    disc_done: "Added “{name}”. Backup: {file}. Restart the dashboard for the change to take effect.", disc_hops: "hops", disc_prot: "needs a network name / key (included)", disc_radio: "radio: configure it with your own device",
+    disc_st_available: "available", disc_st_unknown: "not heard for a day", disc_st_stale: "not heard for 3 days", disc_ago: "heard {t} ago", disc_enabled_done: "Discovery is on. Backup: {file}. Restart the dashboard.",
+    prof_name: "Profile name", prof_members: "Interfaces that stay on:", prof_save: "Save", prof_cancel: "Cancel", prof_del_confirm: "Delete the profile “{name}”?", prof_err: "Error: {e}",
+    diag_title: "Interface diagnostics", diag_ok: "No interface problems found.",
+    diag_down_net: "{name}: the hub does not respond", diag_down_net_a: "The hub may be switched off, or it may not let your address in. If you do not need this hub, disable it in Configs: a dead network interface only loads the gateway.",
+    diag_down: "{name}: the interface is offline", diag_down_a: "Check the cable, power or address of this interface, then restart the dashboard. If you do not need it, disable it in Configs.",
+    diag_reset: "{name}: the connection broke {n} times in 30 minutes ({why})", diag_reset_a: "The remote hub may be offline or may be refusing your address. If this keeps repeating and you do not need this hub, disable it in Configs: a dead network interface only loads the gateway.",
+    diag_restarts: "The dashboard was started {n} times in 12 hours", diag_restarts_a: "Some public hubs may temporarily refuse an address after many short connections. While you test, avoid restarting the dashboard too often; if connections are refused, wait a few hours.",
+    diag_why_reset: "connection reset", diag_why_closed: "closed by the hub", diag_why_refused: "refused", diag_why_timeout: "timed out", diag_why_other: "error",
     txt_copied: "✓ Copied", btn_copy: "COPY",
     sec_lxmf_messages: "LXMF Messages", btn_clear: "CLEAR",
     sec_rns_interfaces: "RNS interfaces", btn_refresh: "REFRESH",
@@ -1819,7 +2080,7 @@ const I18N = {
     btn_cancel_lc: "Cancel", btn_download: "⬇ Download",
     txt_restore_title: "↑ Restore from backup", txt_select_zip: "Select ZIP-file backup:",
     btn_restore_arrow: "↑ Restore",
-    txt_reset_identity_title: "⚠ Reset Identity",
+    txt_reset_identity_title: "⚠︎ Reset Identity",
     txt_reset_identity_desc: "Reset: LXMF address, I2P tunnel, Reticulum identity, chat history.",
     btn_reset: "Reset",
     txt_rebooting_title: "⏻ Rebooting",
@@ -1845,7 +2106,16 @@ const I18N = {
     txt_attempt_n: "attempt {n}",
   },
   ru: {
-    nav_services: "Сервисы", nav_configs: "Конфиги", nav_addresses: "Адреса",
+    nav_netmap: "Карта", nm_credit: "Геолокация IP: DB-IP.com (CC BY 4.0) · карта: Natural Earth", nm_legend_home: "Шлюз", nm_home: "Шлюз",
+    nm_st_up: "Подключён", nm_st_down: "Нет связи", nm_st_unknown: "Неизвестно", nm_st_off: "Выключен",
+    nm_no_links: "В конфиге Reticulum нет интерфейсов с удалённым хостом.",
+    nm_reason_private: "частный адрес", nm_reason_dns: "имя не разрешилось", nm_reason_no_db: "нет базы геолокации", nm_reason_no_lib: "не установлен maxminddb", nm_reason_not_found: "нет в базе", nm_reason_db_error: "ошибка базы",
+    nm_db_missing: "База геолокации не установлена, поэтому соединения нельзя разместить на карте.", nm_db_upload: "Выбрать файл…", nm_db_uploading: "Загрузка и распаковка, это может занять минуту…", nm_hint_origin: "Укажите положение шлюза (Система → Глобус), чтобы появились дуги.", nm_hint_db: "Установите базу геолокации (Система → Глобус), чтобы увидеть города.", nm_hint_open: "Открыть настройки", sec_globe: "Глобус (главная)", nm_origin_tip: "Подсказка: нажмите правой кнопкой на своё место на openstreetmap.org и скопируйте координаты.", nm_db_hint: "Выберите файл геобазы: ipcity.bin (из Noema Snitch) или dbip-city-lite.mmdb (с db-ip.com).", nm_db_download: "Скачать (~100 МБ)", nm_db_update: "Обновить", nm_db_progress: "Загрузка…", nm_db_ok: "База: DB-IP City Lite, {date}",
+    nm_db_nolib: "Не установлен пакет maxminddb: выполните pip install maxminddb в окружении дашборда и перезапустите дашборд.",
+    nm_origin_hint: "Укажите, где находится шлюз: от этой точки пойдут дуги.", nm_lat: "Широта", nm_lon: "Долгота", nm_label: "Название", nm_pick: "Выбрать на глобусе", nm_save: "Сохранить", nm_change: "Изменить",
+    flt_hops: "Хопы", flt_any: "Любые", flt_tcp_hint: "Только узлы, чьи анонсы пришли по TCP / сети (не по LoRa) — работает вместе с остальными фильтрами",
+    sec_monitoring: "Мониторинг", sec_network: "Сеть", sec_messaging: "Общение", sec_system: "Система",
+    nav_services: "Сервисы", nav_configs: "Конфиги", nav_addresses: "Адреса",                                  
     nav_monitor: "Монитор", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Узлы", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
     nav_group_network: "Сеть", nav_group_monitoring: "Мониторинг",
     nav_group_apps: "Приложения", nav_group_settings: "Настройка",
@@ -1855,7 +2125,7 @@ const I18N = {
     txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в Sideband / Crosstalk как имя вашего шлюза",
     txt_propagation_node: "LXMF Propagation Node", txt_propagation_node_hint: "Откуда забираются сообщения, пришедшие пока вы были офлайн. Скопируйте любой адрес из вкладки PropNode в Nodes — применяется сразу, без перезапуска.",
     sec_bridge_access: "Доступ к мосту", sec_chat_access: "Доступ к чату",
-    sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ",
+    sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ", sys_tab_globe: "Глобус", sec_svc_addr: "Сервисы и адреса",
     sec_telegram: "Уведомления Telegram",
     col_type: "Тип", col_hash: "Адрес", col_name: "Имя", col_hops: "Хопы", col_last_seen: "Последний раз",
     col_region: "Регион", col_tcp: "TCP", col_first_seen: "Первый раз",
@@ -1927,6 +2197,29 @@ const I18N = {
     txt_addr_nn_node_desc: "Информационная страница шлюза в сети Reticulum.",
     txt_addr_nn_chat_desc: "IRC-чат в сети Nomadnet. Откройте в браузере Nomadnet.",
     txt_addr_noema_chat_desc: "LXMF-адрес чата шлюза. Добавьте в Sideband или CrossTalk чтобы написать шлюзу напрямую.",
+    ifg_radio: "Радио", ifg_net: "Сеть", ifg_other: "Локальные", ifg_off: "Отключённые ({n})",
+    prof_title: "Профили интерфейсов", prof_hint: "Профиль это набор интерфейсов, которые включены вместе. При применении все остальные интерфейсы выключаются. Сначала делается резервная копия конфигурации; после этого перезапустите дашборд.",
+    prof_new: "+ Новый", prof_will: "Применение «{name}»:", prof_on: "включить: {list}", prof_off: "выключить: {list}", prof_same: "Менять нечего: интерфейсы уже соответствуют этому профилю.",
+    prof_apply: "Применить", prof_edit: "Изменить", prof_delete: "Удалить", prof_confirm: "Изменить настройки интерфейсов и записать конфигурацию Reticulum? Сначала будет сделана резервная копия.",
+    prof_done: "Готово. Резервная копия: {file}. Чтобы изменение вступило в силу, перезапустите дашборд.", prof_restart: "Перезапустить дашборд", prof_none: "нет интерфейсов",
+    disc_search: "Поиск по имени или адресу", disc_t_all: "Все", disc_t_tcp: "TCP", disc_t_tor: "Tor", disc_t_i2p: "I2P", disc_t_radio: "Радио", disc_new: "Только новые", disc_s_km: "По расстоянию", disc_s_hops: "По хопам", disc_s_age: "По свежести", disc_count: "Показано {n} из {all}",
+    reach_copy: "Копировать адрес", reach_path: "Запросить путь", reach_probe: "Probe", reach_wait_path: "Спрашиваю сеть о пути…", reach_wait_probe: "Отправляю пробный пакет, до 15 с…",
+    reach_nopath: "Путь не найден за {s} с. Узел может быть выключен или слишком далеко; повторите позже.", reach_found: "Путь найден за {s} с: {hops} хопов.", reach_known: "Путь известен: {hops} хопов.", reach_via: "Интерфейс: {i}",
+    reach_probe_ok: "Узел ответил: время отклика {ms} мс, хопов: {hops}.", reach_probe_silent: "Ответа на probe нет. Многие узлы на probe не отвечают (только транспортные узлы Reticulum, где это разрешено), так что молчание не значит, что узел выключен.",
+    reach_probe_unknown: "Адрес пока неизвестен (анонс не слышали). Сначала нажмите «Запросить путь».", reach_probe_no_path: "Нет пути к probe-адресу этого узла. Скорее всего, он не отвечает на probe.", reach_probe_send: "Не удалось отправить пробный пакет.",
+    ago_min: "мин", ago_h: "ч", ago_d: "дн", disc_km: "км от шлюза",
+    disc_title: "Найденные интерфейсы", disc_hint: "Другие узлы объявляют свои публичные интерфейсы (хабы, радио). Само ничего не подключается: нажмите «Добавить», и интерфейс запишется в конфигурацию Reticulum (сначала резервная копия), после этого перезапустите дашборд.",
+    disc_off: "Поиск интерфейсов выключен. Включите, чтобы слушать объявления: в конфигурацию запишется discover_interfaces = yes (сначала резервная копия), нужен перезапуск.", disc_on_btn: "Включить поиск",
+    disc_empty: "Пока ничего не найдено. Объявления приходят медленно, подождите несколько часов.", disc_add: "Добавить", disc_added: "уже в конфиге", disc_confirm: "Добавить «{name}» в конфигурацию Reticulum? Сначала будет сделана резервная копия.",
+    disc_done: "Добавлено «{name}». Резервная копия: {file}. Чтобы изменение вступило в силу, перезапустите дашборд.", disc_hops: "хопов", disc_prot: "нужны имя сети и ключ (уже в записи)", disc_radio: "радио: настраивается под ваше устройство вручную",
+    disc_st_available: "доступен", disc_st_unknown: "не слышно сутки", disc_st_stale: "не слышно 3 дня", disc_ago: "слышали {t} назад", disc_enabled_done: "Поиск включён. Резервная копия: {file}. Перезапустите дашборд.",
+    prof_name: "Название профиля", prof_members: "Интерфейсы, которые остаются включёнными:", prof_save: "Сохранить", prof_cancel: "Отмена", prof_del_confirm: "Удалить профиль «{name}»?", prof_err: "Ошибка: {e}",
+    diag_title: "Диагностика интерфейсов", diag_ok: "Проблем с интерфейсами не найдено.",
+    diag_down_net: "{name}: хаб не отвечает", diag_down_net_a: "Хаб может быть выключен или не пускать ваш адрес. Если он вам не нужен, отключите его на странице Configs: мёртвый сетевой интерфейс только нагружает шлюз.",
+    diag_down: "{name}: интерфейс не в сети", diag_down_a: "Проверьте кабель, питание или адрес этого интерфейса и перезапустите дашборд. Если он не нужен, отключите его на странице Configs.",
+    diag_reset: "{name}: соединение рвалось {n} раз за 30 минут ({why})", diag_reset_a: "Удалённый хаб может быть выключен или не пускать ваш адрес. Если это повторяется, а хаб вам не нужен, отключите его на странице Configs: мёртвый сетевой интерфейс только нагружает шлюз.",
+    diag_restarts: "Дашборд запускался {n} раз за 12 часов", diag_restarts_a: "Некоторые публичные хабы могут временно не пускать адрес после множества коротких подключений. Пока вы проверяете, не перезапускайте дашборд слишком часто; если подключения отказывают, подождите несколько часов.",
+    diag_why_reset: "сброс соединения", diag_why_closed: "закрыто хабом", diag_why_refused: "отказ", diag_why_timeout: "таймаут", diag_why_other: "ошибка",
     txt_copied: "✓ Скопировано", btn_copy: "КОПИРОВАТЬ",
     sec_lxmf_messages: "Сообщения LXMF", btn_clear: "ОЧИСТИТЬ",
     sec_rns_interfaces: "Интерфейсы RNS", btn_refresh: "ОБНОВИТЬ",
@@ -1954,7 +2247,7 @@ const I18N = {
     btn_cancel_lc: "Отмена", btn_download: "⬇ Скачать",
     txt_restore_title: "↑ Восстановить из бэкапа", txt_select_zip: "Выберите ZIP-файл бэкапа:",
     btn_restore_arrow: "↑ Восстановить",
-    txt_reset_identity_title: "⚠ Сброс идентификаторов",
+    txt_reset_identity_title: "⚠︎ Сброс идентификаторов",
     txt_reset_identity_desc: "Будут сброшены: LXMF-адрес, I2P туннель, Reticulum identity, история чата.",
     btn_reset: "Сбросить",
     txt_rebooting_title: "⏻ Перезагрузка",
@@ -2009,7 +2302,7 @@ function applyLang(){
   });
 }
 
-function toggleLang(){
+function toggleLang(){ setTimeout(_syncPageTitle,0); setTimeout(()=>{try{diagRender()}catch(e){} try{profRender()}catch(e){}},0); setTimeout(()=>{try{netmapRelang()}catch(e){}},0);
   const cur = localStorage.getItem("noema-lang") || "en";
   const next = cur === "en" ? "ru" : "en";
   localStorage.setItem("noema-lang", next);
@@ -2030,7 +2323,6 @@ async function loadSystem(){
   const r=await fetch(API+"/api/system?_="+Date.now());
   const d=await r.json();
   document.getElementById("uptime-lbl").textContent="Uptime: "+d.uptime;
-  document.getElementById("rns-ver-lbl").textContent="";
     try{const vr=await fetch(API+"/api/version").then(r=>r.json());const vl=document.getElementById("rns-ver-lbl");if(vl&&vr.version)vl.textContent="Dashboard: v"+vr.version;}catch(e){}
   document.getElementById("ip-lbl").textContent=d.ip;
   const cpu=d.cpu||0, ram=d.ram_total?Math.round(d.ram_used/d.ram_total*100):0;
@@ -2065,6 +2357,18 @@ async function checkMqttStatus(){
   }catch(e){}
 }
 
+// Which gateway address belongs to which service (shown under the service on the home page)
+const SVC_ADDR = {
+  dashboard: [["ap-chat-addr","txt_noema_chat"]],
+  noema_lxmf_bridge: [["ap-lxmf-bridge","txt_lxmf_bridge"]],
+  nomadnet: [["ap-nn-node","txt_nn_node"],["ap-nn-chat","txt_nn_chat"]],
+  i2pd: [["ap-i2p","txt_i2p_address"]]
+};
+const ADDR_DESC = {txt_noema_chat:"txt_addr_noema_chat_desc", txt_lxmf_bridge:"txt_addr_bridge_desc", txt_nn_node:"txt_addr_nn_node_desc", txt_nn_chat:"txt_addr_nn_chat_desc", txt_i2p_address:"txt_addr_i2p_desc"};
+const ADDR_ICON = {txt_noema_chat:"💬", txt_lxmf_bridge:"🔹", txt_nn_node:"🌐", txt_nn_chat:"💬", txt_i2p_address:"🔹"};
+const AP = {};   // address texts by element id, so a re-rendered service list keeps them
+function apSet(id, val){ AP[id] = val; const e = document.getElementById(id); if(e){ e.textContent = val; e.title = val; } }
+
 // Services
 async function loadServices(){
   const r=await fetch(API+"/api/services");
@@ -2072,37 +2376,23 @@ async function loadServices(){
   // In FULL, dashboard owns Reticulum directly — rnsd is not used, hide it
   const data=raw.filter(s=>s.name!=="rnsd");
   const _d = I18N[localStorage.getItem("noema-lang")||"en"] || I18N.en;
-  const left=document.getElementById("svc-list-left");
-  const right=document.getElementById("svc-list-right");
-  if(left) left.innerHTML=data.map(s=>`
-    <div class="svc">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="dot" style="width:10px;height:10px;background:${s.status==="active"?"var(--gr)":"var(--rd)"}"></div>
-        <div class="svc-n">${esc(s.name)}</div>
-        <span class="badge ${s.status}">${esc(s.status)}</span>
-      </div>
-    </div>`).join("");
-  if(right) right.innerHTML=data.map(s=>`
-    <div class="svc" style="justify-content:flex-end">
-      <div class="svc-btns">
-        <button class="sys-btn teal" onclick="svcAction('${s.name}','start')">▶ ${_d.btn_start}</button>
-        <button class="sys-btn rd" onclick="svcAction('${s.name}','stop')">■ ${_d.btn_stop}</button>
-        <button class="sys-btn am" onclick="svcAction('${s.name}','restart')">↺ ${_d.btn_restart}</button>
-      </div>
-    </div>`).join("");
-  const mobile=document.getElementById("svc-list-mobile");
-  if(mobile) mobile.innerHTML=data.map(s=>`
-    <div class="svc">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="dot" style="width:10px;height:10px;background:${s.status==="active"?"var(--gr)":"var(--rd)"}"></div>
-        <div class="svc-n">${esc(s.name)}</div>
-        <span class="badge ${s.status}">${esc(s.status)}</span>
-      </div>
-      <div class="svc-btns">
-        <button class="sys-btn teal" onclick="svcAction('${s.name}','start')">▶ ${_d.btn_start}</button>
-        <button class="sys-btn rd" onclick="svcAction('${s.name}','stop')">■ ${_d.btn_stop}</button>
-        <button class="sys-btn am" onclick="svcAction('${s.name}','restart')">↺ ${_d.btn_restart}</button>
-      </div>
+  const box=document.getElementById("svc-compact");
+  if(box) box.innerHTML=data.map(s=>`
+    <div class="svc-block">
+    <div class="svc-mini">
+      <div class="dot" style="width:9px;height:9px;background:${s.status==="active"?"var(--gr)":"var(--rd)"}"></div>
+      <div class="svc-n" title="${esc(s.name)}">${esc(s.name)}</div>
+      <span class="badge ${esc(s.status)}">${esc(s.status)}</span>
+      <span class="svc-ib">
+        <button class="sys-btn teal" title="${esc(_d.btn_start)}" onclick="svcAction('${s.name}','start')"><span class="b-i">▶</span><span class="b-t"> ${esc(_d.btn_start)}</span></button>
+        <button class="sys-btn rd" title="${esc(_d.btn_stop)}" onclick="svcAction('${s.name}','stop')"><span class="b-i">■</span><span class="b-t"> ${esc(_d.btn_stop)}</span></button>
+        <button class="sys-btn am" title="${esc(_d.btn_restart)}" onclick="svcAction('${s.name}','restart')"><span class="b-i">↺</span><span class="b-t"> ${esc(_d.btn_restart)}</span></button>
+      </span>
+    </div>${(SVC_ADDR[s.name]||[]).map(([id,k])=>`
+    <div class="svc-addr" title="${esc(t(ADDR_DESC[k]))}">
+      <div class="addr-top"><span class="addr-k">${ADDR_ICON[k]||""} ${esc(t(k))}</span><span class="addr-d">${esc(t(ADDR_DESC[k]))}</span></div>
+      <div class="addr-row"><span class="addr-v" id="${id}" title="${esc(AP[id]||"")}">${esc(AP[id]||"—")}</span><button class="sys-btn teal" onclick="apCopy('${id}')" title="${esc(t("btn_copy"))}"><span class="b-i">⧉</span><span class="b-t">${esc(t("btn_copy"))}</span></button></div>
+    </div>`).join("")}
     </div>`).join("");
 }
 
@@ -2136,7 +2426,7 @@ async function announceAll(){
     const msg = Object.entries(res).map(([k,v])=>`${k}: ${v}`).join(", ");
     showToast("📡 " + msg);
   } catch(e) {
-    showToast("❌ " + e.message);
+    showToast("✕ " + e.message);
   }
 }
 
@@ -2184,8 +2474,8 @@ async function saveChatPropagationNode(){
     const r = await fetch(API+"/api/chat/propagation_node", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({propagation_node: hash})});
     const d = await r.json();
     if(d.ok) toast("✓ Propagation node updated");
-    else toast("❌ " + (d.error || "failed"), false);
-  } catch(e){ toast("❌ " + e.message, false); }
+    else toast("✕ " + (d.error || "failed"), false);
+  } catch(e){ toast("✕ " + e.message, false); }
 }
 
 async function saveChatSettings(){
@@ -2235,7 +2525,7 @@ async function doResetIdentity(){
       // Show overlay with countdown
       const ov=document.createElement("div");
       ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px";
-      ov.innerHTML="<div style='font-size:18px;font-weight:700;color:#4ade9a'>Identity Reset</div><div style='font-size:13px;color:#8b91b8'>Please wait...</div><div id='reset-cnt' style='font-size:24px;font-weight:700;color:#fff'>8</div>";
+      ov.innerHTML="<div style='font-size:18px;font-weight:700;color:#4aabde'>Identity Reset</div><div style='font-size:13px;color:#8b91b8'>Please wait...</div><div id='reset-cnt' style='font-size:24px;font-weight:700;color:#ffffff'>8</div>";
       document.body.appendChild(ov);
       let n=8;
       const t=setInterval(()=>{
@@ -2608,10 +2898,10 @@ async function _rnsSaveToggle() {
       if(st) { st.textContent="✓ Saved — restart dashboard to apply"; setTimeout(()=>{ if(st) st.style.display="none"; }, 4000); }
       _rnsIfacesLoad();
     } else {
-      if(st) { st.style.color="var(--rd)"; st.textContent="❌ "+(d.error||"Error"); }
+      if(st) { st.style.color="var(--rd)"; st.textContent="✕ "+(d.error||"Error"); }
     }
   } catch(e) {
-    if(st) { st.style.color="var(--rd)"; st.textContent="❌ "+e; }
+    if(st) { st.style.color="var(--rd)"; st.textContent="✕ "+e; }
   }
 }
 
@@ -2815,6 +3105,7 @@ let chatLastRenderedMsgs = [];
 let chatContacts = [];
 let chatPollTimer = null;
 let chatLastTs = Math.floor(Date.now()/1000);
+let chatLastSeq = null;
 
 async function loadChat(){
   const r = await fetch(API+"/api/chat/address");
@@ -2836,7 +3127,7 @@ function renderChatContacts(){
   }
   el.innerHTML = chatContacts.map((c,i) => {
     const unread = _contactUnread[c.addr] || 0;
-    const badge = unread > 0 ? `<span style="background:#f87171;color:#fff;border-radius:12px;padding:1px 5px;font-size:9px;margin-left:4px">${unread}</span>` : '';
+    const badge = unread > 0 ? `<span style="background:#eaf9ff;color:#060a1a;border-radius:12px;padding:1px 5px;font-size:9px;margin-left:4px">${unread}</span>` : '';
     return `<div onclick="openChat('${c.addr}','${esc(c.name||'')}')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--bd);border-left:2px solid ${chatCurrentAddr===c.addr?'var(--teal)':'transparent'};background:${chatCurrentAddr===c.addr?'var(--s3)':'transparent'}">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:12px;font-weight:700;color:${unread>0?'var(--tx)':'var(--tx)'}">${esc(c.name||c.addr.slice(0,8))}</div>
@@ -2910,7 +3201,7 @@ function renderChatMsgs(msgs, forceScroll){
 
 function chatStatusIcon(status, attempts){
   if(status === "delivered") return ' <span style="color:var(--teal)">✓✓</span>';
-  if(status === "failed") return ' <span style="color:var(--rd,#f87171)">✕</span>';
+  if(status === "failed") return ' <span style="color:var(--rd,#eaf9ff)">✕</span>';
   if(status === "sending"){
     const n = attempts && attempts > 0 ? attempts : 1;
     const label = t("txt_attempt_n").replace("{n}", n);
@@ -2970,11 +3261,11 @@ async function saveAccessSettings(){
     const cooldown   = document.getElementById("access-cooldown").value;
     const r = await fetch(API+"/api/access/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({enabled,whitelist:_accessWhitelist,rate_limit,cooldown})});
     const d = await r.json();
-    st.textContent = d.ok ? "✅ Saved · Bridge restarting" : "❌ Error";
+    st.textContent = d.ok ? "✓ Saved · Bridge restarting" : "✕ Error";
     st.style.color = d.ok ? "var(--teal)" : "var(--rd)";
     st.style.display = "inline";
     setTimeout(()=>st.style.display="none", 4000);
-  }catch(e){ st.textContent="❌ Error"; st.style.display="inline"; }
+  }catch(e){ st.textContent="✕ Error"; st.style.display="inline"; }
 }
 
 let _chatAccessWhitelist = [];
@@ -3023,11 +3314,11 @@ async function saveChatAccessSettings(){
     const enabled = document.getElementById("chat-access-enabled-toggle").checked;
     const r = await fetch(API+"/api/chat_access/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({enabled,whitelist:_chatAccessWhitelist})});
     const d = await r.json();
-    st.textContent = d.ok ? "✅ Saved" : "❌ Error";
+    st.textContent = d.ok ? "✓ Saved" : "✕ Error";
     st.style.color = d.ok ? "var(--teal)" : "var(--rd)";
     st.style.display = "inline";
     setTimeout(()=>st.style.display="none", 4000);
-  }catch(e){ st.textContent="❌ Error"; st.style.display="inline"; }
+  }catch(e){ st.textContent="✕ Error"; st.style.display="inline"; }
 }
 
 async function loadTgSettings(){
@@ -3038,7 +3329,7 @@ async function loadTgSettings(){
     if(document.getElementById("tg-notify-bridge")) document.getElementById("tg-notify-bridge").checked = d.notify_bridge !== false;
     if(document.getElementById("tg-notify-chat"))   document.getElementById("tg-notify-chat").checked   = d.notify_chat   !== false;
     const st = document.getElementById("tg-status");
-    if(d.enabled){ st.textContent="✅ "+t("txt_enabled"); st.style.display="inline"; }
+    if(d.enabled){ st.textContent="✓ "+t("txt_enabled"); st.style.display="inline"; }
   }catch(e){}
 }
 
@@ -3051,11 +3342,11 @@ async function saveTgSettings(){
     const notify_chat   = document.getElementById("tg-notify-chat")?.checked ?? true;
     const r = await fetch(API+"/api/telegram/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bot_token:token,chat_id:chatid,notify_bridge,notify_chat})});
     const d = await r.json();
-    if(d.ok){ st.textContent="✅ Saved"; st.style.color="var(--teal)"; }
-    else { st.textContent="❌ Error"; st.style.color="var(--rd)"; }
+    if(d.ok){ st.textContent="✓ Saved"; st.style.color="var(--teal)"; }
+    else { st.textContent="✕ Error"; st.style.color="var(--rd)"; }
     st.style.display="inline";
     setTimeout(()=>st.style.display="none", 3000);
-  }catch(e){ st.textContent="❌ Error"; st.style.display="inline"; }
+  }catch(e){ st.textContent="✕ Error"; st.style.display="inline"; }
 }
 
 async function testTgNotify(){
@@ -3066,11 +3357,11 @@ async function testTgNotify(){
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:chatid,text:"🔔 NOEMA RNSGate — test notification"})});
     const d = await r.json();
-    if(d.ok){ st.textContent="✅ Sent"; st.style.color="var(--teal)"; }
-    else { st.textContent="❌ "+d.description; st.style.color="var(--rd)"; }
+    if(d.ok){ st.textContent="✓ Sent"; st.style.color="var(--teal)"; }
+    else { st.textContent="✕ "+d.description; st.style.color="var(--rd)"; }
     st.style.display="inline";
     setTimeout(()=>st.style.display="none", 4000);
-  }catch(e){ st.textContent="❌ Error"; st.style.display="inline"; }
+  }catch(e){ st.textContent="✕ Error"; st.style.display="inline"; }
 }
 
 function chatSoundRestore(){
@@ -3089,6 +3380,7 @@ function chatPlaySound(){
   const vol = parseFloat((document.getElementById("chat-sound-vol")||{value:"0.35"}).value)||0.35;
   try{
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state === "suspended") ctx.resume().catch(()=>{});
     const g = ctx.createGain();
     g.connect(ctx.destination);
     const play = (freq, start, dur, fEnd) => {
@@ -3179,8 +3471,14 @@ async function pollChatIncoming(){
       const cr = await fetch(API+"/api/chat/contacts");
       chatContacts = await cr.json();
     }
-    const r = await fetch(API+"/api/chat/incoming?since="+chatLastTs);
-    const msgs = await r.json();
+    // the server numbers incoming messages; ask only for the ones newer than the last number we saw (no clocks involved)
+    const r = await fetch(API+"/api/chat/incoming?after="+(chatLastSeq===null ? "now" : chatLastSeq));
+    const d = await r.json();
+    if(Array.isArray(d)) return;                      // an old server without numbering
+    if(chatLastSeq === null){ chatLastSeq = d.seq; return; }
+    if(d.seq < chatLastSeq){ chatLastSeq = 0; return; }   // the dashboard was restarted: numbering started again
+    chatLastSeq = d.seq;
+    const msgs = d.msgs || [];
     if(!msgs.length) return;
     chatLastTs = Math.max(chatLastTs, ...msgs.map(m=>m.ts));
     const senders = [...new Set(msgs.map(m=>m.from))];
@@ -3194,15 +3492,14 @@ async function pollChatIncoming(){
       const text = msgs.find(m=>m.from===addr)?.text||"";
       chatPlaySound();
       chatPushNotify(name, text);
-      if(addr===chatCurrentAddr){
+      const viewing = addr===chatCurrentAddr && document.getElementById("panel-chat").classList.contains("active");
+      if(viewing){      // the open conversation shows the new messages at once
         const r2 = await fetch(API+"/api/chat/history/"+addr);
         const all = await r2.json();
         renderChatMsgs(all);
-        toast("💬 "+name+": "+text.slice(0,30));
-      } else {
-        toast("💬 "+name+": "+text.slice(0,30));
-        addUnread(msgs.filter(m=>m.from===addr).length, addr);
       }
+      toast("💬 "+name+": "+text.slice(0,30));
+      addUnread(msgs.filter(m=>m.from===addr).length, addr);      // the counter is shown in every case; it is cleared when you click into the conversation
     }
   }catch(e){}
 }
@@ -3394,6 +3691,9 @@ async function doClearFiles(){
 }
 
 // UNREAD
+function _chatSeen(){ if(chatCurrentAddr && (_contactUnread[chatCurrentAddr]||0) > 0) clearUnread(chatCurrentAddr); }
+document.addEventListener("click", e => { if(e.target.closest && e.target.closest("#chat-messages")) _chatSeen(); });
+document.addEventListener("focusin", e => { if(e.target && e.target.id === "chat-input") _chatSeen(); });
 let _unread = 0;
 function addUnread(n, addr){
   _unread += n;
@@ -3432,16 +3732,14 @@ function _tickBadges(){
   const cb = document.getElementById("chat-badge");
   const cp = document.getElementById("chat-pill");
   if(cb && cb.style.display !== "none" && cp){
-    const ic = cp.querySelector(".hub-pill-ic");
-    const r = (ic||cp).getBoundingClientRect();
-    if(r.width > 0){ cb.style.left=(r.right-10)+"px"; cb.style.top=(r.top-6)+"px"; }
+    const r = cp.getBoundingClientRect();
+    if(r.width > 0){ cb.style.left=(r.right-cb.offsetWidth-8)+"px"; cb.style.top=(r.top+(r.height-16)/2)+"px"; }
   }
   const ub = document.getElementById("update-badge");
   const sp = document.getElementById("system-pill");
   if(ub && ub.style.display !== "none" && sp){
-    const ic = sp.querySelector(".hub-pill-ic");
-    const r = (ic||sp).getBoundingClientRect();
-    if(r.width > 0){ ub.style.left=(r.right-10)+"px"; ub.style.top=(r.top-6)+"px"; }
+    const r = sp.getBoundingClientRect();
+    if(r.width > 0){ ub.style.left=(r.right-ub.offsetWidth-8)+"px"; ub.style.top=(r.top+(r.height-16)/2)+"px"; }
   }
   requestAnimationFrame(_tickBadges);
 }
@@ -3985,7 +4283,7 @@ function sdrDraw(){
     wctx.drawImage(_sdrOffscreen, 0, 0, nBins, rows.length, 0, 0, rectW, rectH);
     visibleMarkers.forEach(m=>{
       const x = ((m.freq-last.freq_start)/(last.freq_stop-last.freq_start))*rectW;
-      wctx.strokeStyle = "rgba(180,140,255,.55)";
+      wctx.strokeStyle = "rgba(111,180,224,.55)";
       wctx.lineWidth = 1;
       wctx.setLineDash([3,3]);
       wctx.beginPath(); wctx.moveTo(x,0); wctx.lineTo(x,rectH); wctx.stroke();
@@ -4014,18 +4312,18 @@ function sdrDraw(){
         const y = rectH2 - t*rectH2;
         if(i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y);
       });
-      lctx.strokeStyle = "#3ddc84";
+      lctx.strokeStyle = "#3daddc";
       lctx.lineWidth = 1.3;
       lctx.stroke();
 
       visibleMarkers.forEach(m=>{
         const x = ((m.freq-last.freq_start)/(last.freq_stop-last.freq_start))*rectW2;
-        lctx.strokeStyle = "rgba(180,140,255,.7)";
+        lctx.strokeStyle = "rgba(111,180,224,.7)";
         lctx.lineWidth = 1;
         lctx.setLineDash([3,3]);
         lctx.beginPath(); lctx.moveTo(x,0); lctx.lineTo(x,rectH2); lctx.stroke();
         lctx.setLineDash([]);
-        lctx.fillStyle = "rgba(200,170,255,.9)";
+        lctx.fillStyle = "rgba(111,180,224,.9)";
         lctx.font = "9px monospace";
         const label = t(m.labelKey);
         const labelW = lctx.measureText(label).width;
@@ -4103,7 +4401,7 @@ async function loadRnodePanel(){
           const f = rnode.fields||{};
           const isUp = (f["Status"]||"").startsWith("Up");
           return `<button class="sys-btn${i===0?' teal':''}" onclick="selectRnode(${i})" id="rnode-tab-${i}">
-            <span style="width:8px;height:8px;border-radius:50%;background:${isUp?"#4ade9a":"#f87171"};display:inline-block;margin-right:6px"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:${isUp?"#4aabde":"#eaf9ff"};display:inline-block;margin-right:6px"></span>
             ${esc(rnode.name.replace("RNodeInterface[","").replace("]",""))}
           </button>`;
         }).join("")}
@@ -4153,7 +4451,7 @@ function selectRnode(idx){
   const extraBars = [];
   if(cpuTempVal !== null) {
     const pct = Math.min(cpuTempVal / 120 * 100, 100);
-    const col = cpuTempVal >= 70 ? "#ef4444" : cpuTempVal >= 55 ? "#f59e0b" : "#10b981";
+    const col = cpuTempVal >= 70 ? "#eaf9ff" : cpuTempVal >= 55 ? "#a9dcf0" : "#1074b9";
     extraBars.push(`<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:5px 10px;display:flex;flex-direction:column;justify-content:center;min-width:130px">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
         <span style="font-size:11px">🌡</span>
@@ -4164,7 +4462,7 @@ function selectRnode(idx){
     </div>`);
   }
   if(batteryVal !== null) {
-    const col = batteryVal <= 20 ? "#ef4444" : batteryVal <= 40 ? "#f59e0b" : "#10b981";
+    const col = batteryVal <= 20 ? "#eaf9ff" : batteryVal <= 40 ? "#a9dcf0" : "#1074b9";
     const icon = isCharging ? "🔌" : "🔋";
     extraBars.push(`<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:5px 10px;display:flex;flex-direction:column;justify-content:center;min-width:130px">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
@@ -4178,7 +4476,7 @@ function selectRnode(idx){
 
   if(metricsEl) metricsEl.innerHTML =
     `<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;flex-shrink:0">
-      <div style="width:8px;height:8px;border-radius:50%;background:${isUp?"#4ade9a":"#f87171"};flex-shrink:0"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:${isUp?"#4aabde":"#eaf9ff"};flex-shrink:0"></div>
       <span style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap">${esc(rnode.name.replace("RNodeInterface[","").replace("]",""))}</span>
       <span style="font-size:10px;color:${isUp?"var(--gr)":"var(--rd)"}">${isUp?"online":"offline"}</span>
     </div>` +
@@ -4358,7 +4656,7 @@ async function loadTrafficCharts(){
       return dt.getHours()+":"+String(dt.getMinutes()).padStart(2,"0")+":"+String(dt.getSeconds()).padStart(2,"0");
     });
 
-    const colors = ["#4fd1c5","#c98fb3","#e8a33d","#3ddc84","#ff5c5c","#7fd4d4","#e08a6a","#7d93b3"];
+    const colors = ["#4f8cd1","#6fb4e0","#a9dcf0","#3daddc","#eaf9ff","#7fa3d4","#eaf9ff","#7d93b3"];
 
     ifaceNames.forEach((name,ci) => {
       const safeId = "tc-"+name.replace(/[^a-z0-9]/gi,"_");
@@ -4384,7 +4682,7 @@ async function loadTrafficCharts(){
           labels,
           datasets:[
             {label:"TX",data:txData,borderColor:color,backgroundColor:color+"20",borderWidth:1.5,pointRadius:0,fill:true,tension:.3},
-            {label:"RX",data:rxData,borderColor:"#c98fb3",backgroundColor:"#c98fb310",borderWidth:1,pointRadius:0,fill:false,tension:.3}
+            {label:"RX",data:rxData,borderColor:"#6fb4e0",backgroundColor:"#c98fb310",borderWidth:1,pointRadius:0,fill:false,tension:.3}
           ]
         },
         options:{
@@ -4534,13 +4832,13 @@ function _vuDrawScale(svgGroupId, ticks, unitSuffix) {
   const arc = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   arc.setAttribute('d', arcPath(76, startDeg, endDeg));
   arc.setAttribute('fill', 'none');
-  arc.setAttribute('stroke', '#3ddc8422');
+  arc.setAttribute('stroke', '#3daddc22');
   arc.setAttribute('stroke-width', '12');
   g.appendChild(arc);
 
   // Zone coloring: green zone (left 2/3), amber (middle), red (right zone for RSSI ≥ -40, SNR ≥ 15)
   const zones = [
-    {from: 0, to: 0.55, color: '#3ddc8444'},
+    {from: 0, to: 0.55, color: '#3daddc44'},
     {from: 0.55, to: 0.8, color: '#f5a62344'},
     {from: 0.8, to: 1.0, color: '#ff4b4b44'},
   ];
@@ -4568,14 +4866,14 @@ function _vuDrawScale(svgGroupId, ticks, unitSuffix) {
     const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     tick.setAttribute('x1', x1); tick.setAttribute('y1', y1);
     tick.setAttribute('x2', x2); tick.setAttribute('y2', y2);
-    tick.setAttribute('stroke', '#3ddc8477'); tick.setAttribute('stroke-width', '1.5');
+    tick.setAttribute('stroke', '#3daddc77'); tick.setAttribute('stroke-width', '1.5');
     g.appendChild(tick);
     // Label
     const lx = cx + 50 * Math.cos(rad), ly = cy + 50 * Math.sin(rad);
     const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     lbl.setAttribute('x', lx); lbl.setAttribute('y', ly + 3);
     lbl.setAttribute('text-anchor', 'middle');
-    lbl.setAttribute('fill', '#3ddc8499');
+    lbl.setAttribute('fill', '#3daddc99');
     lbl.setAttribute('font-family', "'JetBrains Mono',monospace");
     lbl.setAttribute('font-size', '7');
     lbl.textContent = v;
@@ -4593,7 +4891,7 @@ function _vuDrawScale(svgGroupId, ticks, unitSuffix) {
     const mt = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     mt.setAttribute('x1', cx + r1*Math.cos(rad)); mt.setAttribute('y1', cy + r1*Math.sin(rad));
     mt.setAttribute('x2', cx + r2*Math.cos(rad)); mt.setAttribute('y2', cy + r2*Math.sin(rad));
-    mt.setAttribute('stroke', '#3ddc8433'); mt.setAttribute('stroke-width', '0.8');
+    mt.setAttribute('stroke', '#3daddc33'); mt.setAttribute('stroke-width', '0.8');
     g.appendChild(mt);
   }
 }
@@ -4612,7 +4910,7 @@ function _vuSetValue(needleId, valId, value, minVal, maxVal, unit) {
   const deg = startDeg + pct * totalDeg;
   needle.style.transform = `rotate(${deg}deg)`;
   // Color needle by zone
-  const color = pct > 0.8 ? '#ff6b6b' : pct > 0.55 ? '#f5a623' : '#3ddc84';
+  const color = pct > 0.8 ? '#eaf9ff' : pct > 0.55 ? '#a9dcf0' : '#3daddc';
   needle.setAttribute('stroke', color);
   needle.nextElementSibling.setAttribute('fill', color); // circle
   if (valEl) {
@@ -4697,6 +4995,9 @@ let _nodesData = [];
 let _nodesFilter = 'all';
 let _nodesInterval = null;
 let _loraOnly = false;
+let _hopSel = new Set();   // selected hop buckets: "0","1","2","3","4+","?" — empty = all
+let _tcpOnly = false;
+function _hopBucket(h){ if(h === null || h === undefined) return "?"; return h >= 4 ? "4+" : String(h); }
 
 const _nodeTypeColor = {
   LXMF:     'var(--pink)',
@@ -4742,8 +5043,8 @@ function _renderDartboard(nodes) {
       const y = Math.sin(angle) * rj;
       const color = _nodeTypeColor[n.app_type] || 'var(--mu)';
       const colorHex = {
-        LXMF: '#f472b6', Nomadnet: '#38bdf8',
-        PropNode: '#f5a623', RNS: '#6b7280'
+        LXMF: '#6fb4e0', Nomadnet: '#38bdf8',
+        PropNode: '#a9dcf0', RNS: '#6b7280'
       }[n.app_type] || '#6b7280';
 
       const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -4780,6 +5081,8 @@ function _renderNodesTable(){
 
   let rows = (_nodesFilter === 'all' ? _nodesData : _nodesData.filter(n => n.app_type === _nodesFilter))
     .filter(n => !_loraOnly || n.via_rnode)
+    .filter(n => !_hopSel.size || _hopSel.has(_hopBucket(n.hops)))
+    .filter(n => !_tcpOnly || (n.via && n.via.tcp))
     .filter(n => !q ||
       (n.hash && n.hash.includes(q)) ||
       (n.name && n.name.toLowerCase().includes(q)) ||
@@ -4792,7 +5095,7 @@ function _renderNodesTable(){
   if(_loraOnly) rows = rows.slice().sort((a,b) => (b.last_via_rnode||0) - (a.last_via_rnode||0));
 
   document.getElementById('nodes-count').textContent =
-    (_nodesFilter === 'all' && !_loraOnly)
+    (_nodesFilter === 'all' && !_loraOnly && !_hopSel.size && !_tcpOnly)
       ? `${_nodesData.length} nodes`
       : `${rows.length} / ${_nodesData.length}`;
 
@@ -4807,9 +5110,14 @@ function _renderNodesTable(){
   tbody.innerHTML = rows.map(n => {
     const color = _nodeTypeColor[n.app_type] || 'var(--mu)';
     const badge = `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${color}22;color:${color}">${esc(n.app_type||'RNS')}</span>`;
-    const loraBadge = n.via_rnode
-      ? `<span title="Heard directly over LoRa (${esc(n.via_interface||'RNode')}) — last: ${_fmtRelTime(n.last_via_rnode)}" style="margin-left:5px">📡</span>`
+    const sigTxt = (n.rssi !== null && n.rssi !== undefined)
+      ? `<span title="RSSI ${n.rssi} dBm${(n.snr !== null && n.snr !== undefined) ? ', SNR ' + n.snr + ' dB' : ''} — last announce over LoRa, ${_fmtRelTime(n.sig_ts)}" style="margin-left:4px;white-space:nowrap;font-family:var(--mono);font-size:10px;color:${n.rssi >= -95 ? 'var(--teal)' : n.rssi >= -112 ? 'var(--sky)' : 'var(--mu)'}">${Math.round(n.rssi)} dBm${(n.snr !== null && n.snr !== undefined) ? ' · ' + Math.round(n.snr) + ' dB' : ''}</span>`
       : '';
+    const loraBadge = (n.via_rnode
+      ? `<span title="Heard directly over LoRa (${esc(n.via_interface||'RNode')}) — last: ${_fmtRelTime(n.last_via_rnode)}" style="margin-left:5px">📡</span>${sigTxt}`
+      : '') + ((n.via && n.via.tcp)
+      ? `<span title="Announce heard over TCP / network — last: ${_fmtRelTime(n.via.tcp)}" style="margin-left:5px">🌐</span>`
+      : '');
     const hashShort = n.hash ? n.hash.substring(0,16)+'…' : '—';
     const fullHash  = esc(n.hash||'');
     const name  = n.name ? esc(n.name) : `<span style="color:var(--mu)">—</span>`;
@@ -4852,19 +5160,19 @@ function _copyToClipboard(text){
 }
 function _copyHash(hash){ _copyToClipboard(hash); }
 
-async function _showRnpath(hash){
+async function _showRnpath(hash, keep){
   const popup  = document.getElementById('rnpath-popup');
   const body   = document.getElementById('rnpath-body');
   const hashEl = document.getElementById('rnpath-hash');
   if(!popup) return;
   hashEl.textContent = hash;
-  body.textContent = 'Looking up path…';
+  if(!keep){ const ro = document.getElementById('reach-out'); if(ro) ro.textContent = ''; body.textContent = 'Looking up path…'; }
   popup.style.display = 'flex';
   try {
     const r = await fetch(API + '/api/rnpath?hash=' + hash);
     const d = await r.json();
     if(d.error) {
-      body.textContent = '❌ ' + d.error;
+      body.textContent = '✕ ' + d.error;
     } else {
       const hops  = d.hops !== null && d.hops !== undefined ? d.hops : '?';
       const iface = d.interface || '—';
@@ -4876,7 +5184,7 @@ async function _showRnpath(hash){
         (d.raw ? '\n\n' + d.raw : '');
     }
   } catch(e) {
-    body.textContent = '❌ ' + e.message;
+    body.textContent = '✕ ' + e.message;
   }
 }
 window.addEventListener('resize', () => {
@@ -4899,7 +5207,7 @@ document.addEventListener('keydown', e => {
 function _setLoraBtnVisual(on){
   const btn = document.getElementById('nodes-lora-toggle');
   if(!btn) return;
-  btn.style.background = on ? 'rgba(61,220,132,.18)' : '';
+  btn.style.background = on ? 'rgba(56,189,248,.18)' : '';
   btn.style.borderColor = on ? 'var(--teal)' : '';
   btn.style.boxShadow = on ? 'var(--glow)' : '';
 }
@@ -4917,6 +5225,25 @@ function toggleLoraFilter(btn){
     const allBtn = document.querySelector('#nodes-filter .sys-btn[onclick*="\'all\'"]');
     if(allBtn) allBtn.classList.add('active');
   }
+  _renderNodesTable();
+}
+
+function setHopFilter(key, btn){
+  if(key === 'any') _hopSel.clear();
+  else if(key === 'p03') _hopSel = (_hopSel.size === 4 && ['0','1','2','3'].every(k => _hopSel.has(k))) ? new Set() : new Set(['0','1','2','3']);
+  else { if(_hopSel.has(key)) _hopSel.delete(key); else _hopSel.add(key); }
+  const all03 = _hopSel.size === 4 && ['0','1','2','3'].every(k => _hopSel.has(k));
+  document.querySelectorAll('#nodes-hops [data-hop]').forEach(b => {
+    const k = b.dataset.hop;
+    b.classList.toggle('active', k === 'any' ? _hopSel.size === 0 : k === 'p03' ? all03 : _hopSel.has(k));
+  });
+  _renderNodesTable();
+}
+function toggleTcpFilter(btn){
+  _tcpOnly = !_tcpOnly;
+  btn.style.background = _tcpOnly ? 'rgba(56,189,248,.18)' : '';
+  btn.style.borderColor = _tcpOnly ? 'var(--bl)' : '';
+  btn.style.boxShadow = _tcpOnly ? 'var(--glow)' : '';
   _renderNodesTable();
 }
 
@@ -4990,8 +5317,8 @@ async function loadI2pStatus(){
     const addrEl = document.getElementById("i2p-addr");
     if(!dot) return;
     const running = d.running;
-    dot.style.background = running ? "#4ade9a" : "#f87171";
-    dot.style.boxShadow = running ? "0 0 8px #4ade9a60" : "none";
+    dot.style.background = running ? "#4aabde" : "#eaf9ff";
+    dot.style.boxShadow = running ? "0 0 8px #4aabde60" : "none";
     lbl.style.color = running ? "var(--gr)" : "var(--rd)";
     lbl.textContent = running ? "● running" : "● stopped";
     if(d.b32_address){
@@ -5042,22 +5369,22 @@ async function i2pAddInterface(){
 async function loadAddressesPanel(){
   try{
     const d = await fetch(API+"/api/addresses").then(r=>r.json());
-    if(d.lxmf_bridge) document.getElementById("ap-lxmf-bridge").textContent = d.lxmf_bridge;
+    if(d.lxmf_bridge) apSet("ap-lxmf-bridge", d.lxmf_bridge);
   }catch(e){}
   try{
     const d = await fetch(API+"/api/nomadnet/status").then(r=>r.json());
     if(d.page_addr){
-      document.getElementById("ap-nn-node").textContent = d.page_addr+":/page/index.mu";
-      document.getElementById("ap-nn-chat").textContent = d.page_addr+":/page/nomadnet.mu";
+      apSet("ap-nn-node", d.page_addr+":/page/index.mu");
+      apSet("ap-nn-chat", d.page_addr+":/page/nomadnet.mu");
     }
   }catch(e){}
   try{
     const d = await fetch(API+"/api/i2p/status").then(r=>r.json());
-    if(d.b32||d.b32_address) document.getElementById("ap-i2p").textContent = d.b32||d.b32_address;
+    if(d.b32||d.b32_address) apSet("ap-i2p", d.b32||d.b32_address);
   }catch(e){}
   try{
     const d = await fetch(API+"/api/chat/address").then(r=>r.json());
-    if(d.address) document.getElementById("ap-chat-addr").textContent = d.address;
+    if(d.address) apSet("ap-chat-addr", d.address);
   }catch(e){}
 }
 
@@ -5091,7 +5418,7 @@ async function loadNomadnet(){
     const dot = document.getElementById("nn-status-dot");
     const txt = document.getElementById("nn-status-txt");
     const addr = document.getElementById("nn-addr");
-    if(dot) dot.style.background = d.running?"#4ade80":"#6b7280";
+    if(dot) dot.style.background = d.running?"#4ab8de":"#6b7280";
     if(txt) txt.textContent = d.status;
     if(addr) addr.textContent = d.page_addr || "—";
   }catch(e){}
@@ -5273,7 +5600,8 @@ setInterval(() => {
     loadInterference();
   }
 }, 10000 * _pollMul);
-setInterval(pollChatIncoming, 5000 * _pollMul);
+pollChatIncoming();                                  // the first check at once: it fixes the starting number, so nothing that arrives later is taken for old
+setInterval(pollChatIncoming, Math.min(5000 * _pollMul, 10000));   // chat is checked at least every 10 s even in the slow mode
 setInterval(pollChatStatus, 3000 * _pollMul);
 
 
@@ -5306,9 +5634,9 @@ fetch(API+"/api/chat/contacts").then(r=>r.json()).then(async d=>{
     N.forEach(n=>{n.x+=n.vx;n.y+=n.vy;n.p+=.02;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;});
     for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++){
       const dx=N[i].x-N[j].x,dy=N[i].y-N[j].y,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<150){ctx.beginPath();ctx.strokeStyle=`rgba(61,220,132,${(1-d/150)*.14})`;ctx.lineWidth=.8;ctx.moveTo(N[i].x,N[i].y);ctx.lineTo(N[j].x,N[j].y);ctx.stroke();}
+      if(d<150){ctx.beginPath();ctx.strokeStyle=`rgba(56,189,248,${(1-d/150)*.14})`;ctx.lineWidth=.8;ctx.moveTo(N[i].x,N[i].y);ctx.lineTo(N[j].x,N[j].y);ctx.stroke();}
     }
-    N.forEach(n=>{const a=(Math.sin(n.p)*.5+.5)*.35+.1;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,6.28);ctx.fillStyle=`rgba(61,220,132,${a})`;ctx.fill();});
+    N.forEach(n=>{const a=(Math.sin(n.p)*.5+.5)*.35+.1;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,6.28);ctx.fillStyle=`rgba(56,189,248,${a})`;ctx.fill();});
     requestAnimationFrame(draw);
   }
   window.addEventListener('resize',()=>{resize();init();draw();});
@@ -5732,7 +6060,7 @@ async function loadCronRnsd(){
   try{
     const d = await fetch(API+"/api/cron/rnsd").then(r=>r.json());
     document.getElementById("cron-rnsd-toggle").checked = d.enabled;
-    document.getElementById("cron-rnsd-status").textContent = d.enabled ? "✅ enabled" : "";
+    document.getElementById("cron-rnsd-status").textContent = d.enabled ? "✓ enabled" : "";
   }catch(e){}
 }
 
@@ -5740,17 +6068,17 @@ async function setCronRnsd(enabled){
   const st = document.getElementById("cron-rnsd-status");
   try{
     const d = await fetch(API+"/api/cron/rnsd",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({enabled})}).then(r=>r.json());
-    st.textContent = d.enabled ? "✅ enabled" : "disabled";
+    st.textContent = d.enabled ? "✓ enabled" : "disabled";
     st.style.color = d.enabled ? "var(--teal)" : "var(--mu)";
-    setTimeout(()=>{ st.textContent = d.enabled ? "✅ enabled" : ""; st.style.color="var(--mu)"; }, 3000);
-  }catch(e){ st.textContent="❌ Error"; }
+    setTimeout(()=>{ st.textContent = d.enabled ? "✓ enabled" : ""; st.style.color="var(--mu)"; }, 3000);
+  }catch(e){ st.textContent="✕ Error"; }
 }
 
 async function loadCronWatchdog(){
   try{
     const d = await fetch(API+"/api/cron/tcp_watchdog").then(r=>r.json());
     document.getElementById("cron-watchdog-toggle").checked = d.enabled;
-    document.getElementById("cron-watchdog-status").textContent = d.enabled ? "✅ enabled" : "";
+    document.getElementById("cron-watchdog-status").textContent = d.enabled ? "✓ enabled" : "";
   }catch(e){}
 }
 
@@ -5758,10 +6086,10 @@ async function setCronWatchdog(enabled){
   const st = document.getElementById("cron-watchdog-status");
   try{
     const d = await fetch(API+"/api/cron/tcp_watchdog",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({enabled})}).then(r=>r.json());
-    st.textContent = d.enabled ? "✅ enabled" : "disabled";
+    st.textContent = d.enabled ? "✓ enabled" : "disabled";
     st.style.color = d.enabled ? "var(--teal)" : "var(--mu)";
-    setTimeout(()=>{ st.textContent = d.enabled ? "✅ enabled" : ""; st.style.color="var(--mu)"; }, 3000);
-  }catch(e){ st.textContent="❌ Error"; }
+    setTimeout(()=>{ st.textContent = d.enabled ? "✓ enabled" : ""; st.style.color="var(--mu)"; }, 3000);
+  }catch(e){ st.textContent="✕ Error"; }
 }
 </script>
 <script src="/vendor/xterm.js" defer></script>
@@ -5783,8 +6111,8 @@ function _ptyInit(){
   if(!el) return;
   if(_ptyTerm){ _ptyFit&&_ptyFit.fit(); return; }
   _ptyTerm=new Terminal({
-    theme:{background:'#0a0e0c',foreground:'#3ddc84',cursor:'#3ddc84',
-           selectionBackground:'#3ddc8433',black:'#0a0e0c',green:'#3ddc84'},
+    theme:{background:'#070911',foreground:'#3daddc',cursor:'#3daddc',
+           selectionBackground:'#3daddc33',black:'#070911',green:'#3daddc'},
     fontFamily:"'JetBrains Mono','Courier New',monospace",
     fontSize:12,lineHeight:1.4,cursorBlink:true,cursorStyle:'block',scrollback:2000,
   });
@@ -5920,7 +6248,7 @@ async function _rnsIfacesLoad() {
       return;
     }
 
-    el.innerHTML = ifaces.map((iface, i) => {
+    const _cards = ifaces.map((iface, i) => {
       const type = iface.params?.type || "Unknown";
       const enabled = _ifaceIsEnabled(iface.params);
       const live = findLive(iface.name);
@@ -5983,7 +6311,7 @@ async function _rnsIfacesLoad() {
           </div>
         </div>` : "";
 
-      return `<div style="background:var(--s1);border:1px solid ${isEditing?"var(--bd-hi)":(pendingOff?"rgba(232,163,61,.35)":"var(--bd)")};border-radius:10px;overflow:hidden;opacity:${(enabled||pendingOff)?1:0.55};transition:border-color .15s,opacity .15s;flex-shrink:0">
+      const html = `<div style="background:var(--s1);border:1px solid ${isEditing?"var(--bd-hi)":(pendingOff?"rgba(169,220,240,.35)":"var(--bd)")};border-radius:10px;overflow:hidden;opacity:${(enabled||pendingOff)?1:0.55};transition:border-color .15s,opacity .15s;flex-shrink:0">
         <!-- card header -->
         <div style="height:56px;box-sizing:border-box;padding:0 10px 0 12px;display:flex;align-items:center;gap:9px">
           <!-- status dot + icon -->
@@ -5995,9 +6323,9 @@ async function _rnsIfacesLoad() {
           <div style="flex:1;min-width:0;overflow:hidden">
             <div style="display:flex;align-items:center;gap:6px;line-height:1.25">
               <span style="font-size:11px;font-weight:700;color:${(enabled||pendingOff)?"var(--tx)":"var(--mu)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(iface.name)}</span>
-              ${pendingOff ? `<span title="Disabled in config but still on air — restart dashboard to apply" style="font-size:8px;font-family:var(--mono);color:var(--am);border:1px solid rgba(232,163,61,.5);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em;white-space:nowrap">OFF · LIVE</span>`
+              ${pendingOff ? `<span title="Disabled in config but still on air — restart dashboard to apply" style="font-size:8px;font-family:var(--mono);color:var(--am);border:1px solid rgba(169,220,240,.5);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em;white-space:nowrap">OFF · LIVE</span>`
                 : !enabled ? `<span style="font-size:8px;font-family:var(--mono);color:var(--off);border:1px solid var(--off);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em">OFF</span>`
-                : pendingOn ? `<span title="Enabled in config but not up — restart dashboard or check settings" style="font-size:8px;font-family:var(--mono);color:var(--rd);border:1px solid rgba(255,92,92,.5);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em;white-space:nowrap">DOWN</span>` : ""}
+                : pendingOn ? `<span title="Enabled in config but not up — restart dashboard or check settings" style="font-size:8px;font-family:var(--mono);color:var(--rd);border:1px solid rgba(234,249,255,.5);border-radius:3px;padding:0 4px;flex-shrink:0;letter-spacing:.04em;white-space:nowrap">DOWN</span>` : ""}
             </div>
             <div title="${esc(type)}${infoTitle?" · "+esc(infoTitle):""}" style="font-size:9px;font-family:var(--mono);line-height:1.35;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
               <span style="color:${(enabled||pendingOff)?typeCol:"var(--off)"}">${esc(type)}</span>${(enabled||pendingOff)&&infoChips?`<span style="color:var(--mu)"> · ${infoChips}</span>`:""}
@@ -6007,19 +6335,19 @@ async function _rnsIfacesLoad() {
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <!-- power -->
             <button title="${enabled?"Disable":"Enable"}" onclick="event.stopPropagation();_rnsToggleIface(${i})"
-              style="width:26px;height:26px;border-radius:6px;border:1px solid ${enabled?"rgba(61,220,132,.4)":"var(--bd)"};background:${enabled?"rgba(61,220,132,.12)":"transparent"};color:${enabled?"var(--gr)":"var(--off)"};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0"
-              onmouseenter="this.style.borderColor='var(--bd-hi)'" onmouseleave="this.style.borderColor='${enabled?"rgba(61,220,132,.4)":"var(--bd)"}'">
+              style="width:var(--ctl-h);height:var(--ctl-h);border-radius:6px;border:1px solid ${enabled?"rgba(56,189,248,.4)":"var(--bd)"};background:${enabled?"rgba(56,189,248,.12)":"transparent"};color:${enabled?"var(--gr)":"var(--off)"};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0"
+              onmouseenter="this.style.borderColor='var(--bd-hi)'" onmouseleave="this.style.borderColor='${enabled?"rgba(56,189,248,.4)":"var(--bd)"}'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
             </button>
             <!-- edit -->
             <button title="Edit" onclick="event.stopPropagation();_rnsIfaceToggleExpand(${i})"
-              style="width:26px;height:26px;border-radius:6px;border:1px solid ${isEditing?"var(--bd-hi)":"var(--bd)"};background:${isEditing?"rgba(61,220,132,.12)":"var(--s2)"};color:${isEditing?"var(--teal)":"var(--mu)"};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
+              style="width:var(--ctl-h);height:var(--ctl-h);border-radius:6px;border:1px solid ${isEditing?"var(--bd-hi)":"var(--bd)"};background:${isEditing?"rgba(56,189,248,.12)":"var(--s2)"};color:${isEditing?"var(--teal)":"var(--mu)"};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
               onmouseenter="this.style.borderColor='var(--bd-hi)';this.style.color='var(--teal)'" onmouseleave="this.style.borderColor='${isEditing?"var(--bd-hi)":"var(--bd)"}'">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             <!-- delete -->
             <button title="Delete" onclick="event.stopPropagation();_rnsIfaceDelete(${i})"
-              style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
+              style="width:var(--ctl-h);height:var(--ctl-h);border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
               onmouseenter="this.style.borderColor='var(--rd)';this.style.color='var(--rd)'" onmouseleave="this.style.borderColor='var(--bd)';this.style.color='var(--mu)'">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
@@ -6027,7 +6355,9 @@ async function _rnsIfacesLoad() {
         </div>
         ${editBlock}
       </div>`;
-    }).join("");
+      return {i, type, on: enabled || pendingOff, editing: isEditing, html};
+    });
+    el.innerHTML = _rnsGroupCards(_cards);
 
     // Баннер рассинхрона: конфиг изменён, но Reticulum работает со старым
     const pb = document.getElementById("rns-pending-bar");
@@ -6052,6 +6382,29 @@ async function _rnsRestartDaemon() {
   } catch(e) { /* обрыв соединения при рестарте — это норма */ }
   say("Dashboard restarting, reloading…", "var(--teal)");
   setTimeout(()=>location.reload(), 6000);
+}
+
+/* interfaces are shown in groups (radio, network, other); the switched-off ones of a group are folded into one line */
+let _rnsOffOpen = {};
+function _rnsGroupOf(type){
+  const x = String(type || "");
+  if(/rnode|lora|kiss|serial|weave|ble/i.test(x)) return "radio";
+  if(/tcp|backbone|udp|i2p/i.test(x)) return "net";
+  return "other";
+}
+function _rnsToggleOff(key){ _rnsOffOpen[key] = !_rnsOffOpen[key]; _rnsIfacesLoad(); }
+function _rnsGroupCards(cards){
+  const groups = [["other", "ifg_other"], ["radio", "ifg_radio"], ["net", "ifg_net"]];     // local (Default Interface) first, then radio, then network
+  return groups.map(([key, label]) => {
+    const all = cards.filter(c => _rnsGroupOf(c.type) === key); if(!all.length) return "";
+    const on = all.filter(c => c.on), off = all.filter(c => !c.on), nOn = on.length;
+    const open = _rnsOffOpen[key] || off.some(c => c.editing);
+    if(off.length === 1){ on.push(off[0]); off.length = 0; }       // a single switched-off interface is simply shown (no fold for one card)
+    return '<div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px"><span class="dg-t" style="margin:0">' + esc(t(label)) + '</span><span style="font-family:var(--mono);font-size:10px;color:var(--mu)">' + nOn + "/" + all.length + '</span><span style="flex:1;border-top:1px solid var(--bd)"></span></div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px">' + on.map(c => c.html).join("") + '</div>' +
+      (off.length ? '<button class="sys-btn" style="width:100%;margin-top:6px;font-size:10px;padding:4px 8px;text-align:left" onclick="_rnsToggleOff(\'' + key + '\')">' + (open ? "▾ " : "▸ ") + esc(t("ifg_off").replace("{n}", off.length)) + '</button>' +
+        (open ? '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">' + off.map(c => c.html).join("") + '</div>' : "") : "");
+  }).join("");
 }
 
 function _rnsIfaceToggleExpand(idx){
@@ -6133,15 +6486,16 @@ async function _rnsIfaceDelete(idx){
 }
 </script>
 <style>
-.sys-side-btn{display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:none;border-left:2px solid transparent;color:var(--mu);font-family:var(--fn);font-size:12px;cursor:pointer;transition:all .15s}
-.sys-side-btn:hover{background:var(--s2);color:var(--tx)}
-.sys-side-btn.active{background:var(--s2);color:var(--teal);font-weight:600;border-left-color:var(--teal)}
-#sys-content-area{padding:20px;overflow-y:auto;max-height:calc(100vh - 160px)}
+/* System page: tabs on top, in the same look as the tabs of the Configs page */
+#sys-shell{grid-template-columns:1fr!important;grid-template-rows:auto 1fr!important;background:none!important;border:none!important;border-radius:0!important;overflow:visible!important}
+#sys-sidebar{flex-direction:row!important;flex-wrap:wrap;overflow:visible!important;border-right:none!important;padding:0 0 12px!important;gap:4px!important}
+#sys-sidebar>div{display:none}
+.sys-side-btn{display:block;width:auto;font-size:12px;padding:8px 15px;cursor:pointer;color:var(--mu);border-radius:var(--radius);border:1px solid var(--bd);background:var(--s2);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:.15s;white-space:nowrap}
+.sys-side-btn:hover{color:var(--tx);border-color:var(--mu)}
+.sys-side-btn.active{color:#070a13;background:var(--teal);border-color:var(--teal);font-weight:700;box-shadow:var(--glow)}
+#sys-content-area{padding:20px;overflow-y:auto;max-height:calc(100vh - 220px);background:var(--s1);border:1px solid var(--bd);border-radius:12px}
 @media(max-width:768px){
-  #sys-shell{grid-template-columns:1fr!important;grid-template-rows:auto 1fr!important}
-  #sys-sidebar{flex-direction:row!important;overflow-x:auto!important;border-right:none!important;border-bottom:1px solid var(--bd);padding:6px 4px!important;gap:2px;-webkit-mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%)}
-  .sys-side-btn{white-space:nowrap;flex-shrink:0;border-left:none!important;border-bottom:2px solid transparent;padding:8px 12px!important}
-  .sys-side-btn.active{border-bottom-color:var(--teal)}
+  .sys-side-btn{flex:1 1 auto;text-align:center}
   #sys-content-area{max-height:none!important}
 }
 </style>
@@ -6152,6 +6506,7 @@ const _SYS_TABS = [
   {id:'versions',i18n:'sec_versions',   label:'Versions', sep:true},
   {id:'access',  i18n:'sys_tab_access', label:'Chat & Access'},
   {id:'telegram',i18n:'sec_telegram',   label:'Telegram'},
+  {id:'globe',   i18n:'sys_tab_globe',  label:'Globe'},
 ];
 const _SYS_SEC_MAP = {ops:'sec_system',versions:'sec_versions',access:'sec_chat_settings',telegram:'sec_telegram'};
 // Merged sections mapping
@@ -6165,7 +6520,7 @@ function _initSysPanel() {
   if(!panel || _sysPanelBuilt) { sysTab('ops'); return; }
   _sysPanelBuilt = true;
 
-  const _SYS_SEC_MAP_FULL = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',telegram:'sec_telegram'};
+  const _SYS_SEC_MAP_FULL = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',telegram:'sec_telegram',globe:'sec_globe'};
 
   const allLabels = [...panel.querySelectorAll('.section-lbl[data-i18n]')];
   const sections = {};
@@ -6229,14 +6584,633 @@ function sysTab(id) {
 }
 </script>
 <div id="rnpath-popup" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#000d;z-index:99999;align-items:center;justify-content:center">
-  <div style="background:var(--s2);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:640px;width:92%;position:relative;box-shadow:0 8px 32px #000a">
+  <div style="background:linear-gradient(var(--s2),var(--s2)),var(--bg);border:1px solid var(--bd);border-radius:16px;padding:24px;max-width:640px;width:92%;position:relative;box-shadow:0 8px 32px #000a">
     <button onclick="document.getElementById('rnpath-popup').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;line-height:1">✕</button>
     <div id="rnpath-hash" style="font-size:11px;font-family:var(--mono);color:var(--mu);margin-bottom:12px;word-break:break-all;line-height:1.6;padding-right:24px"></div>
     <div id="rnpath-body" style="font-size:12px;color:var(--tx);line-height:1.8;font-family:var(--mono);white-space:pre-wrap">Loading…</div>
     <div style="margin-top:12px;display:flex;gap:8px">
-      <button class="sys-btn" onclick="_copyToClipboard(document.getElementById('rnpath-hash').textContent)" style="font-size:11px;padding:4px 10px">Copy address</button>
+      <button class="sys-btn" onclick="_copyToClipboard(document.getElementById('rnpath-hash').textContent)" data-i18n="reach_copy">Copy address</button>
+      <button class="sys-btn teal" id="reach-path-btn" onclick="reachPath()" data-i18n="reach_path">Request path</button>
+      <button class="sys-btn" id="reach-probe-btn" onclick="reachProbe()" data-i18n="reach_probe">Probe</button>
     </div>
+    <div id="reach-out" class="dg-a" style="margin:10px 0 0;white-space:pre-wrap"></div>
   </div>
 </div>
+<script id="netmap-js">
+/* ===== NETWORK MAP: globe + connection list (view only) ===== */
+const NM = {
+  data: null, status: {}, land: null, rot: [20, 25], zoom: 1, sel: null,
+  run: false, raf: 0, last: 0, interact: 0, drag: null, pick: false, focus: null,
+  cols: null, hits: [], timers: [], dlTimer: 0, auto: true, w: 0, h: 0, dpr: 1, ro: null, bound: {}, cid: "nm-canvas"
+};
+
+const NM_PALS = {
+  /* both palettes are single-tone with a wide brightness range: near-black ocean, mid-tone land, bright arcs, almost white gateway */
+  green: { name: "green", sphereIn: "rgba(36,77,100,.78)", sphereOut: "rgba(2,4,10,.98)", sphereStroke: "rgba(109,215,255,.45)", grat: "rgba(109,215,255,.09)",
+    landFill: "rgba(56,189,248,.30)", landStroke: "rgba(109,215,255,.65)", up: "#6dd7ff", down: "#2b647a", unk: "#a6daf0", gateway: "#f2fcff", gwRing: "#6dd7ff",
+    pulse: "#ffffff", labelBg: "rgba(3,5,12,.92)", labelBorder: "#2c596b", labelSel: "#6dd7ff", labelText: "#e6f8ff" },
+  /* palette of the Noema 3D Print Card: one cyan-blue tone, states told apart by brightness */
+  blue: { name: "blue", sphereIn: "rgba(24,82,140,.82)", sphereOut: "rgba(3,6,22,.98)", sphereStroke: "rgba(56,189,248,.5)", grat: "rgba(120,204,226,.10)",
+    landFill: "rgba(27,92,150,.78)", landStroke: "rgba(120,204,226,.72)", up: "#38bdf8", down: "#4e7988", unk: "#78cce2", gateway: "#eaf9ff", gwRing: "#00aeff",
+    pulse: "#ffffff", labelBg: "rgba(3,8,28,.94)", labelBorder: "rgba(56,189,248,.45)", labelSel: "#38bdf8", labelText: "#cfe8f5" }
+};
+function nmPalKey(){ return "blue"; }
+NM.pal = NM_PALS[nmPalKey()];
+function nmApplyLegend(){
+  const set = (cls, col) => document.querySelectorAll(cls).forEach(e => { e.style.background = col; });
+  set(".lg-up", NM.pal.up); set(".lg-down", NM.pal.down); set(".lg-home", NM.pal.gateway);
+  document.querySelectorAll(".nm-pal-btn").forEach(b => { b.dataset.pal = NM.pal.name; });
+}
+function nmTogglePal(){
+  const k = NM.pal.name === "green" ? "blue" : "green";
+  try{ localStorage.setItem("noema-globe-pal", k); }catch(e){}
+  NM.pal = NM_PALS[k]; nmApplyLegend();
+}
+function nmColors(){
+  nmApplyLegend();
+  const cs = getComputedStyle(document.documentElement), g = (n, d) => (cs.getPropertyValue(n).trim() || d);
+  NM.cols = {
+    teal: g("--teal", "#3daddc"), gr: g("--gr", "#3daddc"), rd: g("--rd", "#eaf9ff"), am: g("--am", "#a9dcf0"),
+    mu: g("--mu", "#5586a9"), tx: g("--tx", "#d8edf5"), bd: g("--bd-hi", "#244b5a"), bg: g("--bg", "#04060c")
+  };
+}
+
+/* --- land polygons from TopoJSON (vendor/land-110m.json) --- */
+async function nmLoadLand(){
+  if(NM.land) return;
+  try{
+    const topo = await fetch("vendor/land-110m.json").then(r => r.json());
+    const [sx, sy] = topo.transform.scale, [tx, ty] = topo.transform.translate;
+    const arcs = topo.arcs.map(a => { let x = 0, y = 0; return a.map(p => { x += p[0]; y += p[1]; return [x * sx + tx, y * sy + ty]; }); });
+    const ring = idxs => { const out = []; idxs.forEach(i => { const a = i < 0 ? arcs[~i].slice().reverse() : arcs[i]; out.push(...(out.length ? a.slice(1) : a)); }); return out; };
+    const rings = [];
+    topo.objects.land.geometries.forEach(g => {
+      const polys = g.type === "Polygon" ? [g.arcs] : g.arcs;
+      polys.forEach(poly => poly.forEach(r => rings.push(ring(r))));
+    });
+    NM.land = rings;
+  }catch(e){ NM.land = []; }
+}
+
+/* --- projection: orthographic, centred on NM.rot --- */
+const NM_D2R = Math.PI / 180;
+function nmProj(lon, lat, r){
+  r = r || 1;
+  const l0 = NM.rot[0] * NM_D2R, p0 = NM.rot[1] * NM_D2R, l = lon * NM_D2R, p = lat * NM_D2R, R = NM.R;
+  const cp = Math.cos(p), c = Math.sin(p0) * Math.sin(p) + Math.cos(p0) * cp * Math.cos(l - l0);
+  const x = cp * Math.sin(l - l0), y = Math.cos(p0) * Math.sin(p) - Math.sin(p0) * cp * Math.cos(l - l0);
+  return { x: NM.cx + R * r * x, y: NM.cy - R * r * y, c: c, vis: (r * c >= 0) || (r * r * (1 - c * c) >= 1) };
+}
+function nmInvert(px, py){
+  const R = NM.R, x = (px - NM.cx) / R, y = -(py - NM.cy) / R, rho = Math.hypot(x, y);
+  if(rho > 1) return null;
+  const c = Math.asin(rho), p0 = NM.rot[1] * NM_D2R, l0 = NM.rot[0] * NM_D2R;
+  const lat = rho === 0 ? p0 : Math.asin(Math.cos(c) * Math.sin(p0) + y * Math.sin(c) * Math.cos(p0) / rho);
+  const lon = l0 + Math.atan2(x * Math.sin(c), rho * Math.cos(p0) * Math.cos(c) - y * Math.sin(p0) * Math.sin(c));
+  return [((lon / NM_D2R + 540) % 360) - 180, lat / NM_D2R];
+}
+
+/* --- great circle --- */
+function nmVec(lon, lat){ const l = lon * NM_D2R, p = lat * NM_D2R; return [Math.cos(p) * Math.cos(l), Math.cos(p) * Math.sin(l), Math.sin(p)]; }
+function nmGC(a, b){
+  const u = nmVec(a.lon, a.lat), v = nmVec(b.lon, b.lat);
+  const d = Math.acos(Math.max(-1, Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2]))), sd = Math.sin(d);
+  return { d: d, at: t => {
+    const k1 = sd < 1e-6 ? 1 - t : Math.sin((1 - t) * d) / sd, k2 = sd < 1e-6 ? t : Math.sin(t * d) / sd;
+    const x = k1 * u[0] + k2 * v[0], y = k1 * u[1] + k2 * v[1], z = k1 * u[2] + k2 * v[2];
+    return [Math.atan2(y, x) / NM_D2R, Math.atan2(z, Math.hypot(x, y)) / NM_D2R];
+  } };
+}
+
+/* --- link state (config + rnstatus) --- */
+function nmLinkState(l){
+  if(!l.enabled) return "off";
+  const s = NM.status[l.name];
+  if(!s) return "unknown";
+  return /^up/i.test(s.status) ? "up" : "down";
+}
+function nmStateColor(st){ const p = NM.pal; return st === "up" ? p.up : st === "down" ? p.down : st === "unknown" ? p.unk : NM.cols.mu; }
+
+/* --- drawing --- */
+function nmResize(){
+  const cv = document.getElementById(NM.cid); if(!cv) return;
+  const r = cv.getBoundingClientRect(); if(!r.width || !r.height) return;
+  NM.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(r.width), h = Math.round(r.height);
+  // a layout wobble of a pixel or two (cards above/beside re-rendering) must not clear the canvas or move the globe
+  if(NM.w && cv.width && Math.abs(w - NM.w) < 3 && Math.abs(h - NM.h) < 3) return;
+  cv.width = Math.round(w * NM.dpr); cv.height = Math.round(h * NM.dpr);
+  NM.w = w; NM.h = h;
+}
+function nmRoundRect(ctx, x, y, w, h, r){
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function nmDraw(now){
+  const cv = document.getElementById(NM.cid); if(!cv || !NM.w) return;
+  const ctx = cv.getContext("2d"), C = NM.cols;
+  ctx.setTransform(NM.dpr, 0, 0, NM.dpr, 0, 0); ctx.clearRect(0, 0, NM.w, NM.h);
+  NM.cx = NM.w / 2; NM.cy = NM.h / 2; NM.R = Math.min(NM.w, NM.h) * 0.42 * NM.zoom;
+  const R = NM.R;
+
+  // sphere
+  const g = ctx.createRadialGradient(NM.cx - R * 0.35, NM.cy - R * 0.4, R * 0.1, NM.cx, NM.cy, R);
+  g.addColorStop(0, NM.pal.sphereIn); g.addColorStop(1, NM.pal.sphereOut);
+  ctx.beginPath(); ctx.arc(NM.cx, NM.cy, R, 0, 6.2832); ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = NM.pal.sphereStroke; ctx.lineWidth = 1; ctx.stroke();
+
+  // graticule
+  ctx.strokeStyle = NM.pal.grat; ctx.lineWidth = 1;
+  for(let lon = -180; lon < 180; lon += 30){
+    ctx.beginPath(); let pen = false;
+    for(let lat = -90; lat <= 90; lat += 5){ const p = nmProj(lon, lat); if(p.c > 0){ pen ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); pen = true; } else pen = false; }
+    ctx.stroke();
+  }
+  for(let lat = -60; lat <= 60; lat += 30){
+    ctx.beginPath(); let pen = false;
+    for(let lon = -180; lon <= 180; lon += 5){ const p = nmProj(lon, lat); if(p.c > 0){ pen ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); pen = true; } else pen = false; }
+    ctx.stroke();
+  }
+
+  // land (clipped at the horizon)
+  if(NM.land){
+    ctx.fillStyle = NM.pal.landFill; ctx.strokeStyle = NM.pal.landStroke; ctx.lineWidth = 0.8;
+    NM.land.forEach(ring => {
+      const n = ring.length, P = new Array(n);
+      let s0 = -1;
+      for(let i = 0; i < n; i++){ const p = nmProj(ring[i][0], ring[i][1]); P[i] = p; if(s0 < 0 && p.c > 0) s0 = i; }
+      if(s0 < 0) return;
+      // clip to the visible hemisphere: cut each edge at the horizon and follow the horizon circle across hidden stretches
+      const ang = q => Math.atan2(q[1] - NM.cy, q[0] - NM.cx);
+      const out = []; let exitA = null;
+      const hor = (a, b) => { let dd = b - a; while(dd > Math.PI) dd -= 6.2832; while(dd < -Math.PI) dd += 6.2832; const st = Math.max(1, Math.ceil(Math.abs(dd) / 0.1)); for(let k = 1; k < st; k++){ const t = a + dd * k / st; out.push([NM.cx + R * Math.cos(t), NM.cy + R * Math.sin(t)]); } };
+      const cut = (a, b) => { const t = a.c / (a.c - b.c), x = ((a.x - NM.cx) + t * ((b.x - NM.cx) - (a.x - NM.cx))) / R, y = ((a.y - NM.cy) + t * ((b.y - NM.cy) - (a.y - NM.cy))) / R, m = Math.hypot(x, y) || 1; return [NM.cx + R * x / m, NM.cy + R * y / m]; };
+      for(let k = 0; k < n; k++){
+        const a = P[(s0 + k) % n], b = P[(s0 + k + 1) % n], av = a.c > 0, bv = b.c > 0;
+        if(av) out.push([a.x, a.y]);
+        if(av && !bv){ const e = cut(a, b); out.push(e); exitA = ang(e); }
+        else if(!av && bv){ const e = cut(a, b); if(exitA !== null) hor(exitA, ang(e)); out.push(e); exitA = null; }
+      }
+      if(exitA !== null){ const f = out[0]; if(f) hor(exitA, ang(f)); }
+      if(out.length < 3) return;
+      ctx.beginPath(); ctx.moveTo(out[0][0], out[0][1]);
+      for(let i = 1; i < out.length; i++) ctx.lineTo(out[i][0], out[i][1]);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    });
+  }
+
+  const d = NM.data, o = d && d.origin;
+  NM.hits = [];
+  if(!d) return;
+  const links = d.links.map((l, i) => ({ l: l, i: i, st: nmLinkState(l) })).filter(x => x.l.geo && x.st !== "off");
+  const labels = [];
+
+  if(o){
+    links.forEach(x => {
+      const A = { lon: o.lon, lat: o.lat }, B = x.l.geo, gc = nmGC(A, B), up = x.st === "up", sel = NM.sel === x.i;
+      const col = nmStateColor(x.st), hgt = 0.06 + 0.2 * (gc.d / Math.PI), N = 56;
+      ctx.beginPath(); let pen = false;
+      for(let k = 0; k <= N; k++){
+        const t = k / N, pt = gc.at(t), p = nmProj(pt[0], pt[1], 1 + hgt * Math.sin(Math.PI * t));
+        if(p.vis){ pen ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); pen = true; } else pen = false;
+      }
+      ctx.strokeStyle = col; ctx.globalAlpha = up ? (sel ? 1 : 0.88) : 0.6; ctx.lineWidth = sel ? 2.6 : 1.5;
+      ctx.shadowColor = col; ctx.shadowBlur = up ? (sel ? 12 : 6) : 0;
+      ctx.setLineDash(up ? [] : [4, 5]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+      if(up){ // pulses travelling from the gateway to the peer
+        for(let n = 0; n < 2; n++){
+          const t = ((now / 2600) + x.i * 0.173 + n * 0.5) % 1, pt = gc.at(t), p = nmProj(pt[0], pt[1], 1 + hgt * Math.sin(Math.PI * t));
+          if(!p.vis) continue;
+          ctx.beginPath(); ctx.arc(p.x, p.y, sel ? 3.2 : 2.4, 0, 6.2832); ctx.fillStyle = NM.pal.pulse; ctx.shadowColor = col; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0;
+        }
+      }
+    });
+  }
+
+  // peer markers
+  links.forEach(x => {
+    const p = nmProj(x.l.geo.lon, x.l.geo.lat); if(p.c <= 0) return;
+    const col = nmStateColor(x.st), sel = NM.sel === x.i;
+    ctx.beginPath(); ctx.arc(p.x, p.y, sel ? 5.5 : 3.8, 0, 6.2832);
+    if(x.st === "down"){ ctx.fillStyle = C.bg; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke(); }
+    else { ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.bg; ctx.stroke(); }
+    NM.hits.push({ x: p.x, y: p.y, i: x.i });
+    labels.push({ x: p.x, y: p.y, text: x.l.geo.city || x.l.geo.country || x.l.host, pri: sel ? 2 : 0 });
+  });
+  // gateway marker
+  if(o){
+    const p = nmProj(o.lon, o.lat);
+    if(p.c > 0){
+      const pulse = (now / 1400) % 1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5 + pulse * 14, 0, 6.2832); ctx.strokeStyle = NM.pal.gwRing; ctx.globalAlpha = 0.5 * (1 - pulse); ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, 6.2832); ctx.fillStyle = NM.pal.gateway; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.bg; ctx.stroke();
+      labels.push({ x: p.x, y: p.y, text: o.label || t("nm_home"), pri: 3 });
+    }
+  }
+
+  // labels (greedy, no overlaps)
+  ctx.font = "600 11px " + (getComputedStyle(document.body).getPropertyValue("--mono") || "monospace"); ctx.textBaseline = "middle";
+  const placed = [];
+  labels.sort((a, b) => b.pri - a.pri).forEach(lb => {
+    const w = ctx.measureText(lb.text).width + 12, h = 18, bx = lb.x + 8, by = lb.y - 24;
+    if(bx + w > NM.w - 4 || by < 4) return;
+    if(placed.some(r => bx < r.x + r.w + 2 && bx + w > r.x - 2 && by < r.y + r.h + 2 && by + h > r.y - 2)) return;
+    placed.push({ x: bx, y: by, w: w, h: h });
+    nmRoundRect(ctx, bx, by, w, h, 6); ctx.fillStyle = NM.pal.labelBg; ctx.fill();
+    ctx.strokeStyle = lb.pri >= 2 ? NM.pal.labelSel : NM.pal.labelBorder; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = NM.pal.labelText; ctx.fillText(lb.text, bx + 6, by + h / 2 + 0.5);
+  });
+}
+
+/* --- animation loop --- */
+function nmFrame(ts){
+  if(!NM.run) return;
+  NM.raf = requestAnimationFrame(nmFrame);
+  if(document.hidden || ts - NM.last < 28) return; // ~30 fps; the margin keeps it on every 2nd vsync (a hard 33 ms limit skipped to every 3rd frame and made it judder)
+  const dt = Math.min((ts - NM.last) / 1000, 0.2); NM.last = ts;
+  if(NM.focus){
+    let dl = NM.focus[0] - NM.rot[0]; dl = ((dl + 540) % 360) - 180;
+    const k = 1 - Math.exp(-dt * 4);
+    NM.rot[0] += dl * k; NM.rot[1] += (NM.focus[1] - NM.rot[1]) * k;
+    if(Math.abs(dl) < 0.3 && Math.abs(NM.focus[1] - NM.rot[1]) < 0.3) NM.focus = null;
+  } else if(NM.auto && !NM.drag && NM.sel === null && !NM.pick && ts - NM.interact > 8000){
+    NM.rot[0] += dt * 5;
+  }
+  NM.rot[0] = ((NM.rot[0] + 540) % 360) - 180;
+  nmDraw(ts);
+}
+
+/* --- interaction --- */
+function nmBind(){
+  ["nm-canvas", "nm-canvas-home"].forEach(nmBindCanvas);
+  const list = document.getElementById("nm-list");
+  if(list && !NM.bound.list){ NM.bound.list = true; list.addEventListener("click", e => { const it = e.target.closest(".nm-item"); if(it) nmSelect(parseInt(it.dataset.i, 10)); }); }
+}
+function nmBindCanvas(id){
+  const cv = document.getElementById(id); if(!cv || NM.bound[id]) return; NM.bound[id] = true;
+  cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); NM.drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY }; NM.focus = null; NM.interact = performance.now(); });
+  cv.addEventListener("pointermove", e => {
+    if(!NM.drag) return;
+    const dx = e.clientX - NM.drag.x, dy = e.clientY - NM.drag.y; NM.drag.x = e.clientX; NM.drag.y = e.clientY;
+    NM.rot[0] -= dx / NM.R * 57.3; NM.rot[1] = Math.max(-85, Math.min(85, NM.rot[1] + dy / NM.R * 57.3)); NM.interact = performance.now();
+  });
+  const up = e => {
+    if(!NM.drag) return;
+    const moved = Math.hypot(e.clientX - NM.drag.sx, e.clientY - NM.drag.sy); NM.drag = null;
+    if(moved > 4) return;
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if(NM.pick){ const ll = nmInvert(px, py); if(ll){ document.getElementById("nm-lat").value = ll[1].toFixed(3); document.getElementById("nm-lon").value = ll[0].toFixed(3); NM.pick = false; nmRenderOrigin(); } return; }
+    let best = null, bd = 16; NM.hits.forEach(h => { const d = Math.hypot(h.x - px, h.y - py); if(d < bd){ bd = d; best = h; } });
+    if(best) nmSelect(best.i); else if(NM.sel !== null) nmSelect(null);
+  };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", () => { NM.drag = null; });
+  cv.addEventListener("wheel", e => { e.preventDefault(); NM.zoom = Math.max(0.7, Math.min(2.6, NM.zoom * Math.exp(-e.deltaY * 0.0015))); NM.interact = performance.now(); }, { passive: false });
+  if(window.ResizeObserver){ NM.ro = NM.ro || new ResizeObserver(nmResize); NM.ro.observe(cv.parentElement); }
+}
+
+function nmSelect(i){
+  NM.sel = (i === null || NM.sel === i) ? null : i;
+  if(NM.sel !== null){ const l = NM.data.links[NM.sel]; if(l && l.geo) NM.focus = [l.geo.lon, Math.max(-70, Math.min(70, l.geo.lat))]; }
+  NM.interact = performance.now(); nmRenderList();
+}
+
+/* --- data --- */
+async function nmFetchData(){
+  try{
+    const d = await fetch(API + "/api/netmap/data").then(r => r.json());
+    const first = !NM.data; NM.data = d;
+    if(first && d.origin){ NM.rot = [d.origin.lon, Math.max(-60, Math.min(60, d.origin.lat))]; }
+    nmRenderAll();
+  }catch(e){}
+}
+async function nmFetchStatus(){
+  try{
+    const d = await fetch(API + "/api/rnstatus").then(r => r.json()), map = {};
+    (d.interfaces || []).forEach(it => {
+      const m = /\[(.*)\]/.exec(it.name || ""); if(!m) return;
+      const nm = m[1].replace(/\/[^\/]*:\d+$/, "").trim(), f = it.fields || {}, tx = /↑\s*([\d.]+\s*[A-Za-z]+)/.exec(f.Traffic || "");
+      map[nm] = { status: f.Status || "", tx: tx ? tx[1] : "" };
+    });
+    NM.status = map; nmRenderList();
+  }catch(e){}
+}
+
+/* --- side panel --- */
+function nmReason(r){ return t("nm_reason_" + r) || r; }
+function nmRenderList(){
+  const box = document.getElementById("nm-list"); if(!box || !NM.data) return;
+  const links = NM.data.links;
+  if(!links.length){ box.innerHTML = `<div class="nm-card" style="color:var(--mu)">${esc(t("nm_no_links"))}</div>`; return; }
+  const order = { up: 0, unknown: 1, down: 2, off: 3 };
+  const rows = links.map((l, i) => ({ l: l, i: i, st: nmLinkState(l) })).sort((a, b) => order[a.st] - order[b.st] || a.l.name.localeCompare(b.l.name));
+  box.innerHTML = rows.map(({ l, i, st }) => {
+    const col = nmStateColor(st), place = l.geo ? [l.geo.city, l.geo.country].filter(Boolean).join(", ") : nmReason(l.reason);
+    const stat = NM.status[l.name], tx = stat && stat.tx ? ` · ↑${esc(stat.tx)}` : "";
+    return `<div class="nm-item${NM.sel === i ? " sel" : ""}${st === "off" ? " off" : ""}" data-i="${i}">
+      <span class="nm-dot" style="background:${col}"></span>
+      <div style="min-width:0;flex:1">
+        <div class="nm-name">${esc(l.name)} <span class="nm-st" style="color:${col}">${esc(t("nm_st_" + st))}</span></div>
+        <div class="nm-sub">${esc(place || "—")}</div>
+        <div class="nm-sub nm-mono">${esc(l.host)}${l.port ? ":" + l.port : ""}${l.ip && l.ip !== l.host ? " · " + esc(l.ip) : ""}${tx}</div>
+      </div></div>`;
+  }).join("");
+}
+function nmRenderOrigin(){
+  const box = document.getElementById("nm-origin"); if(!box || !NM.data) return;
+  const o = NM.data.origin, editing = box.dataset.edit === "1" || !o;
+  if(!editing){
+    box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>📍 <b>${esc(o.label || t("nm_home"))}</b> <span class="nm-sub nm-mono">${o.lat}, ${o.lon}</span></span><button class="sys-btn" onclick="nmEditOrigin(true)">${esc(t("nm_change"))}</button></div>`;
+    return;
+  }
+  const keep = id => { const e = document.getElementById(id); return e ? e.value : null; };
+  const lat = keep("nm-lat"), lon = keep("nm-lon"), lab = keep("nm-label");
+  box.innerHTML = `${o ? "" : `<div class="nm-sub" style="margin-bottom:6px">${esc(t("nm_origin_hint"))}</div>`}
+    <div class="nm-form">
+      <input class="nm-in" id="nm-lat" placeholder="${esc(t("nm_lat"))}" inputmode="decimal" value="${esc(lat !== null ? lat : (o ? o.lat : ""))}">
+      <input class="nm-in" id="nm-lon" placeholder="${esc(t("nm_lon"))}" inputmode="decimal" value="${esc(lon !== null ? lon : (o ? o.lon : ""))}">
+      <input class="nm-in" id="nm-label" placeholder="${esc(t("nm_label"))}" maxlength="40" value="${esc(lab !== null ? lab : (o ? o.label : ""))}">
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+      <button class="sys-btn teal" onclick="nmSaveOrigin()">${esc(t("nm_save"))}</button>
+      ${o ? `<button class="sys-btn" onclick="nmEditOrigin(false)">${esc(t("btn_cancel"))}</button>` : ""}
+    </div><div class="nm-sub" style="margin-top:6px">${esc(t("nm_origin_tip"))}</div><div class="nm-sub" id="nm-origin-msg" style="margin-top:4px"></div>`;
+}
+function nmEditOrigin(on){ const b = document.getElementById("nm-origin"); b.dataset.edit = on ? "1" : "0"; NM.pick = false; nmRenderOrigin(); }
+async function nmSaveOrigin(){
+  const body = { lat: document.getElementById("nm-lat").value.replace(",", "."), lon: document.getElementById("nm-lon").value.replace(",", "."), label: document.getElementById("nm-label").value };
+  const msg = document.getElementById("nm-origin-msg");
+  try{
+    const r = await fetch(API + "/api/netmap/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }), d = await r.json();
+    if(!d.ok){ msg.style.color = "var(--rd)"; msg.textContent = d.error || "error"; return; }
+    NM.pick = false; document.getElementById("nm-origin").dataset.edit = "0"; NM.data.origin = d.origin; NM.focus = [d.origin.lon, d.origin.lat]; nmRenderAll();
+  }catch(e){ msg.style.color = "var(--rd)"; msg.textContent = String(e); }
+}
+function nmRenderDb(){
+  const box = document.getElementById("nm-db"); if(!box || !NM.data) return;
+  const db = NM.data.db, dl = db.download || {};
+  let h = "";
+  if(!db.lib){ h = `<div style="color:var(--am)">${esc(t("nm_db_nolib"))}</div>`; }
+  else if(dl.state === "running"){
+    const pct = dl.total ? Math.min(100, Math.round(dl.done * 100 / dl.total)) : 0;
+    h = `<div>${esc(t("nm_db_progress"))} ${dl.total ? pct + "%" : Math.round(dl.done / 1048576) + " MB"}</div><div class="nm-bar"><div style="width:${pct}%"></div></div>`; nmPollDb();
+  } else if(!db.present){
+    h = `<div style="color:var(--am)">${esc(t("nm_db_missing"))}</div><div class="nm-sub" style="margin-top:4px">${esc(t("nm_db_hint"))}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button class="sys-btn teal" onclick="document.getElementById('nm-file').click()">${esc(t("nm_db_upload"))}</button><button class="sys-btn" onclick="nmDbDownload()">${esc(t("nm_db_download"))}</button></div>`;
+    if(dl.state === "error") h += `<div style="color:var(--rd);margin-top:4px">${esc(dl.message)}</div>`;
+  } else {
+    const dt = new Date(db.date * 1000).toLocaleDateString();
+    h = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="nm-sub">${esc(t("nm_db_ok").replace("{date}", dt))}</span><span style="display:flex;gap:6px"><button class="sys-btn" onclick="document.getElementById('nm-file').click()">${esc(t("nm_db_upload"))}</button></span></div>`;
+    if(dl.state === "error") h += `<div style="color:var(--rd);margin-top:4px">${esc(dl.message)}</div>`;
+  }
+  box.innerHTML = h + `<input type="file" id="nm-file" accept=".gz,.mmdb,.bin" style="display:none" onchange="nmDbUpload(this)"><div class="nm-sub" id="nm-up-msg" style="margin-top:4px"></div>`;
+}
+async function nmDbUpload(inp){
+  const f = inp.files && inp.files[0]; if(!f) return;
+  const msg = document.getElementById("nm-up-msg"); msg.style.color = "var(--mu)"; msg.textContent = t("nm_db_uploading");
+  const fd = new FormData(); fd.append("file", f);
+  try{
+    const r = await fetch(API + "/api/netmap/db/upload", { method: "POST", body: fd }), d = await r.json();
+    if(!d.ok){ msg.style.color = "var(--rd)"; msg.textContent = d.error || "error"; return; }
+    await nmFetchData();
+  }catch(e){ msg.style.color = "var(--rd)"; msg.textContent = String(e); }
+}
+function nmPollDb(){
+  if(NM.dlTimer) return;
+  NM.dlTimer = setInterval(async () => {
+    try{
+      const db = await fetch(API + "/api/netmap/db").then(r => r.json()); if(NM.data) NM.data.db = db; nmRenderDb();
+      if(!db.download || db.download.state !== "running"){ clearInterval(NM.dlTimer); NM.dlTimer = 0; nmFetchData(); }
+    }catch(e){}
+  }, 1500);
+}
+async function nmDbDownload(){
+  try{ await fetch(API + "/api/netmap/db/download", { method: "POST" }); }catch(e){}
+  if(NM.data){ NM.data.db.download = { state: "running", done: 0, total: 0 }; nmRenderDb(); }
+  nmPollDb();
+}
+async function nmSettingsOpen(){ await new Promise(r => setTimeout(r, 300)); await nmFetchData(); }
+function nmRenderHint(){
+  const h = document.getElementById("nm-hint-home"); if(!h || !NM.data) return;
+  const msg = !NM.data.origin ? t("nm_hint_origin") : (!NM.data.db.present ? t("nm_hint_db") : "");
+  if(!msg){ h.style.display = "none"; return; }
+  h.style.display = ""; h.innerHTML = `<span>${esc(msg)}</span><button class="sys-btn teal" onclick="nmGoMap()">${esc(t("nm_hint_open"))}</button>`;
+}
+function nmGoMap(){ const p = [...document.querySelectorAll(".hub-pill")].find(x => (x.getAttribute("onclick") || "").includes("nav('system'")); if(p) p.click(); setTimeout(() => { try{ sysTab("globe"); }catch(e){} }, 400); }
+function nmRenderAll(){ nmRenderDb(); nmRenderOrigin(); nmRenderList(); nmRenderHint(); }
+
+/* --- lifecycle --- */
+async function netmapOpen(which){
+  NM.cid = which === "home" ? "nm-canvas-home" : "nm-canvas";
+  nmColors(); nmBind(); nmResize();
+  await nmLoadLand();
+  setTimeout(nmResize, 60);
+  if(NM.run) return; NM.run = true; NM.last = 0; NM.raf = requestAnimationFrame(nmFrame);
+  nmFetchData(); nmFetchStatus();
+  NM.timers = [setInterval(() => { if(!document.hidden) nmFetchData(); }, 60000), setInterval(() => { if(!document.hidden) nmFetchStatus(); }, 60000), setInterval(() => { if(!document.hidden) loadAddressesPanel(); }, 120000)];
+}
+/* diagnostics: localStorage.nm_debug=1 and reload; the console then lists main-thread stalls and the requests around them */
+try{ if(localStorage.getItem("nm_debug")){
+  const _f = window.fetch, _rq = []; window.fetch = function(u){ _rq.push([Math.round(performance.now()), String(u).split("?")[0]]); if(_rq.length > 60) _rq.shift(); return _f.apply(this, arguments); };
+  if(window.PerformanceObserver) new PerformanceObserver(l => l.getEntries().forEach(e => { const t0 = e.startTime - 200, t1 = e.startTime + e.duration; console.warn("[nm] main thread blocked " + Math.round(e.duration) + " ms at " + Math.round(e.startTime), _rq.filter(r => r[0] >= t0 && r[0] <= t1).map(r => r[0] + " " + r[1]), JSON.stringify(e.attribution && e.attribution.map(a => a.containerType + ":" + (a.containerSrc || a.name)))); })).observe({ type: "longtask", buffered: true });
+  let _lt = 0; const _tick = ts => { if(_lt && ts - _lt > 250) console.warn("[nm] frame gap " + Math.round(ts - _lt) + " ms at " + Math.round(ts), "NM.run=" + NM.run, "hidden=" + document.hidden); _lt = ts; requestAnimationFrame(_tick); }; requestAnimationFrame(_tick);
+} }catch(e){}
+function netmapClose(){
+  NM.run = false; cancelAnimationFrame(NM.raf); NM.timers.forEach(clearInterval); NM.timers = [];
+}
+function netmapRelang(){ if(NM.data) nmRenderAll(); try{ loadServices(); }catch(e){} }
+setTimeout(() => { const p = document.getElementById("panel-home"); if(p && p.classList.contains("active")){ netmapOpen("home"); loadAddressesPanel(); } }, 0);
+
+</script>
+<script id="prof-js">
+/* interface profiles: choose, check what changes, apply (config is backed up first), create and edit your own */
+let _prof = {profiles: [], interfaces: [], active: null}, _profSel = null, _profEdit = null, _profNotice = "";
+async function _profPost(path, body){
+  const r = await fetch(API + "/api/profiles" + path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})});
+  return r.json();
+}
+async function profLoad(){ try{ _prof = await fetch(API + "/api/profiles").then(r => r.json()); if(!_prof.profiles) _prof = {profiles: [], interfaces: [], active: null}; profRender(); }catch(e){} }
+function _profList(a){ return a.length ? a.join(", ") : t("prof_none"); }
+async function profRender(){
+  const chips = document.getElementById("prof-chips"), box = document.getElementById("prof-detail"); if(!chips || !box) return;
+  chips.innerHTML = _prof.profiles.map(p => '<button class="prof-chip' + (p.name === _profSel ? " sel" : "") + (p.name === _prof.active ? " act" : "") + '" onclick="profSelect(' + JSON.stringify(p.name).replace(/"/g, "&quot;") + ')">' + esc(p.name) + '</button>').join("") + '<button class="prof-chip" onclick="profEditOpen(null)">' + esc(t("prof_new")) + '</button>';
+  if(_profEdit){ box.innerHTML = _profEditHtml(); return; }
+  if(!_profSel){ box.innerHTML = _profNotice; return; }
+  let d; try{ d = await _profPost("/preview", {name: _profSel}); }catch(e){ return; }
+  if(!d.ok){ box.innerHTML = '<div class="dg-a">' + esc(t("prof_err").replace("{e}", d.error || "")) + '</div>'; return; }
+  const on = d.changes.filter(c => c.to).map(c => c.name), off = d.changes.filter(c => !c.to).map(c => c.name);
+  const nameJs = JSON.stringify(_profSel).replace(/"/g, "&quot;");
+  box.innerHTML = '<div class="dg-a" style="margin:0 0 6px"><b style="color:var(--tx)">' + esc(t("prof_will").replace("{name}", _profSel)) + '</b><br>' +
+    (d.changes.length ? (on.length ? esc(t("prof_on").replace("{list}", _profList(on))) + '<br>' : '') + (off.length ? esc(t("prof_off").replace("{list}", _profList(off))) : '') : esc(t("prof_same"))) + '</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap">' + (d.changes.length ? '<button class="sys-btn teal" onclick="profApply()">' + esc(t("prof_apply")) + '</button>' : '') +
+    '<button class="sys-btn" onclick="profEditOpen(' + nameJs + ')">' + esc(t("prof_edit")) + '</button><button class="sys-btn rd" onclick="profDelete()">' + esc(t("prof_delete")) + '</button></div><div id="prof-msg">' + _profNotice + '</div>';
+}
+function profSelect(n){ _profSel = _profSel === n ? null : n; _profEdit = null; _profNotice = ""; profRender(); }
+async function profApply(){
+  if(!confirm(t("prof_confirm"))) return;
+  const d = await _profPost("/apply", {name: _profSel, confirm: true}), m = document.getElementById("prof-msg");
+  if(!d.ok){ m.innerHTML = '<div class="dg-a">' + esc(t("prof_err").replace("{e}", d.error || "")) + '</div>'; return; }
+  _profNotice = '<div class="dg-a" style="margin-top:6px">' + esc(t("prof_done").replace("{file}", d.backup ? d.backup.split("/").pop() : "—")) + '</div><button class="sys-btn teal" style="margin-top:6px" onclick="svcAction(\'dashboard\',\'restart\')">' + esc(t("prof_restart")) + '</button>';
+  profLoad();
+}
+async function profDelete(){
+  if(!confirm(t("prof_del_confirm").replace("{name}", _profSel))) return;
+  await _profPost("/delete", {name: _profSel}); _profSel = null; profLoad();
+}
+function profEditOpen(name){ _profEdit = {name: name, isNew: name === null}; _profSel = name; profRender(); }
+function _profEditHtml(){
+  const cur = _profEdit.isNew ? _prof.interfaces.filter(i => i.enabled).map(i => i.name) : ((_prof.profiles.find(p => p.name === _profEdit.name) || {}).members || []);
+  return '<div class="dg-a" style="margin:0">' + esc(t("prof_name")) + '</div><input class="prof-in" id="prof-name" maxlength="40" value="' + esc(_profEdit.name || "") + '"' + (_profEdit.isNew ? '' : ' disabled') + '>' +
+    '<div class="dg-a" style="margin:0 0 4px">' + esc(t("prof_members")) + '</div>' +
+    _prof.interfaces.map((i, k) => '<label class="prof-ck"><input type="checkbox" class="prof-m" value="' + esc(i.name) + '"' + (cur.includes(i.name) ? ' checked' : '') + '> ' + esc(i.name) + ' <span style="color:var(--mu);font-size:10px">' + esc(i.type || "") + '</span></label>').join("") +
+    '<div style="display:flex;gap:6px;margin-top:8px"><button class="sys-btn teal" onclick="profSave()">' + esc(t("prof_save")) + '</button><button class="sys-btn" onclick="profEditClose()">' + esc(t("prof_cancel")) + '</button></div><div id="prof-msg"></div>';
+}
+function profEditClose(){ _profEdit = null; profRender(); }
+async function profSave(){
+  const name = _profEdit.isNew ? document.getElementById("prof-name").value.trim() : _profEdit.name;
+  const members = [...document.querySelectorAll(".prof-m:checked")].map(x => x.value);
+  const d = await _profPost("/save", {name: name, members: members});
+  if(!d.ok){ document.getElementById("prof-msg").innerHTML = '<div class="dg-a">' + esc(t("prof_err").replace("{e}", d.error || "")) + '</div>'; return; }
+  _profEdit = null; _profSel = name; await profLoad();
+}
+</script>
+<script id="reach-js">
+/* path request and probe for one address, only when the button is pressed (nothing is sent in the background) */
+async function _reachPost(path, body, btnId){
+  const btns = ["reach-path-btn", "reach-probe-btn"].map(i => document.getElementById(i)); btns.forEach(b => b && (b.disabled = true));
+  try{ const r = await fetch(API + "/api/reach" + path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)}); return await r.json(); }
+  catch(e){ return {ok: false, error: e.message}; }
+  finally{ btns.forEach(b => b && (b.disabled = false)); }
+}
+function _reachSay(txt){ document.getElementById("reach-out").textContent = txt; }
+async function reachPath(){
+  const h = document.getElementById("rnpath-hash").textContent.trim();
+  _reachSay(t("reach_wait_path"));
+  const d = await _reachPost("/path", {hash: h, wait: 12});
+  if(!d.ok){ _reachSay(t("prof_err").replace("{e}", d.error || "")); return; }
+  if(!d.known){ _reachSay(t("reach_nopath").replace("{s}", d.waited)); return; }
+  _showRnpath(h, true);          // the lines above show the same path as the answer
+  _reachSay(t(d.requested ? "reach_found" : "reach_known").replace("{hops}", d.hops).replace("{s}", d.waited) + (d.interface ? "\n" + t("reach_via").replace("{i}", d.interface) : ""));
+}
+async function reachProbe(){
+  const h = document.getElementById("rnpath-hash").textContent.trim();
+  _reachSay(t("reach_wait_probe"));
+  const d = await _reachPost("/probe", {hash: h, timeout: 15});
+  if(!d.ok){ _reachSay(t("prof_err").replace("{e}", d.error || "")); return; }
+  if(!d.delivered){ _reachSay(t("reach_probe_" + (d.error || "silent")) || t("reach_probe_silent")); return; }
+  _reachSay(t("reach_probe_ok").replace("{ms}", d.rtt_ms).replace("{hops}", d.hops) + (d.rssi != null ? "  RSSI " + d.rssi + " dBm" : "") + (d.snr != null ? "  SNR " + d.snr + " dB" : ""));
+}
+</script>
+<script id="disc-js">
+/* interfaces announced by other nodes: a list to look at; Add writes one config entry (backup first) */
+let _disc = null, _discNotice = "";
+async function _discPost(path, body){
+  const r = await fetch(API + "/api/discovered" + path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  return r.json();
+}
+function discToggle(){
+  const b = document.getElementById("disc-body"), open = b.style.display === "none";
+  b.style.display = open ? "block" : "none"; document.getElementById("disc-toggle").textContent = open ? "▴" : "▾";
+  if(open) discLoad();
+}
+async function discLoad(){
+  try{ _disc = await fetch(API + "/api/discovered").then(r => r.json()); }catch(e){ _disc = null; }
+  discRender();
+}
+function _discAgo(s){ return s < 3600 ? Math.max(1, Math.round(s / 60)) + " " + t("ago_min") : s < 86400 ? Math.round(s / 3600) + " " + t("ago_h") : Math.round(s / 86400) + " " + t("ago_d"); }
+let _discQ = "", _discType = "all", _discNew = true, _discSort = "km";
+function _discCat(i){
+  if(/rnode|kiss|weave/i.test(i.type)) return "radio";
+  if(/i2p/i.test(i.type)) return "i2p";
+  return /\.onion$/i.test(i.host) ? "tor" : "tcp";
+}
+function _discHops(n){
+  if((localStorage.getItem("noema-lang") || "en") === "ru"){ const a = n % 10, b = n % 100; return n + " " + (a === 1 && b !== 11 ? "хоп" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "хопа" : "хопов"); }
+  return n + (n === 1 ? " hop" : " hops");
+}
+function _discShort(h){ return h.length > 36 ? h.slice(0, 14) + "…" + h.slice(-14) : h; }
+function discSet(k, v){ if(k === "q") _discQ = v; if(k === "type") _discType = v; if(k === "new") _discNew = !_discNew; if(k === "sort") _discSort = v; if(k === "q") discList(); else discRender(); }
+function discRender(){
+  const b = document.getElementById("disc-body"); if(!b || b.style.display === "none") return;
+  let h = '<div class="dg-a" style="margin:0 0 8px">' + esc(t("disc_hint")) + '</div>';
+  if(!_disc || _disc.ok === false){ b.innerHTML = h; return; }
+  if(!_disc.enabled) h += '<div class="dg-a" style="margin:0 0 8px">' + esc(t("disc_off")) + '</div><button class="sys-btn teal" onclick="discEnable()">' + esc(t("disc_on_btn")) + '</button>';
+  else if(!_disc.items.length) h += '<div class="dg-a">' + esc(t("disc_empty")) + '</div>';
+  if(_disc.items.length){
+    h += '<input class="prof-in" id="disc-q" style="margin:0 0 6px" placeholder="' + esc(t("disc_search")) + '" value="' + esc(_discQ) + '" oninput="discSet(\'q\', this.value)">' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">' +
+      ["all", "tcp", "tor", "i2p", "radio"].map(k => '<button class="prof-chip' + (_discType === k ? " sel" : "") + '" onclick="discSet(\'type\', \'' + k + '\')">' + esc(t("disc_t_" + k)) + '</button>').join("") +
+      '<button class="prof-chip' + (_discNew ? " sel" : "") + '" onclick="discSet(\'new\')">' + esc(t("disc_new")) + '</button>' +
+      '<select onchange="discSet(\'sort\', this.value)">' + ["km", "hops", "age"].map(k => '<option value="' + k + '"' + (_discSort === k ? " selected" : "") + '>' + esc(t("disc_s_" + k)) + '</option>').join("") + '</select></div>' +
+      '<div class="dg-a" id="disc-count" style="margin:0 0 6px"></div><div id="disc-list" style="max-height:40vh;overflow-y:auto;overscroll-behavior:contain"></div>';
+  }
+  b.innerHTML = h + '<div id="disc-msg">' + _discNotice + '</div>';
+  if(_disc.items.length) discList();
+}
+function discList(){
+  const box = document.getElementById("disc-list"); if(!box) return;
+  const q = _discQ.trim().toLowerCase(), all = _disc.items;
+  const items = all.filter(i => (_discType === "all" || _discCat(i) === _discType) && !(_discNew && i.added) && (!q || (i.name + " " + i.host).toLowerCase().includes(q)));
+  const big = 1e9, key = {km: i => i.km == null ? big : i.km, hops: i => i.hops == null ? big : i.hops, age: i => i.age}[_discSort];
+  items.sort((a, b) => key(a) - key(b) || a.age - b.age);
+  document.getElementById("disc-count").textContent = t("disc_count").replace("{n}", items.length).replace("{all}", all.length);
+  box.innerHTML = items.map(i => {
+    const where = i.type === "I2PInterface" ? i.host.slice(0, 16) + "…" : i.host ? _discShort(i.host) + (i.port ? ":" + i.port : "") : i.frequency ? (i.frequency / 1e6) + " MHz, SF" + i.sf + ", " + (i.bandwidth / 1000) + " kHz" : "";
+    const act = i.added ? '<span class="dg-a" style="margin:0">' + esc(t("disc_added")) + '</span>' : i.addable ? '<button class="sys-btn teal" onclick="discAdd(\'' + i.id + '\')">' + esc(t("disc_add")) + '</button>' : '';
+    return '<div class="dg-i" style="display:flex;align-items:center;gap:8px;justify-content:space-between"><div style="min-width:0"><div class="dg-h" style="overflow-wrap:anywhere">' + esc(i.name) + ' <span style="color:var(--mu);font-weight:400;font-size:10px">' + esc(i.type.replace("Interface", "")) + '</span></div>' +
+      '<div class="dg-a" style="margin:0;overflow-wrap:anywhere">' + esc(where) + (where ? ' · ' : '') + esc(t("disc_st_" + i.status)) + (i.hops != null ? ' · ' + esc(_discHops(i.hops)) : '') + ' · ' + esc(t("disc_ago").replace("{t}", _discAgo(i.age))) +
+      (i.lat != null && i.lon != null ? ' · ' + i.lat.toFixed(3) + ', ' + i.lon.toFixed(3) + (i.km != null ? ' <b style="color:var(--teal);font-weight:600">' + i.km + ' ' + esc(t("disc_km")) + '</b>' : '') : '') +
+      (i.protected ? ' · ' + esc(t("disc_prot")) : '') + (!i.addable && !i.host ? ' · ' + esc(t("disc_radio")) : '') + '</div></div>' + act + '</div>';
+  }).join("");
+}
+async function discEnable(){
+  if(!confirm(t("prof_confirm"))) return;
+  const d = await _discPost("/enable", {confirm: true});
+  _discNotice = d.ok ? '<div class="dg-a" style="margin-top:6px">' + esc(t("disc_enabled_done").replace("{file}", d.backup ? d.backup.split("/").pop() : "—")) + '</div><button class="sys-btn teal" style="margin-top:6px" onclick="svcAction(\'dashboard\',\'restart\')">' + esc(t("prof_restart")) + '</button>' : '<div class="dg-a">' + esc(t("prof_err").replace("{e}", d.error || "")) + '</div>';
+  discLoad();
+}
+async function discAdd(id){
+  const it = (_disc.items || []).find(x => x.id === id); if(!it) return;
+  if(!confirm(t("disc_confirm").replace("{name}", it.name))) return;
+  const d = await _discPost("/add", {id: id, confirm: true});
+  _discNotice = d.ok ? '<div class="dg-a" style="margin-top:6px">' + esc(t("disc_done").replace("{name}", d.name).replace("{file}", d.backup.split("/").pop())) + '</div><button class="sys-btn teal" style="margin-top:6px" onclick="svcAction(\'dashboard\',\'restart\')">' + esc(t("prof_restart")) + '</button>' : '<div class="dg-a">' + esc(t("prof_err").replace("{e}", d.error || "")) + '</div>';
+  discLoad();
+}
+</script>
+<script id="diag-js">
+/* interface diagnostics: a small button in the page bar that appears only when something is wrong */
+let _diag = [];
+function diagShort(n){        // "TCPInterface[norilsk/host:4242]" -> "norilsk (host:4242)"
+  const m = /^[A-Za-z]+\[([^\]]*)\]$/.exec(n || ""); if(!m) return n || "";
+  const p = m[1].split("/"); return p.length > 1 ? p[0] + " (" + p.slice(1).join("/") + ")" : p[0];
+}
+function diagRender(){
+  const btn = document.getElementById("diag-btn"), panel = document.getElementById("diag-panel"); if(!btn || !panel) return;
+  btn.style.display = _diag.length ? "" : "none"; document.getElementById("diag-n").textContent = _diag.length;
+  btn.classList.toggle("err", _diag.some(i => i.level === "error"));
+  btn.classList.toggle("blink", _diag.length > 0 && _diagSig() !== _diagSeen());
+  panel.innerHTML = '<div class="dg-t">' + esc(t("diag_title")) + '</div>' + (_diag.length ? _diag.map(i => {
+    const why = t("diag_why_" + (i.detail || "other")) || "";
+    const net = /^(TCP|Backbone|I2P)/i.test(i.iface || "");               // a network hub has no cable: other advice
+    const key = i.kind === "down" && net ? "down_net" : i.kind;
+    const head = t("diag_" + key).replace("{name}", diagShort(i.iface)).replace("{n}", i.count).replace("{why}", why);
+    return '<div class="dg-i' + (i.level === "error" ? " err" : "") + '"><div class="dg-h">' + esc(head) + '</div><div class="dg-a">' + esc(t("diag_" + key + "_a")) + '</div></div>';
+  }).join("") : '<div class="dg-a">' + esc(t("diag_ok")) + '</div>');
+}
+function _diagSig(){ return _diag.map(i => i.kind + ":" + i.iface).sort().join("|"); }
+function _diagSeen(){ try{ return localStorage.getItem("noema_diag_seen") || ""; }catch(e){ return ""; } }
+function diagToggle(){
+  const p = document.getElementById("diag-panel"), b = document.getElementById("diag-btn");
+  if(p.style.display === "none"){
+    const r = b.getBoundingClientRect(); p.style.left = Math.max(8, r.left) + "px"; p.style.top = (r.bottom + 8) + "px"; p.style.right = "auto";
+    p.style.display = "block";
+    try{ localStorage.setItem("noema_diag_seen", _diagSig()); }catch(e){}     // seen: it stops blinking until the problems change
+    b.classList.remove("blink");
+  } else p.style.display = "none";
+}
+async function diagLoad(){
+  try{ const d = await fetch(API + "/api/diag/interfaces").then(r => r.json()); _diag = d.issues || []; diagRender(); }catch(e){}
+}
+document.addEventListener("click", e => { const p = document.getElementById("diag-panel"); if(p && p.style.display !== "none" && !e.target.closest("#diag-panel") && !e.target.closest("#diag-btn")) p.style.display = "none"; });
+setTimeout(diagLoad, 3000); setInterval(diagLoad, 60000);
+</script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.12"
+__version__ = "1.1.14"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -55,6 +55,25 @@ import RNS as _RNS_global  # noqa: E402 — must be after Reticulum() init
 # unchanged. _NodeAnnounceHandler below reads this record to set a sticky
 # "seen via LoRa" flag per node that later, better paths can't erase.
 _rnode_announce_seen: dict = {}  # hex_hash -> (iface_name, ts)
+# hex_hash -> {"rnode"|"tcp"|"i2p"|"auto"|"other": last_ts}: through which kind of interface
+# announces of this destination arrived (lets the Nodes tab filter "heard over LoRa / over TCP")
+_announce_via: dict = {}
+_ANNOUNCE_VIA_MAX = 8000
+# hex_hash -> {"rssi": dBm, "snr": dB, "ts": t}: signal of the last announce heard straight over an RNode
+_announce_sig: dict = {}
+
+def _iface_kind(interface):
+    name = str(getattr(interface, "name", ""))
+    cls = type(interface).__name__.lower()
+    if "RNode" in name or "rnode" in cls:
+        return "rnode"
+    if "tcp" in cls or "backbone" in cls:
+        return "tcp"
+    if "i2p" in cls:
+        return "i2p"
+    if "auto" in cls:
+        return "auto"
+    return "other"
 
 def _install_rnode_announce_hook():
     import time as _hook_time
@@ -71,12 +90,25 @@ def _install_rnode_announce_hook():
             try:
                 raw = args[0] if len(args) > 0 else kwargs.get("raw")
                 interface = args[1] if len(args) > 1 else kwargs.get("interface")
-                if raw is not None and interface is not None and "RNode" in str(getattr(interface, "name", "")):
+                # Announce packets only (cheap flag test first; every other packet is untouched)
+                if raw and interface is not None and (raw[0] & 0x03) == 0x01:
                     peek = _RNS_global.Packet(None, raw)
                     if peek.unpack() and peek.packet_type == _RNS_global.Packet.ANNOUNCE:
-                        _rnode_announce_seen[peek.destination_hash.hex()] = (
-                            str(getattr(interface, "name", "")), _hook_time.time()
-                        )
+                        hx = peek.destination_hash.hex()
+                        now_t = _hook_time.time()
+                        kind = _iface_kind(interface)
+                        _announce_via.setdefault(hx, {})[kind] = now_t
+                        if kind == "rnode":
+                            _rnode_announce_seen[hx] = (str(getattr(interface, "name", "")), now_t)
+                            rssi = getattr(interface, "r_stat_rssi", None)
+                            snr = getattr(interface, "r_stat_snr", None)
+                            if rssi is not None or snr is not None:
+                                _announce_sig[hx] = {"rssi": rssi, "snr": snr, "ts": now_t}
+                        if len(_announce_via) > _ANNOUNCE_VIA_MAX:       # keep memory bounded
+                            for k in sorted(_announce_via, key=lambda x: max(_announce_via[x].values()))[:2000]:
+                                _announce_via.pop(k, None)
+                            for k in [k for k in _announce_sig if k not in _announce_via]:
+                                _announce_sig.pop(k, None)
             except Exception:
                 pass
             return _orig_inbound(*args, **kwargs)
@@ -86,6 +118,97 @@ def _install_rnode_announce_hook():
         print(f"[NOEMA FULL] WARNING: failed to install RNode announce hook: {_hook_e}")
 
 _install_rnode_announce_hook()
+
+# --- interface diagnostics: remember the stack's own warnings about broken interface connections ---
+try:
+    import ifdiag as _ifdiag_mod
+    _ifdiag = _ifdiag_mod.Diag(f"{_HOME}/dashboard")
+    _rns_log_orig = _RNS_global.log
+    def _rns_log_capture(msg, *a, **k):
+        try:
+            if "interface error occurred" in str(msg):
+                _ifdiag.capture(str(msg))
+        except Exception:
+            pass
+        return _rns_log_orig(msg, *a, **k)
+    _RNS_global.log = _rns_log_capture
+except Exception as _ifdiag_err:
+    _ifdiag = None
+    print(f"[IfDiag] unavailable: {_ifdiag_err}")
+
+def _kind_from_name(name):
+    """Interface kind from rnpath / get_path_table text, e.g. 'RNodeInterface[Heltec V4]', 'TCPInterface[...]'."""
+    n = str(name).lower()
+    if "rnode" in n: return "rnode"
+    if "tcp" in n or "backbone" in n: return "tcp"
+    if "i2p" in n: return "i2p"
+    if "auto" in n: return "auto"
+    return "other"
+
+_pt_cache = {"ts": 0.0, "map": {}}
+def _shared_path_table(now_t, force=False):
+    """hash -> (timestamp, interface text) from the instance that owns the interfaces (we are only its client), cached for 2 s."""
+    if not force and now_t - _pt_cache["ts"] < 2.0:
+        return _pt_cache["map"]
+    m = {}
+    try:
+        inst = _RNS_global.Reticulum.get_instance()
+        for e in inst.get_path_table():
+            h = e.get("hash")
+            if h is not None:
+                m[bytes(h)] = (e.get("timestamp") or 0, str(e.get("interface") or ""))
+    except Exception:
+        pass
+    _pt_cache["ts"], _pt_cache["map"] = now_t, m
+    return m
+
+def _note_announce_kind(hx, kind, iface_name, now_t, rssi=None, snr=None):
+    _announce_via.setdefault(hx, {})[kind] = now_t
+    if kind == "rnode":
+        _rnode_announce_seen[hx] = (iface_name, now_t)
+        if rssi is not None or snr is not None:
+            _announce_sig[hx] = {"rssi": rssi, "snr": snr, "ts": now_t}
+
+def _late_iface_lookup(hex_hash, dest, pkt, ts):
+    """The owner of the radio records the path a moment after our handler ran: look again and mark the node."""
+    try:
+        ent = _shared_path_table(_nt_time.time(), force=True).get(bytes(dest))
+        if not ent or abs(ent[0] - ts) > 8.0:
+            return
+        rssi = snr = None
+        try:
+            ph = getattr(pkt, "packet_hash", None) or (bytes(pkt) if isinstance(pkt, (bytes, bytearray)) else None)
+            if ph:
+                inst = _RNS_global.Reticulum.get_instance()
+                rssi, snr = inst.get_packet_rssi(ph), inst.get_packet_snr(ph)
+        except Exception:
+            pass
+        kind = _kind_from_name(ent[1])
+        _note_announce_kind(hex_hash, kind, ent[1], ts, rssi, snr)
+        if kind == "rnode":
+            with _node_tracker_lock:
+                n = _node_tracker.get(hex_hash)
+                if n is not None:
+                    n["via_rnode"], n["via_interface"], n["last_via_rnode"] = True, ent[1], ts
+    except Exception:
+        pass
+
+def _note_announce_iface(hx, interface, now_t):
+    """Remember through which kind of interface an announce arrived (+ RNode signal at that moment)."""
+    kind = _iface_kind(interface)
+    _announce_via.setdefault(hx, {})[kind] = now_t
+    if kind == "rnode":
+        _rnode_announce_seen[hx] = (str(getattr(interface, "name", "")), now_t)
+        rssi = getattr(interface, "r_stat_rssi", None)
+        snr = getattr(interface, "r_stat_snr", None)
+        if rssi is not None or snr is not None:
+            _announce_sig[hx] = {"rssi": rssi, "snr": snr, "ts": now_t}
+    if len(_announce_via) > _ANNOUNCE_VIA_MAX:       # keep memory bounded
+        for k in sorted(_announce_via, key=lambda x: max(_announce_via[x].values()))[:2000]:
+            _announce_via.pop(k, None)
+        for k in [k for k in _announce_sig if k not in _announce_via]:
+            _announce_sig.pop(k, None)
+
 
 # Detect RNS binary path - support both old (rns-env) and new (MeshGate/.venv) layouts
 import shutil as _shutil
@@ -710,6 +833,26 @@ class _NodeAnnounceHandler:
                 except Exception:
                     name = None
 
+            # LXMF announces carry the display name as msgpack, not plain text
+            if app_data and app_type in ("LXMF", "PropNode"):
+                try:
+                    import LXMF as _lx
+                    _ln = _lx.display_name_from_app_data(app_data)
+                    if _ln:
+                        name = _ln
+                except Exception:
+                    pass
+            if (not name or "\ufffd" in name) and app_data and app_type in ("LXMF", "PropNode"):
+                try:    # same thing without the LXMF helper: msgpack [display_name, stamp_cost]
+                    import RNS.vendor.umsgpack as _mp
+                    _dd = _mp.unpackb(app_data)
+                    if isinstance(_dd, (list, tuple)) and _dd and isinstance(_dd[0], (bytes, bytearray)):
+                        name = bytes(_dd[0]).decode("utf-8", "replace").strip() or None
+                except Exception:
+                    pass
+            if name and "\ufffd" in name:
+                name = None
+
             # Hops to this destination
             try:
                 hops = _rns.Transport.hops_to(destination_hash)
@@ -722,6 +865,34 @@ class _NodeAnnounceHandler:
             via_rnode = False
             via_interface = ""
             seen = _rnode_announce_seen.get(hex_hash)
+            if not seen or (ts - seen[1]) > 5.0:
+                # the inbound hook did not see it (depends on the RNS version): the path table knows the interface
+                # this announce arrived on; its timestamp tells whether it is the announce we are handling now
+                try:
+                    pe = _rns.Transport.path_table.get(destination_hash)
+                    if pe and (ts - pe[0]) <= 5.0 and pe[5] is not None:
+                        if type(pe[5]).__name__ == "LocalClientInterface":
+                            # we are a client of the shared instance that owns the radio: ask it which interface the path came in on
+                            ent = _shared_path_table(ts).get(bytes(destination_hash))
+                            if not ent or (ts - ent[0]) > 8.0:
+                                # not recorded (or only an older path) at the radio's owner yet: look again in a moment
+                                import threading as _th
+                                _th.Timer(1.5, _late_iface_lookup, args=(hex_hash, destination_hash, pe[6], ts)).start()
+                            else:
+                                rssi = snr = None
+                                try:
+                                    ph = getattr(pe[6], "packet_hash", None) or (bytes(pe[6]) if isinstance(pe[6], (bytes, bytearray)) else None)
+                                    if ph:
+                                        inst = _rns.Reticulum.get_instance()
+                                        rssi, snr = inst.get_packet_rssi(ph), inst.get_packet_snr(ph)
+                                except Exception:
+                                    pass
+                                _note_announce_kind(hex_hash, _kind_from_name(ent[1]), ent[1], ts, rssi, snr)
+                        else:
+                            _note_announce_iface(hex_hash, pe[5], ts)
+                        seen = _rnode_announce_seen.get(hex_hash)
+                except Exception:
+                    pass
             if seen and (ts - seen[1]) <= 5.0:
                 via_rnode = True
                 via_interface = seen[0]
@@ -756,6 +927,8 @@ class _NodeAnnounceHandler:
                     existing["hops"] = hops
                     if name:
                         existing["name"] = name
+                    elif "\ufffd" in (existing.get("name") or ""):
+                        existing["name"] = ""      # a name stored from an undecoded announce
                     if tcp_addr:
                         existing["tcp_addr"] = tcp_addr
                     if region:
@@ -850,6 +1023,20 @@ def _nt_register():
 threading.Thread(target=_nt_register, daemon=True).start()
 
 
+@app.route("/api/diag/interfaces")
+def api_diag_interfaces():
+    """Problems of the Reticulum interfaces in plain words (view only)."""
+    if _ifdiag is None:
+        return jsonify({"issues": []})
+    try:
+        stats = _RNS_global.Reticulum.get_instance().get_interface_stats()
+    except Exception:
+        stats = {}
+    try:
+        return jsonify({"issues": _ifdiag.issues(stats)})
+    except Exception as e:
+        return jsonify({"issues": [], "error": str(e)})
+
 @app.route("/api/announce", methods=["POST"])
 def api_announce():
     """Trigger manual announce for LXMF Bridge and Nomadnet node."""
@@ -872,20 +1059,17 @@ def api_announce():
     except Exception as e:
         results["lxmf"] = str(e)
 
-    # RNS destinations in this process
+    # NOEMA Chat: the LXMF address of this gateway's own chat (lives in this process)
     try:
-        import RNS as _rns
-        count = 0
-        dests = getattr(_rns.Transport, 'destinations', [])
-        dests = dests if isinstance(dests, dict) else {}
-        for dest in dests.values():
-            try:
-                dest.announce()
-                count += 1
-            except: pass
-        results["rns"] = f"{count} destinations"
+        if _chat_router is None:
+            _chat_init()
+        if _chat_router is not None and _chat_dest is not None:
+            _chat_router.announce(destination_hash=_chat_dest.hash)
+            results["chat"] = "announced"
+        else:
+            results["chat"] = "chat not started"
     except Exception as e:
-        results["rns"] = str(e)
+        results["chat"] = f"error: {e}"
 
     return jsonify({"ok": True, "results": results})
 
@@ -929,7 +1113,12 @@ def api_nodes():
     """
     try:
         with _node_tracker_lock:
-            nodes = list(_node_tracker.values())
+            nodes = [dict(n) for n in _node_tracker.values()]
+        for n in nodes:
+            n["via"] = dict(_announce_via.get(n.get("hash"), {}))
+            sig = _announce_sig.get(n.get("hash"))
+            if sig:
+                n["rssi"], n["snr"], n["sig_ts"] = sig["rssi"], sig["snr"], sig["ts"]
         nodes.sort(key=lambda n: n.get("last_seen", 0), reverse=True)
         return jsonify({"nodes": nodes, "total": len(nodes)})
     except Exception as e:
@@ -2098,6 +2287,8 @@ def backup_download():
         "data/node_tracker.json":          f"{_HOME}/dashboard/node_tracker.json",
         "data/nomadnet_hashes":            NOMADNET_ADDR_FILE,
         "data/sdr_presets.json":           SDR_PRESETS_FILE,
+        "data/netmap.json":                f"{_HOME}/dashboard/netmap.json",
+        "data/profiles.json":                f"{_HOME}/dashboard/profiles.json",
     }
 
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -2210,6 +2401,8 @@ def backup_restore():
         "data/monitored_nodes.json":   f"{_HOME}/dashboard/monitored_nodes.json",
         "data/nomadnet_hashes":        NOMADNET_ADDR_FILE,
         "data/sdr_presets.json":       SDR_PRESETS_FILE,
+        "data/netmap.json":            f"{_HOME}/dashboard/netmap.json",
+        "data/profiles.json":            f"{_HOME}/dashboard/profiles.json",
         # legacy keys from old backups
         "reticulum_config":            f"{_HOME}/.reticulum/config",
         "noema_bridge.cfg":            "/etc/noema/bridge.cfg",
@@ -2429,6 +2622,7 @@ _chat_router = None
 _chat_identity = None
 _chat_dest = None
 _chat_incoming = deque(maxlen=500)
+_chat_seq = 0      # running number of incoming messages: the page asks for 'newer than N', no clocks involved
 
 CHAT_STORAGE = f"{_HOME}/dashboard/chat_lxmf"
 
@@ -2573,12 +2767,17 @@ def _chat_on_receive(message):
         except: pass
 
         _save_chat_msg(src, msg)
+        global _chat_seq
+        _chat_seq += 1
+        msg["seq"] = _chat_seq
         _chat_incoming.append(msg)
         # Telegram notification for chat messages
         try:
-            name = msg.get("from_name") or src[:16]
-            text = msg.get("text","")[:200]
-            _tg_send(f"💬 <b>NOEMA Chat</b>\nОт: <code>{name}</code>\n{text}")
+            import html as _html
+            name = msg.get("from_name") or ""
+            text = _html.escape(msg.get("text","")[:200])
+            who = (f"{_html.escape(name)}\n" if name else "") + f"<code>{src}</code>"      # the full address: tap it in Telegram to copy and add the contact
+            _tg_send(f"💬 <b>NOEMA Chat</b>\nОт: {who}\n{text}")
         except: pass
     except: pass
 
@@ -2886,7 +3085,16 @@ def chat_send():
 
 @app.route("/api/chat/incoming")
 def chat_incoming():
-    since = int(request.args.get("since", 0))
+    after = request.args.get("after")
+    if after is not None:                       # new style: by sequence number
+        if after == "now":
+            return jsonify({"seq": _chat_seq, "msgs": []})
+        try:
+            after = int(after)
+        except ValueError:
+            after = 0
+        return jsonify({"seq": _chat_seq, "msgs": [m for m in _chat_incoming if m.get("seq", 0) > after]})
+    since = int(request.args.get("since", 0))   # old style, kept for old pages
     msgs = [m for m in _chat_incoming if m["ts"] > since]
     return jsonify(msgs)
 
@@ -3817,6 +4025,38 @@ def chat_access_settings():
     _chat_access_enabled = parser.get("chat_access", "enabled", fallback="0") == "1"
     _chat_access_whitelist = set(x.strip() for x in parser.get("chat_access", "whitelist", fallback="").split(",") if x.strip())
     return jsonify({"ok": True})
+
+# --- Network map (where the Reticulum interfaces connect to) ---
+try:
+    import netmap as _netmap_mod
+    _netmap = _netmap_mod.register_routes(app, f"{_HOME}/dashboard", home=_HOME)
+except Exception as _netmap_err:
+    _netmap = None
+    print(f"[NetMap] unavailable: {_netmap_err}")
+
+# --- interface profiles (named sets of interfaces that are switched on together) ---
+try:
+    import profiles as _profiles_mod
+    _profiles = _profiles_mod.register_routes(app, _HOME, f"{_HOME}/dashboard")
+except Exception as _profiles_err:
+    _profiles = None
+    print(f"[Profiles] unavailable: {_profiles_err}")
+
+# --- interfaces announced by other nodes (read the discovery files, add one to the config on request) ---
+try:
+    import discovered as _discovered_mod
+    _discovered = _discovered_mod.register_routes(app, _HOME)
+except Exception as _discovered_err:
+    _discovered = None
+    print(f"[Discovered] unavailable: {_discovered_err}")
+
+# --- reachability checks for one destination: path request and probe (only when a button is pressed) ---
+try:
+    import reach as _reach_mod
+    _reach_mod.register_routes(app, _RNS_global,
+        iface_of=lambda h: (_shared_path_table(_nt_time.time(), force=True).get(bytes(h)) or (0, ""))[1] or None)
+except Exception as _reach_err:
+    print(f"[Reach] unavailable: {_reach_err}")
 
 @app.route("/<path:filename>")
 def static_files(filename): return send_from_directory(".", filename)
