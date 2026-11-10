@@ -1932,6 +1932,8 @@ function toast(msg,ok=true){
   t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"),2000);
 }
+// older code calls showToast(): same toast, shown as an error when the text starts with ✕
+function showToast(msg){ toast(msg, !String(msg).startsWith("✕")); }
 
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()}

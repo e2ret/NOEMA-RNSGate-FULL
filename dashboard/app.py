@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.14"
+__version__ = "1.1.15"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -1037,27 +1037,60 @@ def api_diag_interfaces():
     except Exception as e:
         return jsonify({"issues": [], "error": str(e)})
 
+def _nomadnet_node_name(cfgdir):
+    """Name the Nomadnet node announces: [node] node_name of its config, else '<display name>'s Node' like Nomadnet itself."""
+    import re as _re
+    try:
+        text = open(f"{cfgdir}/config", encoding="utf-8").read()
+        sec = _re.search(r"^\s*\[node\]\s*$(.*?)(?=^\s*\[[^\[]|\Z)", text, _re.S | _re.M)
+        m = _re.search(r"^\s*node_name\s*=\s*(.+?)\s*$", sec.group(1) if sec else "", _re.M)
+        if m and m.group(1).lower() != "none":
+            return m.group(1)
+    except Exception:
+        pass
+    display = "Anonymous Peer"
+    try:
+        from RNS.vendor import umsgpack as _mp
+        display = _mp.unpackb(open(f"{cfgdir}/storage/peersettings", "rb").read()).get("display_name") or display
+    except Exception:
+        pass
+    return f"{display}'s Node"
+
+
+def _announce_nomadnet():
+    """Announce the Nomadnet node from here, without touching the nomadnet service.
+    The dashboard owns the Reticulum instance, so it can announce the node's destination (same identity, same
+    name) and drop its own copy of the destination right away, so that link requests still go to nomadnet."""
+    RNS = _RNS_global
+    inst = RNS.Reticulum.get_instance()
+    if inst is not None and getattr(inst, "is_connected_to_shared_instance", False):
+        return "skipped (dashboard is not the owner of Reticulum)"
+    cfgdir = f"{_HOME}/.nomadnetwork"
+    ident = RNS.Identity.from_file(f"{cfgdir}/storage/identity")
+    if ident is None:
+        return "no nomadnet identity"
+    dest = RNS.Destination(ident, RNS.Destination.IN, RNS.Destination.SINGLE, "nomadnetwork", "node")
+    try:
+        dest.announce(app_data=_nomadnet_node_name(cfgdir).encode("utf-8"))
+    finally:
+        RNS.Transport.deregister_destination(dest)
+    return "announced"
+
+
 @app.route("/api/announce", methods=["POST"])
 def api_announce():
-    """Trigger manual announce for LXMF Bridge and Nomadnet node."""
-    import subprocess as _sub
+    """Manual announce. Nothing is restarted: Nomadnet and the LXMF bridge do not react to signals (a signal
+    would only stop them), so the node is announced from here and the bridge announces itself every 10 minutes."""
     results = {}
 
-    # Nomadnet: send SIGUSR1 via systemctl kill
+    # Nomadnet node: announced from the dashboard (the owner of Reticulum)
     try:
-        out = _sub.run(["sudo", "systemctl", "kill", "-s", "SIGUSR1", "nomadnet"],
-                       capture_output=True, timeout=5)
-        results["nomadnet"] = "signal sent" if out.returncode == 0 else f"err({out.returncode})"
+        results["nomadnet"] = _announce_nomadnet()
     except Exception as e:
-        results["nomadnet"] = str(e)
+        results["nomadnet"] = f"error: {e}"
 
-    # LXMF bridge: restart to trigger announce
-    try:
-        out = _sub.run(["sudo", "systemctl", "kill", "-s", "SIGUSR1", "noema_lxmf_bridge"],
-                       capture_output=True, timeout=5)
-        results["lxmf"] = "signal sent" if out.returncode == 0 else "not supported"
-    except Exception as e:
-        results["lxmf"] = str(e)
+    # LXMF bridge: announces itself every 10 minutes (and at start), nothing to trigger
+    results["lxmf"] = "automatic (every 10 min)"
 
     # NOEMA Chat: the LXMF address of this gateway's own chat (lives in this process)
     try:
