@@ -2042,6 +2042,8 @@ const I18N = {
     reach_nopath: "No path found in {s} s. The node may be offline or too far; try again later.", reach_found: "Path found in {s} s: {hops} hops.", reach_known: "Path is known: {hops} hops.", reach_via: "Interface: {i}",
     reach_probe_ok: "The node answered: round trip {ms} ms over {hops} hops.", reach_probe_silent: "No answer to the probe. Many nodes do not answer probes (only Reticulum transport nodes that allow it do), so silence does not mean the node is down.",
     reach_probe_unknown: "The address is not known yet (no announce heard). Try Request path first.", reach_probe_no_path: "No path to the probe address of this node. It probably does not answer probes.", reach_probe_send: "The probe could not be sent.",
+    pf_btn: "Find port", pf_none: "No USB device found. Check the cable (it must carry data, not only power), plug the RNode in and press again.", pf_found: "Found on the gateway ({n}). Tap one to use it:",
+    pf_auto: "Port found and filled in: {p}", pf_cfg: "already used by {n}", pf_stable: "stays the same after a reboot",
     ago_min: "min", ago_h: "h", ago_d: "d", disc_km: "km from the gateway",
     disc_title: "Discovered interfaces", disc_hint: "Other nodes announce their public interfaces (hubs, radio). Nothing is connected by itself: press Add to write one into the Reticulum config (backup first), then restart the dashboard.",
     disc_off: "Interface discovery is off. Turn it on to listen for announcements; this writes discover_interfaces = yes to the config (backup first) and needs a restart.", disc_on_btn: "Turn on discovery",
@@ -2209,6 +2211,8 @@ const I18N = {
     reach_nopath: "Путь не найден за {s} с. Узел может быть выключен или слишком далеко; повторите позже.", reach_found: "Путь найден за {s} с: {hops} хопов.", reach_known: "Путь известен: {hops} хопов.", reach_via: "Интерфейс: {i}",
     reach_probe_ok: "Узел ответил: время отклика {ms} мс, хопов: {hops}.", reach_probe_silent: "Ответа на probe нет. Многие узлы на probe не отвечают (только транспортные узлы Reticulum, где это разрешено), так что молчание не значит, что узел выключен.",
     reach_probe_unknown: "Адрес пока неизвестен (анонс не слышали). Сначала нажмите «Запросить путь».", reach_probe_no_path: "Нет пути к probe-адресу этого узла. Скорее всего, он не отвечает на probe.", reach_probe_send: "Не удалось отправить пробный пакет.",
+    pf_btn: "Найти порт", pf_none: "USB-устройств не найдено. Проверьте кабель (нужен кабель с передачей данных, не только зарядный), подключите RNode и нажмите ещё раз.", pf_found: "Найдено на шлюзе ({n}). Нажмите на нужный, чтобы выбрать:",
+    pf_auto: "Порт найден и подставлен: {p}", pf_cfg: "уже занят интерфейсом {n}", pf_stable: "не меняется после перезагрузки",
     ago_min: "мин", ago_h: "ч", ago_d: "дн", disc_km: "км от шлюза",
     disc_title: "Найденные интерфейсы", disc_hint: "Другие узлы объявляют свои публичные интерфейсы (хабы, радио). Само ничего не подключается: нажмите «Добавить», и интерфейс запишется в конфигурацию Reticulum (сначала резервная копия), после этого перезапустите дашборд.",
     disc_off: "Поиск интерфейсов выключен. Включите, чтобы слушать объявления: в конфигурацию запишется discover_interfaces = yes (сначала резервная копия), нужен перезапуск.", disc_on_btn: "Включить поиск",
@@ -5927,6 +5931,7 @@ function renderNewIfaceFields() {
     }
     return `<div><div style="font-size:10px;color:var(--mu);margin-bottom:3px">${esc(f.label)}</div>${input}</div>`;
   }).join('');
+  if(type === 'RNodeInterface') portFind('new-iface-f-port', 'pf-new', true);
 }
 
 function _i18nDict() {
@@ -5942,6 +5947,8 @@ function renderRNodePortField(id, f, inpSty) {
       <button type="button" id="ble-mode-ble" class="sys-btn" style="font-size:10px;padding:3px 10px" onclick="bleToggleMode('ble')">${esc(_d.btn_ble_bluetooth)}</button>
     </div>
     <input id="${id}" value="${esc(f.default||'')}" placeholder="${esc(f.label)}" style="${inpSty}">
+    <div style="margin-top:6px"><button type="button" class="sys-btn" onclick="portFind('${id}','pf-new')">${esc(t("pf_btn"))}</button></div>
+    <div id="pf-new"></div>
     <div id="ble-pair-block" style="display:none;margin-top:8px;padding:10px;background:var(--s2);border:1px solid var(--bd);border-radius:8px">
       <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${esc(_d.txt_ble_pair_hint)}</div>
       <select id="ble-pair-serial-port" style="${inpSty};margin-bottom:6px"><option value="">${esc(_d.txt_ble_loading_ports)}</option></select>
@@ -6452,7 +6459,8 @@ function _rnsIfaceEditFields(iface, i){
     if(f.sel) return wrap(`<select id="${id}" ${sty}>${f.sel.map(o=>`<option${o===f.val?" selected":""}>${o}</option>`).join("")}</select>`);
     return wrap(`<input id="${id}" value="${esc(f.val||"")}" ${sty}>`);
   };
-  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${fields.map(mk).join("")}</div>`;
+  const finder = type.includes("RNode") ? `<div style="margin-top:8px"><button type="button" class="sys-btn" onclick="portFind('rns-edit-${i}-port','pf-${i}')">${esc(t("pf_btn"))}</button></div><div id="pf-${i}"></div>` : "";
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${fields.map(mk).join("")}</div>${finder}`;
 }
 
 async function _rnsIfaceSave(idx){
@@ -7099,6 +7107,32 @@ async function reachProbe(){
   if(!d.ok){ _reachSay(t("prof_err").replace("{e}", d.error || "")); return; }
   if(!d.delivered){ _reachSay(t("reach_probe_" + (d.error || "silent")) || t("reach_probe_silent")); return; }
   _reachSay(t("reach_probe_ok").replace("{ms}", d.rtt_ms).replace("{hops}", d.hops) + (d.rssi != null ? "  RSSI " + d.rssi + " dBm" : "") + (d.snr != null ? "  SNR " + d.snr + " dB" : ""));
+}
+</script>
+<script id="pf-js">
+/* port finder for RNode: asks the gateway which USB serial devices it sees; tap one to put it into the Port field */
+async function portFind(inputId, boxId, auto){
+  const box = document.getElementById(boxId), inp = document.getElementById(inputId); if(!box || !inp) return;
+  let d; try{ d = await fetch(API + "/api/serial/ports").then(r => r.json()); }catch(e){ return; }
+  const ports = d.ports || [];
+  if(!ports.length){ box.innerHTML = auto ? "" : '<div class="dg-a" style="margin:6px 0 0">' + esc(t("pf_none")) + '</div>'; return; }
+  const free = ports.filter(p => !p.in_config);
+  const pick = free.length === 1 ? free[0] : (ports.length === 1 ? ports[0] : null);
+  const val = p => p.stable || p.path;
+  if(auto && pick && (!inp.value.trim() || /^\/dev\/tty(USB|ACM)\d+$/.test(inp.value.trim()))){
+    inp.value = val(pick);
+    box.innerHTML = '<div class="dg-a" style="margin:6px 0 0">' + esc(t("pf_auto").replace("{p}", val(pick))) + '</div>';
+    return;
+  }
+  if(auto && !pick && ports.length > 1){ /* several: let the person choose */ }
+  box.innerHTML = '<div class="dg-a" style="margin:6px 0 4px">' + esc(t("pf_found").replace("{n}", ports.length)) + '</div>' + ports.map(p =>
+    '<div class="dg-i" style="cursor:pointer;margin-bottom:4px" onclick="portUse(\'' + inputId + '\',\'' + boxId + '\',\'' + esc(val(p)).replace(/'/g, "") + '\')">' +
+      '<div class="dg-h" style="overflow-wrap:anywhere">' + esc(p.path) + (p.name ? ' <span style="color:var(--mu);font-weight:400;font-size:10px">' + esc(p.name) + '</span>' : '') + '</div>' +
+      '<div class="dg-a" style="margin:0;overflow-wrap:anywhere">' + (p.stable ? esc(p.stable) + ' · ' + esc(t("pf_stable")) : '') + (p.in_config ? (p.stable ? ' · ' : '') + esc(t("pf_cfg").replace("{n}", p.in_config)) : '') + '</div></div>').join("");
+}
+function portUse(inputId, boxId, value){
+  const inp = document.getElementById(inputId); if(inp) inp.value = value;
+  const box = document.getElementById(boxId); if(box) box.innerHTML = '<div class="dg-a" style="margin:6px 0 0">' + esc(t("pf_auto").replace("{p}", value)) + '</div>';
 }
 </script>
 <script id="disc-js">

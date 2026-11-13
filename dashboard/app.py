@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.15"
+__version__ = "1.1.16"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_from_directory
@@ -3317,7 +3317,7 @@ def git_status():
 @app.route("/api/run", methods=["POST"])
 def run_command():
     allowed = {
-        "find_ports":      "ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || echo 'не найдено'",
+        "find_ports":      "ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null | grep . || echo 'не найдено'",
         "rnstatus":        f"{_RNS_BIN}/rnstatus",
         "restart_rnsd":    "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet && sleep 2 && systemctl is-active dashboard noema_lxmf_bridge nomadnet",
         "restart_lxmf":    "sudo systemctl restart noema_lxmf_bridge && sleep 1 && systemctl is-active noema_lxmf_bridge",
@@ -4090,6 +4090,13 @@ try:
         iface_of=lambda h: (_shared_path_table(_nt_time.time(), force=True).get(bytes(h)) or (0, ""))[1] or None)
 except Exception as _reach_err:
     print(f"[Reach] unavailable: {_reach_err}")
+
+# --- USB serial ports the gateway sees (to pick the port of an RNode without a terminal) ---
+try:
+    import serialports as _serialports_mod
+    _serialports_mod.register_routes(app, _HOME)
+except Exception as _serialports_err:
+    print(f"[SerialPorts] unavailable: {_serialports_err}")
 
 @app.route("/<path:filename>")
 def static_files(filename): return send_from_directory(".", filename)
