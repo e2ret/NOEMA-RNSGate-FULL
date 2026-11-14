@@ -2,7 +2,6 @@
 
 <img width="200" alt="NOEMA RNSGate FULL" src="https://github.com/user-attachments/assets/81fec1ae-41e7-4f3e-987a-691f9111e0ea" />
 
-
 **Full-featured Reticulum/LXMF gateway with Radio Observatory dashboard**
 **Reticulum / LXMF / RNode LoRa gateway with web dashboard**
 
