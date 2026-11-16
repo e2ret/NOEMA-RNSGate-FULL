@@ -1,0 +1,19 @@
+[Unit]
+Description=Wardrive community overlay admin page
+After=wardrive-map.service
+
+[Service]
+Type=simple
+User=rns
+# Public host name and URL prefix come from "overlay_admin" in /etc/reticulum/wardrive_map.json.
+# Runs as the same user as wardrive-map: it reads the overlay database and, unless started with
+# --read-only, makes changes through it (WAL mode).
+ExecStart=/opt/reticulum/bin/python3 /opt/reticulum/bin/overlay_admin_web.py
+# It exits if the overlay database does not exist yet (overlay_enabled not set / map not started once).
+Restart=on-failure
+RestartSec=30
+StandardOutput=append:/var/log/wardrive_overlay_admin.log
+StandardError=append:/var/log/wardrive_overlay_admin.log
+
+[Install]
+WantedBy=multi-user.target

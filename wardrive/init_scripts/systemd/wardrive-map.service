@@ -1,0 +1,15 @@
+[Unit]
+Description=Wardrive Coverage Map Server
+After=rns.service wardrive-bot.service
+Wants=wardrive-bot.service
+
+[Service]
+Type=simple
+User=rns
+ExecStart=/opt/reticulum/bin/python3 /opt/reticulum/bin/map_server.py
+Restart=on-failure
+StandardOutput=append:/var/log/wardrive_map.log
+StandardError=append:/var/log/wardrive_map.log
+
+[Install]
+WantedBy=multi-user.target

@@ -6,6 +6,7 @@ set -e
 
 REPO_URL="https://github.com/e2ret/NOEMA-RNSGate-FULL.git"
 INSTALL_DIR="$HOME/NOEMA-RNSGate-FULL"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RNS_CONFIG_DIR="$HOME/.reticulum"
 LXMF_TOOLS_DIR="$HOME/lxmf-tools"
 PYTHON="$INSTALL_DIR/.venv/bin/python3"
@@ -214,9 +215,21 @@ fi
 
 # --- Clone or update NOEMA FULL ---
 echo "[2/7] Getting NOEMA RNSGate FULL..."
-if [ -d "$INSTALL_DIR" ]; then
+if [ "${NOEMA_LOCAL_RELEASE:-0}" = "1" ]; then
+    if [ ! -f "$SCRIPT_DIR/dashboard/app.py" ] || [ ! -d "$SCRIPT_DIR/wardrive" ]; then
+        echo "[ERROR] Local release source not found beside install.sh."
+        exit 1
+    fi
+    echo "      Installing the local release from $SCRIPT_DIR"
+    mkdir -p "$INSTALL_DIR"
+    if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
+        cp -a "$SCRIPT_DIR/." "$INSTALL_DIR/"
+    fi
+elif [ -d "$INSTALL_DIR/.git" ]; then
     echo "      Directory $INSTALL_DIR already exists, pulling latest..."
     git -C "$INSTALL_DIR" pull
+elif [ -f "$INSTALL_DIR/dashboard/app.py" ]; then
+    echo "      Existing local source found at $INSTALL_DIR; using it without Git."
 else
     git clone "$REPO_URL" "$INSTALL_DIR"
 fi
@@ -659,6 +672,36 @@ EOF
     echo "      Installed ${NAME}.service"
 }
 
+# --- Wardrive collector and coverage map ---
+# The collector uses Reticulum's shared-instance client socket; dashboard.service
+# remains the only process that opens the physical interfaces.
+WARDRIVE_DIR="$INSTALL_DIR/wardrive"
+if [ -f "$WARDRIVE_DIR/bot/wardrive_bot.py" ] && [ -f "$WARDRIVE_DIR/map/map_server.py" ]; then
+    mkdir -p /etc/reticulum
+    if [ ! -f /etc/reticulum/wardrive_bot.json ]; then
+        cp "$WARDRIVE_DIR/config/wardrive_bot.json" /etc/reticulum/wardrive_bot.json
+    fi
+    if [ ! -f /etc/reticulum/wardrive_map.json ]; then
+        sed "s|/root/.reticulum/storage|$RNS_CONFIG_DIR/storage|" \
+            "$WARDRIVE_DIR/config/wardrive_map.json" > /etc/reticulum/wardrive_map.json
+    fi
+    install_service "wardrive_bot" \
+        "NOEMA Wardrive Collector (Reticulum shared-instance client)" \
+        "$PYTHON -u $WARDRIVE_DIR/bot/wardrive_bot.py" \
+        "$WARDRIVE_DIR/bot" \
+        "network.target dashboard.service" \
+        "wait_dashboard"
+    install_service "wardrive_map" \
+        "NOEMA Wardrive Coverage Map" \
+        "$PYTHON $WARDRIVE_DIR/map/map_server.py" \
+        "$WARDRIVE_DIR/map" \
+        "network.target wardrive_bot.service" \
+        "wait_dashboard"
+    echo "      Wardrive collector and map configured (map port 5001)."
+else
+    echo "      [WARN] wardrive/ sources missing; skipping Wardrive services."
+fi
+
 install_service "dashboard" \
     "NOEMA FULL Dashboard (Reticulum instance owner)" \
     "$PYTHON $INSTALL_DIR/dashboard/app.py" \
@@ -673,6 +716,9 @@ install_service "noema_lxmf_bridge" \
     "wait_dashboard"
 
 SERVICES_LIST="dashboard noema_lxmf_bridge"
+if [ -f /etc/systemd/system/wardrive_bot.service ] && [ -f /etc/systemd/system/wardrive_map.service ]; then
+    SERVICES_LIST="$SERVICES_LIST wardrive_bot wardrive_map"
+fi
 
 # --- Nomadnet node ---
 echo "[7b] Setting up Nomadnet node..."

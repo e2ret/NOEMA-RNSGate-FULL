@@ -1,0 +1,6 @@
+{
+  "announce_interval_secs": 30,
+  "announce_mode": "auto",
+  "send_mode": "packet",
+  "bot_hashes": []
+}

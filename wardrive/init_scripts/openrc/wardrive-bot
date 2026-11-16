@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+
+description="Wardrive LoRa Coverage Bot"
+
+command="/opt/reticulum/bin/python3"
+command_args="/opt/reticulum/bin/wardrive_bot.py"
+command_user="rns"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/wardrive_bot.log"
+error_log="/var/log/wardrive_bot.log"
+
+start_pre() {
+    checkpath --file --owner rns:rns --mode 0644 /var/log/wardrive_bot.log
+}
+
+depend() {
+    need rns
+    after rns
+}

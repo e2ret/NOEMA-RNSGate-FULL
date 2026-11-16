@@ -1,0 +1,14 @@
+{
+  "db_path": "/etc/reticulum/wardrive_bot.db",
+  "geo_cache_path": "/etc/reticulum/wardrive_geo_cache.json",
+  "discovery_dir": "/root/.reticulum/storage/discovery/interfaces",
+  "listen_on": "0.0.0.0",
+  "port": 5001,
+  "page_title": "NOEMA Wardrive Coverage Map",
+  "basemap_provider": "osm",
+  "overlay_enabled": false,
+  "initial_lat": null,
+  "initial_lon": null,
+  "initial_zoom": null,
+  "pinned_nodes": []
+}

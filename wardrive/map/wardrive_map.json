@@ -1,0 +1,86 @@
+{
+  "db_path":        "/etc/reticulum/wardrive_bot.db",
+  "geo_cache_path": "/etc/reticulum/wardrive_geo_cache.json",
+  "discovery_dir":  "/etc/reticulum/storage/discovery/interfaces",
+  "listen_on":     "0.0.0.0",
+  "port":          5000,
+  "page_title":    "Wardrive Coverage Map",
+
+  "_comment_basemap_provider": "Where the map background comes from. 'osm' = OpenStreetMap raster tiles, works out of the box, light use only. 'remote' = another install's vector basemap, fetched directly by the browser (needs basemap_url). 'raster' = any XYZ raster server (needs raster_tiles). 'local' = a tileset on this machine (needs tileset_dir); this is also what a config without the key gets. An unknown value stops the server at startup.",
+  "basemap_provider": "osm",
+
+  "_comment_basemap_url": "Only read when basemap_provider is 'remote': the address of the install lending its basemap, e.g. https://map.rns.moscow. That install must have public_url set. Ignored for every other provider.",
+  "basemap_url": "",
+
+  "_comment_raster_tiles": "Only read when basemap_provider is 'raster'. url is an XYZ template with {z}/{x}/{y} (no {s} subdomains); attribution is HTML shown in the map corner; max_zoom is the deepest zoom the server has; tile_size is the pixel size it renders (256 for classic raster servers); label names the basemap. The values below are the ones the 'osm' provider uses.",
+  "raster_tiles": {
+    "label":       "OpenStreetMap",
+    "url":         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
+    "max_zoom":    19,
+    "tile_size":   256
+  },
+
+  "_comment_public_url": "Only for an install with a local tileset. Set to the address browsers reach this map at, e.g. https://map.example.org, to let other installs use it as their 'remote' provider: styles are then served with absolute URLs and /basemap/ sends CORS headers. If nginx serves /tiles /fonts /sprite /static it must send the same headers (map/nginx/wardrive-map-cors.conf). Empty = lending off.",
+  "public_url": "",
+
+  "_comment_overlay": "Community overlay: invited contributors upload exported signal reports (GeoJSON/CSV/GPX) from the map page; they are validated, and published to a separate layer if they pass. Off by default. Needs overlay_validate.py, overlay_store.py (and overlay_admin.py for the operator) beside map_server.py, and the nginx limits in map/nginx/wardrive-map-upload.conf. overlay_db_path is its own SQLite file, never the bot's; omit it to put wardrive_overlay.db beside db_path. overlay_max_upload_bytes caps one upload (keep nginx client_max_body_size at or above it). 'overlay' tunes limits and is optional: max_rows_day / max_batches_day (per contributor, rolling 24 h), max_invites (each contributor may hand out), invite_ttl_days, max_total_rows (whole overlay), and the validator's max_rows, max_age_days, max_span_days, max_accuracy_m, max_speed_ms, max_reject_frac. Hand out access with overlay_admin.py invite; take data down with overlay_admin.py ban / remove-batch.",
+  "overlay_enabled": false,
+  "overlay_db_path": "/etc/reticulum/wardrive_overlay.db",
+  "overlay_max_upload_bytes": 4194304,
+  "overlay": {
+    "max_rows_day":    20000,
+    "max_batches_day": 10,
+    "max_invites":     3
+  },
+
+  "_comment_overlay_admin": "Read-only web view of the overlay for the operator (overlay_admin_web.py, a separate service, wardrive-overlay-admin). Always listens on 127.0.0.1 only. public_hosts are the Host names nginx forwards to it; setting any turns on the requirement that nginx supplies X-Remote-User, so it refuses requests nginx did not authenticate. base_path is the URL prefix it is published under. nginx and Authelia setup: map/nginx/wardrive-map-admin.conf. Leave the block out to use it only through an SSH tunnel.",
+  "overlay_admin": {
+    "port":         8850,
+    "base_path":    "/overlay-admin",
+    "public_hosts": ["map.example.org"]
+  },
+
+  "_comment_halow_mqtt": "HaLow RNodes publish telemetry (name, position, frequency, firmware, packet counters) as JSON to an MQTT broker; the map subscribes and shows them as HaLow nodes. Needs the paho-mqtt package and halow_telemetry.py beside map_server.py. Leave the block out for no HaLow nodes. host/port: the broker. username plus password_file (a file holding just the password, readable by the map's user; preferred, since this config is usually world-readable) or password: a login that may read the topic. topic defaults to rnode-halow/telemetry. tls: true to connect over TLS. The latest report per node is kept in halow_cache_path (default: beside db_path) so nodes survive a restart.",
+  "halow_mqtt": {
+    "host":          "127.0.0.1",
+    "port":          1883,
+    "username":      "map",
+    "password_file": "/etc/reticulum/halow_mqtt.pass"
+  },
+
+  "initial_lat":   55.7558,
+  "initial_lon":   37.6173,
+  "initial_zoom":  10,
+  "default_country_filter": "Russia",
+  "pinned_nodes": [
+    {
+      "name":      "Home RNode",
+      "type":      "RNode",
+      "lat":       55.7558,
+      "lon":       37.6173,
+      "height":    18,
+      "frequency": 868825000,
+      "bandwidth": 125000,
+      "sf":        10,
+      "cr":        7
+    },
+    {
+      "name":   "Home Backbone",
+      "type":   "Backbone",
+      "lat":    55.7558,
+      "lon":    37.6173,
+      "height": 18,
+      "remote": "203.0.113.1",
+      "port":   4242
+    },
+    {
+      "name":   "Home I2P",
+      "type":   "I2P",
+      "lat":    55.7558,
+      "lon":    37.6173,
+      "height": 18,
+      "b32":    "exampleabcdefghijklmnopqrstuvwxyz234567.b32.i2p"
+    }
+  ]
+}

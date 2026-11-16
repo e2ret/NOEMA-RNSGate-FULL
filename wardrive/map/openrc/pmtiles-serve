@@ -1,0 +1,23 @@
+#!/sbin/openrc-run
+
+description="PMTiles per-tile HTTP server for the map.rns.moscow basemap"
+
+# Serves basemap.pmtiles as /basemap/{z}/{x}/{y}.mvt on loopback only; nginx publishes it at /tiles/z/.
+# It exists because MapLibre's offline downloader cannot read pmtiles:// sources, only plain tile URLs.
+# Runs as the same user as the system nginx (see "user nginx nginx;" in /etc/nginx/nginx.conf).
+command="/usr/local/bin/pmtiles"
+command_args="serve /mnt/sdb1/tilesets/static/tiles --interface 127.0.0.1 --port 8841 --cache-size 128"
+command_user="nginx:nginx"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/pmtiles-serve.log"
+error_log="/var/log/pmtiles-serve.log"
+
+start_pre() {
+    checkpath --file --owner nginx:nginx --mode 0644 /var/log/pmtiles-serve.log
+}
+
+depend() {
+    need localmount
+    after net
+}

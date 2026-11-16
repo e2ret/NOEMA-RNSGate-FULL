@@ -1,0 +1,15 @@
+[Unit]
+Description=Wardrive LoRa Coverage Bot
+After=rns.service
+Requires=rns.service
+
+[Service]
+Type=simple
+User=rns
+ExecStart=/opt/reticulum/bin/python3 /opt/reticulum/bin/wardrive_bot.py
+Restart=on-failure
+StandardOutput=append:/var/log/wardrive_bot.log
+StandardError=append:/var/log/wardrive_bot.log
+
+[Install]
+WantedBy=multi-user.target

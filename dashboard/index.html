@@ -645,6 +645,15 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 .dg-i.err{border-color:var(--rd)}
 .dg-h{font-size:12px;font-weight:700;color:var(--tx);word-break:break-word}
 .dg-a{font-size:11px;color:var(--mu);margin-top:3px;line-height:1.5}
+.git-update-badge{
+  display:none;align-items:center;gap:7px;align-self:flex-start;min-height:26px;
+  padding:0 9px;border:1px solid rgba(245,158,11,.48);border-radius:999px;
+  background:rgba(245,158,11,.12);color:#fbbf24;font:700 10px/1 var(--mono);
+  letter-spacing:.1em;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s
+}
+.git-update-badge:hover{background:rgba(245,158,11,.2);border-color:#f59e0b;box-shadow:0 0 14px rgba(245,158,11,.18)}
+.git-update-icon{font-size:12px;line-height:1}
+.git-update-count{min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#f59e0b;color:#111827;font-size:9px;line-height:16px;text-align:center;letter-spacing:0}
 </style>
 </head>
 <body>
@@ -652,7 +661,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 <div class="shell on-home">
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
-    <div class="logo" style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:28px;width:28px;object-fit:contain;border-radius:12px;border:1px solid var(--bd)"><b>NOEMA <span style="color:var(--teal)">RNSGATE</span> · FULL</b><span id="git-update-badge" onclick="if(confirm('Update NOEMA from GitHub and restart services?'))runCmd('noema_update')" style="display:none;background:var(--am);color:#ffffff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;cursor:pointer;letter-spacing:0.5px">⬆ UPDATE</span></div>
+    <div class="logo" style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:28px;width:28px;object-fit:contain;border-radius:12px;border:1px solid var(--bd)"><b>NOEMA <span style="color:var(--teal)">RNSGATE</span> · FULL</b></div>
+    <button type="button" id="git-update-badge" class="git-update-badge" onclick="if(confirm('Update NOEMA from GitHub and restart services?'))runCmd('noema_update')" title="Update NOEMA from GitHub" aria-label="Update NOEMA from GitHub"><span class="git-update-icon" aria-hidden="true">↑</span><span>UPDATE AVAILABLE</span><span class="git-update-count" id="git-update-count">0</span></button>
     <div class="sb-meta">
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="uptime-lbl">—</div>
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="rns-ver-lbl">—</div>
@@ -664,6 +674,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
     <div class="sb-sec" data-i18n="sec_monitoring">Monitoring</div>
     <div class="hub-pill active" onclick="nav('home',this)"><div class="hub-pill-ic" style="color:var(--teal)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><span data-i18n="nav_services">Services</span></div>
     <div class="hub-pill" onclick="nav('nodes',this);loadNodesPanel();"><div class="hub-pill-ic" style="color:var(--indigo)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 12h4m2-5.3L9.5 11M13 17.3L9.5 13"/></svg></div><span data-i18n="nav_nodes">Nodes</span></div>
+    <div class="hub-pill" onclick="nav('wardrive',this)" title="Wardrive coverage map" data-i18n-title="nav_wardrive"><div class="hub-pill-ic" style="color:var(--am)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15m6-12v15"/></svg></div><span data-i18n="nav_wardrive">Wardrive map</span></div>
     <div class="hub-pill" onclick="nav('logs',this)"><div class="hub-pill-ic" style="color:var(--slate)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><span data-i18n="nav_logs">Logs</span></div>
     <div class="sb-sec" data-i18n="sec_network">Network</div>
     <div class="hub-pill" onclick="nav('rnode',this)"><div class="hub-pill-ic" style="color:var(--am)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></div><span data-i18n="nav_rnode">RNode</span></div>
@@ -1039,6 +1050,53 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
         var _rbHost = "http://"+window.location.hostname+":5000";
         // the frame is loaded only while the rBrowser panel is open (see nav()): a hidden page kept running and stalled this one every 2 s
         document.getElementById("rbrowser-link").href = _rbHost;
+      </script>
+    </div>
+
+    <!-- WARDRIVE COVERAGE MAP -->
+    <div class="panel" id="panel-wardrive">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;flex-shrink:0;border-bottom:1px solid var(--bd);flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:var(--tx)" data-i18n="nav_wardrive">Wardrive map</span>
+        <span style="font-size:11px;color:var(--mu)">· <span data-i18n="wardrive_map_hint">coverage points received by this gateway</span></span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:7px;min-width:0;flex:1;justify-content:flex-end">
+          <span style="font-size:11px;color:var(--mu);white-space:nowrap" data-i18n="wardrive_beacon_label">Beacon hash</span>
+          <input id="wardrive-beacon" type="text" spellcheck="false" autocomplete="off"
+            placeholder="paste from the phone"
+            data-i18n-placeholder="wardrive_beacon_ph"
+            style="flex:1;min-width:140px;max-width:360px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font:11px var(--mono);padding:5px 8px">
+          <button type="button" class="sys-btn" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="applyWardriveBeacon()" data-i18n="wardrive_beacon_apply">Show</button>
+          <button type="button" class="sys-btn" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="clearWardriveBeacon()" data-i18n="wardrive_beacon_clear">All</button>
+        </div>
+      </div>
+      <iframe id="wardrive-frame" title="Wardrive coverage map" style="width:100%;flex:1;min-height:300px;border:0;background:var(--bg)"></iframe>
+      <script>
+        var _wardriveHost = "http://"+window.location.hostname+":5001";
+        var _WD_BEACON_KEY = "noema-wardrive-beacon";
+        function _normBeaconHash(h){ return String(h||"").replace(/[^0-9a-fA-F]/g,"").toLowerCase(); }
+        function wardriveMapUrl(){
+          var h = _normBeaconHash(localStorage.getItem(_WD_BEACON_KEY)||"");
+          return h ? (_wardriveHost+"/?sender="+encodeURIComponent(h)) : _wardriveHost;
+        }
+        function _fillWardriveBeaconInput(){
+          var el = document.getElementById("wardrive-beacon");
+          if(el) el.value = _normBeaconHash(localStorage.getItem(_WD_BEACON_KEY)||"");
+        }
+        function applyWardriveBeacon(){
+          var el = document.getElementById("wardrive-beacon");
+          var h = _normBeaconHash(el && el.value);
+          if(h) localStorage.setItem(_WD_BEACON_KEY, h); else localStorage.removeItem(_WD_BEACON_KEY);
+          if(el) el.value = h;
+          var frame = document.getElementById("wardrive-frame");
+          if(frame) frame.src = wardriveMapUrl();
+        }
+        function clearWardriveBeacon(){
+          localStorage.removeItem(_WD_BEACON_KEY);
+          var el = document.getElementById("wardrive-beacon");
+          if(el) el.value = "";
+          var frame = document.getElementById("wardrive-frame");
+          if(frame) frame.src = _wardriveHost;
+        }
+        _fillWardriveBeaconInput();
       </script>
     </div>
 
@@ -1905,7 +1963,9 @@ function nav(id,el){
   const main = document.querySelector(".main");
   const _rbf = document.getElementById("rbrowser-frame");
   if(_rbf){ if(id==="rbrowser"){ if(!_rbf.getAttribute("src") || _rbf.getAttribute("src")==="about:blank") _rbf.src = _rbHost; } else if(_rbf.getAttribute("src") && _rbf.getAttribute("src")!=="about:blank") _rbf.src = "about:blank"; }
-  if(id==="rbrowser"){ main.style.overflow="hidden"; main.style.padding="0"; }
+  const _wdf = document.getElementById("wardrive-frame");
+  if(_wdf){ if(id==="wardrive"){ _fillWardriveBeaconInput(); _wdf.src = wardriveMapUrl(); } else if(_wdf.getAttribute("src") && _wdf.getAttribute("src")!=="about:blank") _wdf.src = "about:blank"; }
+  if(id==="rbrowser" || id==="wardrive"){ main.style.overflow="hidden"; main.style.padding="0"; }
   else { main.style.overflow=""; main.style.padding=""; }
   // Закрываем PTY SSE если уходим с Logs
   if(id !== "logs" && _ptySSE){ _ptySSE.close(); _ptySSE = null; }
@@ -1952,7 +2012,7 @@ const I18N = {
     sec_monitoring: "Monitoring", sec_network: "Network", sec_messaging: "Messaging", sec_system: "System",
     nav_services: "Services", nav_configs: "Configs", nav_addresses: "Addresses",                                  
     nav_monitor: "Monitor", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Nodes", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
-    nav_chat: "Chat", nav_logs: "Logs", nav_system: "System",
+    nav_chat: "Chat", nav_logs: "Logs", nav_system: "System", nav_wardrive: "Wardrive map", wardrive_map_hint: "coverage points received by this gateway", wardrive_beacon_label: "Beacon hash", wardrive_beacon_ph: "paste from the phone", wardrive_beacon_apply: "Show", wardrive_beacon_clear: "All",
     nav_group_network: "Network", nav_group_monitoring: "Monitoring",
     nav_group_apps: "Apps", nav_group_settings: "Settings",
     sec_quick_commands: "Quick Commands", sec_maintenance: "Maintenance", sec_system: "System",
@@ -2123,7 +2183,7 @@ const I18N = {
     nav_monitor: "Монитор", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Узлы", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
     nav_group_network: "Сеть", nav_group_monitoring: "Мониторинг",
     nav_group_apps: "Приложения", nav_group_settings: "Настройка",
-    nav_chat: "Чат", nav_logs: "Логи", nav_system: "Система",
+    nav_chat: "Чат", nav_logs: "Логи", nav_system: "Система", nav_wardrive: "Карта wardrive", wardrive_map_hint: "точки покрытия, принятые этим шлюзом", wardrive_beacon_label: "Адрес маяка", wardrive_beacon_ph: "вставьте с телефона", wardrive_beacon_apply: "Показать", wardrive_beacon_clear: "Все",
     sec_quick_commands: "Быстрые команды", sec_maintenance: "Обслуживание", sec_system: "Система",
     sec_backup_restore: "Резервная копия", sec_versions: "Версии", sec_chat_settings: "Настройки чата",
     txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в Sideband / Crosstalk как имя вашего шлюза",
@@ -2306,7 +2366,18 @@ function applyLang(){
     const key = el.getAttribute("data-i18n-html");
     if(dict[key]) el.innerHTML = dict[key];
   });
+  syncWardriveLanguage();
 }
+
+function syncWardriveLanguage(){
+  const frame = document.getElementById("wardrive-frame");
+  if(!frame || !frame.contentWindow) return;
+  const lang = localStorage.getItem("noema-lang") || "en";
+  frame.contentWindow.postMessage({type:"lang", lang}, "*");
+}
+
+const wardriveFrame = document.getElementById("wardrive-frame");
+if(wardriveFrame) wardriveFrame.addEventListener("load", syncWardriveLanguage);
 
 function toggleLang(){ setTimeout(_syncPageTitle,0); setTimeout(()=>{try{diagRender()}catch(e){} try{profRender()}catch(e){}},0); setTimeout(()=>{try{netmapRelang()}catch(e){}},0);
   const cur = localStorage.getItem("noema-lang") || "en";
@@ -2550,7 +2621,12 @@ async function checkGitUpdate(){
     const d = await fetch(API+"/api/git_status").then(r=>r.json());
     const badge = document.getElementById("git-update-badge");
     if(!badge) return;
-    if(d.update_available){ badge.style.display="inline"; badge.title=d.behind+" commit(s) behind"; }
+    if(d.update_available){
+      badge.style.display="inline-flex";
+      badge.title=d.behind+" commit(s) behind";
+      const count = document.getElementById("git-update-count");
+      if(count) count.textContent = d.behind;
+    }
     else { badge.style.display="none"; }
   }catch(e){}
 }

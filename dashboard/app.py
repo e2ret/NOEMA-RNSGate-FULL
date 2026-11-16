@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-__version__ = "1.1.16"
+__version__ = "1.1.18"
 import subprocess, threading, os
 from collections import deque
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory
 
 app = Flask(__name__, static_folder=".")
 
@@ -227,7 +227,7 @@ def _find_rns_bin(name):
     return found or name
 _RNS_BIN = os.path.dirname(_find_rns_bin("rnstatus"))
 
-SERVICES = ["dashboard", "noema_lxmf_bridge", "i2pd", "nomadnet", "rbrowser"]
+SERVICES = ["dashboard", "noema_lxmf_bridge", "i2pd", "nomadnet", "rbrowser", "wardrive_bot", "wardrive_map"]
 
 NOMADNET_PAGE = f"{_HOME}/.nomadnetwork/storage/pages/index.mu"
 NOMADNET_PAGES_DIR = f"{_HOME}/.nomadnetwork/storage/pages"
@@ -3319,7 +3319,7 @@ def run_command():
     allowed = {
         "find_ports":      "ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null | grep . || echo 'не найдено'",
         "rnstatus":        f"{_RNS_BIN}/rnstatus",
-        "restart_rnsd":    "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet && sleep 2 && systemctl is-active dashboard noema_lxmf_bridge nomadnet",
+        "restart_rnsd":    "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet wardrive_bot wardrive_map && sleep 2 && systemctl is-active dashboard noema_lxmf_bridge nomadnet wardrive_bot wardrive_map",
         "restart_lxmf":    "sudo systemctl restart noema_lxmf_bridge && sleep 1 && systemctl is-active noema_lxmf_bridge",
         "restart_dash":    None,  # handled separately
         "free_mem":        "LC_ALL=C free -h",
@@ -3329,8 +3329,8 @@ def run_command():
         "noema_update":    (
             f"cd {_HOME}/NOEMA-RNSGate-FULL && git fetch origin 2>&1 && git checkout dashboard/index.html dashboard/app.py lxmf-tools/noema_lxmf_bridge.py 2>&1; git pull 2>&1 && "
             f"{_HOME}/NOEMA-RNSGate-FULL/.venv/bin/pip install --upgrade rns lxmf lxmfy flask paho-mqtt nomadnet -q 2>&1 && "
-            "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet && "
-            "sleep 3 && systemctl is-active dashboard noema_lxmf_bridge nomadnet"
+            "sudo systemctl restart dashboard noema_lxmf_bridge nomadnet wardrive_bot wardrive_map && "
+            "sleep 3 && systemctl is-active dashboard noema_lxmf_bridge nomadnet wardrive_bot wardrive_map"
         ),
         "log_cleanup":     (
             "journalctl --vacuum-size=50M 2>&1 && "
@@ -3731,6 +3731,7 @@ def script_cron_set(name):
 
 @app.route("/api/version")
 def version(): return jsonify({"version": __version__})
+
 @app.route("/api/rns_config_parsed")
 def rns_config_parsed():
     import configparser, re
@@ -3950,7 +3951,7 @@ def reset_identity():
 
 @app.route("/api/cron/rnsd", methods=["GET", "POST"])
 def cron_rnsd():
-    cron_line = "0 4 * * * systemctl restart dashboard noema_lxmf_bridge nomadnet"
+    cron_line = "0 4 * * * systemctl restart dashboard noema_lxmf_bridge nomadnet wardrive_bot wardrive_map"
     def get_crontab():
         try:
             r = subprocess.run(["crontab", "-l"], capture_output=True, text=True)

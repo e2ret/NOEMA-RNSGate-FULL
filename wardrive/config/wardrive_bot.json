@@ -1,0 +1,13 @@
+{
+  "display_name": "NOEMA Wardrive",
+  "db_path": "/etc/reticulum/wardrive_bot.db",
+  "announce_interval_secs": 3600,
+  "relay_hash": null,
+  "initial_lat": 55.7558,
+  "initial_lon": 37.6173,
+  "nodes_radius_km": 50,
+  "welcome_message": "NOEMA Wardrive collector. Sends GPS beacons from Sideband wardrive plugin to this gateway.",
+  "icon_name": "radio-tower",
+  "icon_fg_color": "FFFFFF",
+  "icon_bg_color": "F59E0B"
+}

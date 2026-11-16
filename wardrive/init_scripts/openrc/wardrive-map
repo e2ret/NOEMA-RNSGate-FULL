@@ -1,0 +1,21 @@
+#!/sbin/openrc-run
+
+description="Wardrive Coverage Map Server"
+
+command="/opt/reticulum/bin/python3"
+command_args="/opt/reticulum/bin/map_server.py"
+command_user="rns"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/wardrive_map.log"
+error_log="/var/log/wardrive_map.log"
+
+start_pre() {
+    checkpath --file --owner rns:rns --mode 0644 /var/log/wardrive_map.log
+}
+
+depend() {
+    need rns
+    want wardrive-bot
+    after wardrive-bot
+}

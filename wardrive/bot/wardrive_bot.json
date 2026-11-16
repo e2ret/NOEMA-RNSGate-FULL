@@ -1,0 +1,13 @@
+{
+  "display_name":     "Bot [wardrive]",
+  "db_path":          "/etc/reticulum/wardrive_bot.db",
+  "announce_interval_secs": 3600,
+  "relay_hash":       null,
+  "initial_lat":      55.7558,
+  "initial_lon":      37.6173,
+  "nodes_radius_km":  50,
+  "welcome_message":  "👋 Bot [wardrive] here.\nI record LoRa RNode coverage from announces and direct packets.\n\nAvailable commands:\n  ping    — pings the bot, provides RF metrics\n  status  — point count and last seen timestamp\n  nodes   — discoverable nodes within 50km\n\n",
+  "icon_name":        "radio-tower",
+  "icon_fg_color":    "FFFFFF",
+  "icon_bg_color":    "4CAF50"
+}

@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+description="Wardrive community overlay admin page"
+
+# Binds 127.0.0.1:8850 only; nginx publishes it at /overlay-admin behind Authelia
+# (map/nginx/wardrive-map-admin.conf). Public host name and URL prefix come from
+# "overlay_admin" in /etc/reticulum/wardrive_map.json.
+# Runs as the same user as wardrive-map: it reads the overlay database and, unless started with
+# --read-only, makes changes through it (WAL mode).
+command="/opt/reticulum/bin/python3"
+command_args="/opt/reticulum/bin/overlay_admin_web.py"
+command_user="rns"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/wardrive_overlay_admin.log"
+error_log="/var/log/wardrive_overlay_admin.log"
+
+start_pre() {
+    checkpath --file --owner rns:rns --mode 0644 /var/log/wardrive_overlay_admin.log
+}
+
+depend() {
+    need localmount
+    after wardrive-map
+}
