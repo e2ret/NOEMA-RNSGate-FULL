@@ -49,7 +49,7 @@ DISCOVERY_REFRESH_SECS = _cfg.get("discovery_refresh_secs", 15)  # background rn
 # no reason to be reachable off-box. Binding 0.0.0.0 exposed a second, plaintext path to
 # the same app that bypassed TLS and the /tiles /fonts /sprite /static aliases.
 HOST          = _cfg.get("listen_on",     "127.0.0.1")
-PORT          = _cfg.get("port",          5000)
+PORT          = _cfg.get("port",          5001)
 SERVER_THREADS = _cfg.get("server_threads", 8)
 PAGE_TITLE    = _cfg.get("page_title",    "Wardrive Coverage Map")
 INITIAL_LAT   = _cfg.get("initial_lat",   None)

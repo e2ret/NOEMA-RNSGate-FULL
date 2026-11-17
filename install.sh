@@ -1,5 +1,5 @@
 #!/bin/bash
-# NOEMA RNSGate FULL install script
+# NOEMA RNSGate FULL install script — 1.1.19
 # Supports: Debian / Ubuntu / Armbian
 
 set -e
@@ -15,7 +15,7 @@ CURRENT_USER="${SUDO_USER:-$USER}"
 CURRENT_HOME=$(eval echo "~$CURRENT_USER")
 
 echo "========================================"
-echo "  NOEMA RNSGate FULL Installer"
+echo "  NOEMA RNSGate FULL 1.1.19"
 echo "========================================"
 echo ""
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.18"
+__version__ = "1.1.19"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_file, send_from_directory
@@ -522,6 +522,22 @@ def lxmf_api():
     since = int(request.args.get("since", 0))
     msgs = list(lxmf_log)
     return jsonify({"msgs": msgs[since:], "total": len(msgs)})
+
+@app.route("/api/wardrive/map")
+def wardrive_map_info():
+    """Port/host for the embedded Wardrive map iframe (from wardrive_map.json)."""
+    import json as _wd_json
+    port = 5001
+    host = "0.0.0.0"
+    path = "/etc/reticulum/wardrive_map.json"
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            cfg = _wd_json.load(f)
+        port = int(cfg.get("port", port))
+        host = str(cfg.get("listen_on", host) or host)
+    except Exception:
+        pass
+    return jsonify({"port": port, "listen_on": host, "url_path": "/"})
 
 @app.route("/api/services")
 def svc_list():
@@ -3271,6 +3287,181 @@ def _tg_send(text):
         _ur.urlopen(url, data, timeout=8)
     except Exception as e:
         print(f"[TG] Error: {e}")
+
+# --- Support / diagnostic reports -----------------------------------------
+# Builds a sanitized zip (no identities, no MQTT/Telegram secrets) for local
+# download. The operator shares it however they like — no remote upload.
+_SUPPORT_DIR = "/tmp/noema-support-reports"
+_SUPPORT_UNITS = [
+    "dashboard", "noema_lxmf_bridge", "nomadnet", "rbrowser",
+    "wardrive_bot", "wardrive_map", "i2pd",
+]
+
+def _support_redact_text(text: str) -> str:
+    import re as _re
+    if not text:
+        return ""
+    # key = value / key: value style secrets
+    patterns = [
+        (_re.compile(r'(?i)(bot_token|token|password|passwd|secret|api_key|apikey)\s*[=:]\s*\S+'),
+         r'\1=***'),
+        (_re.compile(r'(?i)("(?:bot_token|token|password|secret|api_key)"\s*:\s*")[^"]*(")'),
+         r'\1***\2'),
+        (_re.compile(r'\d{6,12}:[A-Za-z0-9_-]{20,}'), '***TELEGRAM_TOKEN***'),
+    ]
+    out = text
+    for rx, repl in patterns:
+        out = rx.sub(repl, out)
+    return out
+
+def _support_run(cmd: str, timeout: int = 20) -> str:
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        body = (r.stdout or "") + (("\n" + r.stderr) if r.stderr else "")
+        return _support_redact_text(body[-200_000:])
+    except Exception as e:
+        return f"[error running `{cmd}`: {e}]\n"
+
+def _support_build_report(note: str = "", contact: str = ""):
+    """Return (zip_bytes, meta_dict)."""
+    import io, json as _j, platform, time as _t, zipfile
+    from datetime import datetime, timezone
+
+    os.makedirs(_SUPPORT_DIR, exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    report_id = f"noema-report-{ts}"
+
+    files = {}
+
+    # Manifest / operator note (always first thing the maintainer reads)
+    git_out = _support_run(
+        f"cd {_HOME}/NOEMA-RNSGate-FULL && git rev-parse --short HEAD 2>/dev/null; "
+        f"git status -sb 2>/dev/null | head -5"
+    )
+    svc_lines = []
+    for u in _SUPPORT_UNITS:
+        st, _ = sh(f"systemctl is-active {u} 2>/dev/null || echo missing")
+        en, _ = sh(f"systemctl is-enabled {u} 2>/dev/null || echo n/a")
+        svc_lines.append(f"{u:20s} active={st.strip():12s} enabled={en.strip()}")
+
+    failed = [ln.split()[0] for ln in svc_lines if "active=failed" in ln or "active=inactive" in ln]
+    manifest = {
+        "report_id": report_id,
+        "created_utc": ts,
+        "noema_version": __version__,
+        "hostname": platform.node(),
+        "platform": platform.platform(),
+        "python": platform.python_version(),
+        "note": (note or "")[:4000],
+        "contact": (contact or "")[:500],
+        "failed_or_inactive_services": failed,
+        "services": svc_lines,
+        "git": git_out.strip(),
+    }
+    files["00-manifest.json"] = _j.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+    files["00-NOTE.txt"] = (
+        f"NOEMA support report {report_id}\n"
+        f"Version: {__version__}\n"
+        f"Host: {platform.node()} / {platform.platform()}\n"
+        f"Contact: {(contact or '-').strip()}\n\n"
+        f"Operator note:\n{(note or '(none)').strip()}\n\n"
+        f"Services:\n" + "\n".join(svc_lines) + "\n"
+    )
+
+    files["01-systemctl-status.txt"] = _support_run(
+        "systemctl status " + " ".join(_SUPPORT_UNITS) + " --no-pager -l 2>&1 | head -c 120000"
+    )
+    for u in _SUPPORT_UNITS:
+        files[f"journal/{u}.log"] = _support_run(
+            f"journalctl -u {u} -n 400 --no-pager -o short-iso 2>&1"
+        )
+    files["02-rnstatus.txt"] = _support_run(f"{_RNS_BIN}/rnstatus 2>&1 | head -c 80000")
+    files["03-ports.txt"] = _support_run(
+        "ss -tlnp 2>/dev/null | grep -E ':(5000|5001|5002|8081|8082|4242|37428|37429)\\s' || "
+        "ss -tlnp 2>/dev/null | head -80"
+    )
+    files["04-memory-disk.txt"] = _support_run("free -h; echo; df -h /; echo; uptime")
+    files["05-versions.txt"] = _support_run(
+        f"echo NOEMA={__version__}; "
+        f"{_RNS_BIN}/python3 -c 'import RNS,lxmf; print(\"rns\",RNS.__version__); print(\"lxmf\",lxmf.__version__)' 2>&1; "
+        f"{_RNS_BIN}/python3 -c 'from nomadnet._version import __version__ as v; print(\"nomadnet\",v)' 2>&1; "
+        f"python3 --version 2>&1"
+    )
+    files["06-git.txt"] = git_out
+
+    # Redacted configs (no identity files)
+    for label, path in (
+        ("configs/reticulum.cfg.redacted", f"{_HOME}/.reticulum/config"),
+        ("configs/bridge.cfg.redacted", "/etc/noema/bridge.cfg"),
+        ("configs/wardrive_map.json", "/etc/reticulum/wardrive_map.json"),
+        ("configs/wardrive_bot.json", "/etc/reticulum/wardrive_bot.json"),
+        ("configs/nomadnet.cfg.redacted", f"{_HOME}/.nomadnetwork/config"),
+    ):
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                files[label] = _support_redact_text(f.read()[:100_000])
+        except Exception as e:
+            files[label] = f"[missing: {e}]\n"
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for name, content in files.items():
+            zf.writestr(name, content if isinstance(content, str) else content)
+    data = buf.getvalue()
+
+    # Keep a copy briefly so the download link works after Collect
+    out_path = os.path.join(_SUPPORT_DIR, f"{report_id}.zip")
+    try:
+        with open(out_path, "wb") as f:
+            f.write(data)
+        now = _t.time()
+        for fn in os.listdir(_SUPPORT_DIR):
+            fp = os.path.join(_SUPPORT_DIR, fn)
+            try:
+                if os.path.isfile(fp) and now - os.path.getmtime(fp) > 86400:
+                    os.remove(fp)
+            except OSError:
+                pass
+    except OSError:
+        out_path = None
+
+    meta = {
+        "ok": True,
+        "report_id": report_id,
+        "size": len(data),
+        "failed_services": failed,
+        "download_url": f"/api/support/report/{report_id}",
+        "path": out_path,
+    }
+    return data, meta
+
+@app.route("/api/support/report", methods=["POST"])
+def support_report_create():
+    data = request.get_json(silent=True) or {}
+    note = str(data.get("note") or data.get("description") or "")[:4000]
+    contact = str(data.get("contact") or "")[:500]
+    try:
+        _zip_bytes, meta = _support_build_report(note=note, contact=contact)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify(meta)
+
+@app.route("/api/support/report/<report_id>")
+def support_report_download(report_id):
+    import re as _re
+    if not _re.fullmatch(r"noema-report-\d{8}T\d{6}Z", report_id or ""):
+        return jsonify({"error": "bad id"}), 400
+    path = os.path.join(_SUPPORT_DIR, f"{report_id}.zip")
+    if not os.path.isfile(path):
+        zip_bytes, meta = _support_build_report()
+        path = meta.get("path") or path
+        if not path or not os.path.isfile(path):
+            buf = __import__("io").BytesIO(zip_bytes)
+            buf.seek(0)
+            return send_file(buf, mimetype="application/zip",
+                             as_attachment=True, download_name=f"{report_id}.zip")
+    return send_file(path, mimetype="application/zip",
+                     as_attachment=True, download_name=f"{report_id}.zip")
 
 @app.route("/api/telegram/settings", methods=["GET","POST"])
 def telegram_settings():

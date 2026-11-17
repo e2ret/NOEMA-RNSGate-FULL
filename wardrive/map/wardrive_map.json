@@ -3,7 +3,7 @@
   "geo_cache_path": "/etc/reticulum/wardrive_geo_cache.json",
   "discovery_dir":  "/etc/reticulum/storage/discovery/interfaces",
   "listen_on":     "0.0.0.0",
-  "port":          5000,
+  "port":          5001,
   "page_title":    "Wardrive Coverage Map",
 
   "_comment_basemap_provider": "Where the map background comes from. 'osm' = OpenStreetMap raster tiles, works out of the box, light use only. 'remote' = another install's vector basemap, fetched directly by the browser (needs basemap_url). 'raster' = any XYZ raster server (needs raster_tiles). 'local' = a tileset on this machine (needs tileset_dir); this is also what a config without the key gets. An unknown value stops the server at startup.",

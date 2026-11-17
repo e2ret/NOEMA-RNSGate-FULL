@@ -1070,6 +1070,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
       </div>
       <iframe id="wardrive-frame" title="Wardrive coverage map" style="width:100%;flex:1;min-height:300px;border:0;background:var(--bg)"></iframe>
       <script>
+        // Default 5001; overwritten from /etc/reticulum/wardrive_map.json via API so a
+        // manual port change (e.g. 8082 when 5001 is taken) still drives the iframe.
         var _wardriveHost = "http://"+window.location.hostname+":5001";
         var _WD_BEACON_KEY = "noema-wardrive-beacon";
         function _normBeaconHash(h){ return String(h||"").replace(/[^0-9a-fA-F]/g,"").toLowerCase(); }
@@ -1096,7 +1098,14 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
           var frame = document.getElementById("wardrive-frame");
           if(frame) frame.src = _wardriveHost;
         }
+        function _refreshWardriveHost(){
+          return fetch((typeof API!=="undefined"?API:"")+"/api/wardrive/map").then(function(r){ return r.json(); }).then(function(d){
+            var p = parseInt(d && d.port, 10);
+            if(p > 0 && p < 65536) _wardriveHost = "http://"+window.location.hostname+":"+p;
+          }).catch(function(){});
+        }
         _fillWardriveBeaconInput();
+        _refreshWardriveHost();
       </script>
     </div>
 
@@ -1838,6 +1847,27 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
         <div style="font-size:10px;color:var(--mu);margin-top:8px" data-i18n="txt_chat_applies_note">Applies immediately, no restart needed.</div>
       </div>
 
+      <div class="section-lbl" data-i18n="sec_support">Support / error report</div>
+      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:20px">
+        <div style="font-size:12px;color:var(--mu);line-height:1.45;margin-bottom:10px" data-i18n="txt_support_hint">
+          Collects service logs, versions and redacted configs (no identities, no passwords) into a zip you can download and share yourself.
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_support_note">What went wrong</div>
+          <textarea id="support-note" rows="3" maxlength="4000" data-i18n-placeholder="ph_support_note" placeholder="e.g. wardrive_map failed after update, port 5001 busy…"
+            style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font:12px/1.4 var(--fn);padding:8px 10px;resize:vertical"></textarea>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_support_contact">Your contact (optional)</div>
+          <input id="support-contact" type="text" maxlength="500" data-i18n-placeholder="ph_support_contact" placeholder="Telegram @name or email"
+            style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font:12px var(--fn);padding:6px 10px">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="sys-btn teal" type="button" onclick="supportCollect()" data-i18n="btn_support_download">Collect &amp; download</button>
+        </div>
+        <div id="support-status" style="font-size:11px;color:var(--teal);margin-top:8px;display:none;white-space:pre-wrap"></div>
+      </div>
+
       <div class="section-lbl" data-i18n="sec_telegram">Telegram Notifications</div>
       <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:20px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -1964,7 +1994,12 @@ function nav(id,el){
   const _rbf = document.getElementById("rbrowser-frame");
   if(_rbf){ if(id==="rbrowser"){ if(!_rbf.getAttribute("src") || _rbf.getAttribute("src")==="about:blank") _rbf.src = _rbHost; } else if(_rbf.getAttribute("src") && _rbf.getAttribute("src")!=="about:blank") _rbf.src = "about:blank"; }
   const _wdf = document.getElementById("wardrive-frame");
-  if(_wdf){ if(id==="wardrive"){ _fillWardriveBeaconInput(); _wdf.src = wardriveMapUrl(); } else if(_wdf.getAttribute("src") && _wdf.getAttribute("src")!=="about:blank") _wdf.src = "about:blank"; }
+  if(_wdf){
+    if(id==="wardrive"){
+      _fillWardriveBeaconInput();
+      Promise.resolve(_refreshWardriveHost()).then(function(){ _wdf.src = wardriveMapUrl(); });
+    } else if(_wdf.getAttribute("src") && _wdf.getAttribute("src")!=="about:blank") _wdf.src = "about:blank";
+  }
   if(id==="rbrowser" || id==="wardrive"){ main.style.overflow="hidden"; main.style.padding="0"; }
   else { main.style.overflow=""; main.style.padding=""; }
   // Закрываем PTY SSE если уходим с Logs
@@ -2022,6 +2057,16 @@ const I18N = {
     sec_bridge_access: "Bridge Access Control", sec_chat_access: "Chat Access Control",
     sys_tab_ops: "Operations", sys_tab_access: "Chat & Access", sys_tab_globe: "Globe", sec_svc_addr: "Services & addresses",
     sec_telegram: "Telegram Notifications",
+    sec_support: "Support / error report",
+    txt_support_hint: "Collects service logs, versions and redacted configs (no identities, no passwords) into a zip you can download and share yourself.",
+    txt_support_note: "What went wrong",
+    txt_support_contact: "Your contact (optional)",
+    ph_support_note: "e.g. wardrive_map failed after update, port 5001 busy…",
+    ph_support_contact: "Telegram @name or email",
+    btn_support_download: "Collect & download",
+    txt_support_working: "Collecting logs…",
+    txt_support_done: "Report ready: {id} ({size} bytes)",
+    txt_support_failed_svcs: "Inactive/failed: {list}",
     col_type: "Type", col_hash: "Address", col_name: "Name", col_hops: "Hops", col_last_seen: "Last seen",
     col_region: "Region", col_tcp: "TCP", col_first_seen: "First seen",
     ph_nodes_search: "Search by name, hash or type…",
@@ -2191,6 +2236,16 @@ const I18N = {
     sec_bridge_access: "Доступ к мосту", sec_chat_access: "Доступ к чату",
     sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ", sys_tab_globe: "Глобус", sec_svc_addr: "Сервисы и адреса",
     sec_telegram: "Уведомления Telegram",
+    sec_support: "Поддержка / отчёт об ошибке",
+    txt_support_hint: "Собирает логи сервисов, версии и конфиги без секретов (без ключей и паролей) в zip — скачайте и передайте сами, как удобно.",
+    txt_support_note: "Что сломалось",
+    txt_support_contact: "Как с вами связаться (необязательно)",
+    ph_support_note: "например: wardrive_map не стартует после обновления, порт 5001 занят…",
+    ph_support_contact: "Telegram @имя или email",
+    btn_support_download: "Собрать и скачать",
+    txt_support_working: "Собираю логи…",
+    txt_support_done: "Отчёт готов: {id} ({size} байт)",
+    txt_support_failed_svcs: "Неактивны/упали: {list}",
     col_type: "Тип", col_hash: "Адрес", col_name: "Имя", col_hops: "Хопы", col_last_seen: "Последний раз",
     col_region: "Регион", col_tcp: "TCP", col_first_seen: "Первый раз",
     ph_nodes_search: "Поиск по имени, хешу или типу…",
@@ -3415,6 +3470,38 @@ async function loadTgSettings(){
   }catch(e){}
 }
 
+function _supportStatus(msg, ok){
+  const el = document.getElementById("support-status");
+  if(!el) return;
+  el.style.display = "block";
+  el.style.color = ok === false ? "var(--rd,#f87171)" : "var(--teal)";
+  el.textContent = msg;
+}
+async function supportCollect(){
+  const note = (document.getElementById("support-note")||{}).value || "";
+  const contact = (document.getElementById("support-contact")||{}).value || "";
+  _supportStatus(t("txt_support_working") || "Collecting logs…", true);
+  try{
+    const r = await fetch(API+"/api/support/report", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({note, contact})
+    });
+    const d = await r.json();
+    if(!d.ok && d.error){ _supportStatus(d.error, false); return; }
+    let msg = (t("txt_support_done")||"Report ready: {id} ({size} bytes)")
+      .replace("{id}", d.report_id||"?")
+      .replace("{size}", String(d.size||0));
+    if(d.failed_services && d.failed_services.length){
+      msg += "\n" + (t("txt_support_failed_svcs")||"Inactive/failed: {list}")
+        .replace("{list}", d.failed_services.join(", "));
+    }
+    _supportStatus(msg, true);
+    if(d.download_url) window.location.href = d.download_url;
+  }catch(e){
+    _supportStatus(String(e), false);
+  }
+}
 async function saveTgSettings(){
   const token  = document.getElementById("tg-token").value.trim();
   const chatid = document.getElementById("tg-chatid").value.trim();
@@ -6591,10 +6678,11 @@ const _SYS_TABS = [
   {id:'ops',     i18n:'sys_tab_ops',    label:'Operations'},
   {id:'versions',i18n:'sec_versions',   label:'Versions', sep:true},
   {id:'access',  i18n:'sys_tab_access', label:'Chat & Access'},
+  {id:'support', i18n:'sec_support',    label:'Support'},
   {id:'telegram',i18n:'sec_telegram',   label:'Telegram'},
   {id:'globe',   i18n:'sys_tab_globe',  label:'Globe'},
 ];
-const _SYS_SEC_MAP = {ops:'sec_system',versions:'sec_versions',access:'sec_chat_settings',telegram:'sec_telegram'};
+const _SYS_SEC_MAP = {ops:'sec_system',versions:'sec_versions',access:'sec_chat_settings',support:'sec_support',telegram:'sec_telegram'};
 // Merged sections mapping
 const _SYS_MERGE = {
   ops: ['sec_quick_commands','sec_maintenance','sec_system','sec_backup_restore'],
@@ -6606,7 +6694,7 @@ function _initSysPanel() {
   if(!panel || _sysPanelBuilt) { sysTab('ops'); return; }
   _sysPanelBuilt = true;
 
-  const _SYS_SEC_MAP_FULL = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',telegram:'sec_telegram',globe:'sec_globe'};
+  const _SYS_SEC_MAP_FULL = {quickcmds:'sec_quick_commands',maintenance:'sec_maintenance',system:'sec_system',backup:'sec_backup_restore',versions:'sec_versions',chat:'sec_chat_settings',bridge:'sec_bridge_access',chataccess:'sec_chat_access',support:'sec_support',telegram:'sec_telegram',globe:'sec_globe'};
 
   const allLabels = [...panel.querySelectorAll('.section-lbl[data-i18n]')];
   const sections = {};
