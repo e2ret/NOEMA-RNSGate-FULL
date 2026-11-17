@@ -658,6 +658,7 @@ WorkingDirectory=${WORKDIR}
 Environment=HOME=${CURRENT_HOME}
 Environment=LXMFY_LANDLOCK=0
 Environment=LXMF_TOOLS_DIR=${LXMF_TOOLS_DIR}
+Environment=PATH=${INSTALL_DIR}/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStartPre=-${PYTHON} /usr/local/bin/noema-fix-ratchets.py ${CURRENT_HOME}
 ${EXECSTARTPRE}
 ExecStart=${EXEC}

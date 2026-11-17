@@ -467,6 +467,8 @@ MAP_HTML = """<!DOCTYPE html>
     #tab-dot-backbone, #tab-dot-i2p, #tab-dot-halow, #tab-dot-ygg {
       display: none !important;
     }
+    /* Beacon heat map does not need the discovery-stale banner (rnstatus peers). */
+    #discovery-warning { display: none !important; }
     .topbar-tab {
       display: inline-flex; align-items: center; gap: 7px; min-height: 34px;
       padding: 6px 10px; background: var(--bg2); color: var(--text-dim);
@@ -838,7 +840,7 @@ body.light-theme #filter-apply:hover { background: #d5edf7; color: #104d6b; }
   </style>
 </head>
 <body>
-<div id="discovery-warning"><svg class="ico" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"/><path d="M12 16h.01"/></svg> <span data-i18n="warn.discovery">Discovery data unavailable — node list may be incomplete or out of date (rnsd not responding).</span></div>
+<div id="discovery-warning"><svg class="ico" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"/><path d="M12 16h.01"/></svg> <span data-i18n="warn.discovery">Discovery data unavailable — node list may be incomplete or out of date (rnstatus not available).</span></div>
 <div id="hover-tip">
   <div id="hover-bars" class="hover-row">
     <div class="vbar-col">
@@ -1287,7 +1289,7 @@ map.on('style.load', () => {
 const I18N = {
   en: {},   // English is the source text; an empty dict means "use what is in the DOM"
   ru: {
-    'warn.discovery':  'Данные обнаружения недоступны — список узлов может быть неполным или устаревшим (rnsd не отвечает).',
+    'warn.discovery':  'Данные обнаружения недоступны — список узлов может быть неполным или устаревшим (rnstatus недоступен).',
     'nodes.title':     'Список узлов',
     'title.nodes':     'Список узлов',
     'nodes.search':    'Поиск по имени…',
@@ -3939,11 +3941,36 @@ TYPE_LABELS = {
     "AutoInterface":     "Auto",
 }
 
+def _find_rnstatus():
+    """Resolve rnstatus: systemd units rarely have the project venv on PATH."""
+    import shutil
+    home = os.path.expanduser("~")
+    configured = _cfg.get("rnstatus_bin") or os.environ.get("RNSTATUS_BIN")
+    candidates = []
+    if configured:
+        candidates.append(os.path.expanduser(str(configured)))
+    candidates.extend([
+        os.path.join(home, "NOEMA-RNSGate-FULL", ".venv", "bin", "rnstatus"),
+        os.path.join(home, "MeshGate", ".venv", "bin", "rnstatus"),
+        os.path.join(home, "rns-env", "bin", "rnstatus"),
+        "/opt/reticulum/bin/rnstatus",
+    ])
+    which = shutil.which("rnstatus")
+    if which:
+        candidates.append(which)
+    for path in candidates:
+        if path and os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    return which or "rnstatus"
+
+_RNSTATUS_BIN = _find_rnstatus()
+print(f"[discovery] rnstatus binary: {_RNSTATUS_BIN}", flush=True)
+
 def _fetch_rnstatus_nodes():
     """Query rnstatus for discovered interfaces. Raises on failure/timeout."""
     nodes = []
     result = subprocess.run(
-        ["rnstatus", "-d", "-j"],
+        [_RNSTATUS_BIN, "-d", "-j"],
         capture_output=True, text=True, timeout=10
     )
     raw = json.loads(result.stdout)
