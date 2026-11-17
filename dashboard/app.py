@@ -2196,8 +2196,14 @@ def save_config(name):
 @app.route("/api/logs/<name>")
 def get_log(name):
     import re as _re
-    allowed = {"noema_lxmf_bridge": "noema_lxmf_bridge",
-               "nomadnet": "nomadnet", "dashboard": "dashboard", "rbrowser": "rbrowser"}
+    allowed = {
+        "noema_lxmf_bridge": "noema_lxmf_bridge",
+        "nomadnet": "nomadnet",
+        "dashboard": "dashboard",
+        "rbrowser": "rbrowser",
+        "wardrive_bot": "wardrive_bot",
+        "wardrive_map": "wardrive_map",
+    }
     if name not in allowed:
         return jsonify({"error": "unknown"}), 400
     out, _ = sh(f"journalctl -u {allowed[name]} -n 200 --no-pager -o cat")
