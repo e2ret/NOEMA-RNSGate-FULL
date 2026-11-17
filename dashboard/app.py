@@ -523,6 +523,20 @@ def lxmf_api():
     msgs = list(lxmf_log)
     return jsonify({"msgs": msgs[since:], "total": len(msgs)})
 
+def _wardrive_db_path():
+    """SQLite path shared by wardrive_bot and the map (prefer map/bot json)."""
+    import json as _wd_json
+    for cfg_path in ("/etc/reticulum/wardrive_map.json", "/etc/reticulum/wardrive_bot.json"):
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg = _wd_json.load(f)
+            p = cfg.get("db_path")
+            if p:
+                return os.path.expanduser(str(p))
+        except Exception:
+            pass
+    return "/etc/reticulum/wardrive_bot.db"
+
 @app.route("/api/wardrive/map")
 def wardrive_map_info():
     """Port/host for the embedded Wardrive map iframe (from wardrive_map.json)."""
@@ -538,6 +552,29 @@ def wardrive_map_info():
     except Exception:
         pass
     return jsonify({"port": port, "listen_on": host, "url_path": "/"})
+
+@app.route("/api/wardrive/clear", methods=["POST"])
+def wardrive_clear_db():
+    """Delete all coverage points from the wardrive SQLite database."""
+    import sqlite3 as _sq
+    db_path = _wardrive_db_path()
+    if not os.path.isfile(db_path):
+        return jsonify({"ok": True, "deleted": 0, "db_path": db_path, "note": "no database yet"})
+    try:
+        con = _sq.connect(db_path, timeout=10)
+        try:
+            before = con.execute("SELECT COUNT(*) FROM points").fetchone()[0]
+            con.execute("DELETE FROM points")
+            con.commit()
+            try:
+                con.execute("VACUUM")
+            except Exception:
+                pass
+        finally:
+            con.close()
+        return jsonify({"ok": True, "deleted": int(before), "db_path": db_path})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "db_path": db_path}), 500
 
 @app.route("/api/services")
 def svc_list():

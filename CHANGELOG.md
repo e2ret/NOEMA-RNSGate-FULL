@@ -6,6 +6,7 @@
 
 ### Changed
 - **Wardrive map port comes from `wardrive_map.json`.** `/api/wardrive/map` reads `port` and `listen_on`; the sample config and `map_server.py` default to **5001**. A manual port change still drives the embedded map. Reinstall does not overwrite an existing `wardrive_map.json`.
+- **Clear wardrive DB from the map tab.** A **Clear DB** button above the embedded map deletes all rows in the coverage SQLite database (with confirm) and reloads the map.
 - **Logs tab lists wardrive services.** The service selector includes `wardrive_bot` and `wardrive_map` (collector + map journals).
 - **Wardrive map finds `rnstatus` after a clean `install.sh`.** systemd units did not put `.venv/bin` on `PATH`, so the map logged `No such file or directory: 'rnstatus'` and showed the red discovery banner even when beacons worked. `map_server.py` now resolves the venv binary; `install.sh` also sets `PATH` for services. The beacon UI hides that discovery banner.
 - **NOEMA Beacon 0.1.5.** TX power is set in the app from **0 to 30 dBm**. APK: `noema-beacon/noema-beacon.apk`.

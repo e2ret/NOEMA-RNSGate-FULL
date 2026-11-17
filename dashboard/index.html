@@ -1066,6 +1066,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
             style="flex:1;min-width:140px;max-width:360px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font:11px var(--mono);padding:5px 8px">
           <button type="button" class="sys-btn" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="applyWardriveBeacon()" data-i18n="wardrive_beacon_apply">Show</button>
           <button type="button" class="sys-btn" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="clearWardriveBeacon()" data-i18n="wardrive_beacon_clear">All</button>
+          <button type="button" class="sys-btn rd" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="clearWardriveDb()" data-i18n="wardrive_db_clear">Clear DB</button>
         </div>
       </div>
       <iframe id="wardrive-frame" title="Wardrive coverage map" style="width:100%;flex:1;min-height:300px;border:0;background:var(--bg)"></iframe>
@@ -1097,6 +1098,24 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
           if(el) el.value = "";
           var frame = document.getElementById("wardrive-frame");
           if(frame) frame.src = _wardriveHost;
+        }
+        async function clearWardriveDb(){
+          var msg = (typeof t==="function" ? t("wardrive_db_clear_confirm") : "") ||
+            "Delete all coverage points from the wardrive database on this gateway?";
+          if(!confirm(msg)) return;
+          try{
+            var r = await fetch((typeof API!=="undefined"?API:"")+"/api/wardrive/clear", {method:"POST"});
+            var d = await r.json();
+            if(!d.ok){ alert(d.error || "clear failed"); return; }
+            var done = ((typeof t==="function" ? t("wardrive_db_clear_done") : "") || "Deleted {n} points")
+              .replace("{n}", String(d.deleted||0));
+            if(typeof toast==="function") toast(done); else alert(done);
+            var frame = document.getElementById("wardrive-frame");
+            if(frame){
+              var u = wardriveMapUrl();
+              frame.src = u + (u.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now();
+            }
+          }catch(e){ alert(String(e)); }
         }
         function _refreshWardriveHost(){
           return fetch((typeof API!=="undefined"?API:"")+"/api/wardrive/map").then(function(r){ return r.json(); }).then(function(d){
@@ -2050,6 +2069,7 @@ const I18N = {
     nav_services: "Services", nav_configs: "Configs", nav_addresses: "Addresses",                                  
     nav_monitor: "Monitor", nav_rnode: "RNode", nav_sdr: "SDR", nav_nodes: "Nodes", nav_i2p: "I2P", nav_nomadnet: "Nomadnet",
     nav_chat: "Chat", nav_logs: "Logs", nav_system: "System", nav_wardrive: "Wardrive map", wardrive_map_hint: "coverage points received by this gateway", wardrive_beacon_label: "Beacon hash", wardrive_beacon_ph: "paste from the phone", wardrive_beacon_apply: "Show", wardrive_beacon_clear: "All",
+    wardrive_db_clear: "Clear DB", wardrive_db_clear_confirm: "Delete all coverage points from the wardrive database on this gateway?", wardrive_db_clear_done: "Deleted {n} points",
     nav_group_network: "Network", nav_group_monitoring: "Monitoring",
     nav_group_apps: "Apps", nav_group_settings: "Settings",
     sec_quick_commands: "Quick Commands", sec_maintenance: "Maintenance", sec_system: "System",
@@ -2231,6 +2251,7 @@ const I18N = {
     nav_group_network: "Сеть", nav_group_monitoring: "Мониторинг",
     nav_group_apps: "Приложения", nav_group_settings: "Настройка",
     nav_chat: "Чат", nav_logs: "Логи", nav_system: "Система", nav_wardrive: "Карта wardrive", wardrive_map_hint: "точки покрытия, принятые этим шлюзом", wardrive_beacon_label: "Адрес маяка", wardrive_beacon_ph: "вставьте с телефона", wardrive_beacon_apply: "Показать", wardrive_beacon_clear: "Все",
+    wardrive_db_clear: "Очистить БД", wardrive_db_clear_confirm: "Удалить все точки покрытия из базы wardrive на этом шлюзе?", wardrive_db_clear_done: "Удалено точек: {n}",
     sec_quick_commands: "Быстрые команды", sec_maintenance: "Обслуживание", sec_system: "Система",
     sec_backup_restore: "Резервная копия", sec_versions: "Версии", sec_chat_settings: "Настройки чата",
     txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в Sideband / Crosstalk как имя вашего шлюза",
