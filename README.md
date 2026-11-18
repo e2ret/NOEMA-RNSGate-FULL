@@ -5,6 +5,8 @@
 **Full-featured Reticulum/LXMF gateway with Radio Observatory dashboard**
 **Reticulum / LXMF / RNode LoRa gateway with web dashboard**
 
+<img width="800" alt="NOEMA RNSGate FULL" src="https://github.com/user-attachments/assets/425c8da5-2a54-4406-8170-1b8c80582d9a" />
+
 [![Translate](https://img.shields.io/badge/Translate-To_Your_Language-red)](https://translate.google.com/translate?sl=auto&u=https://github.com/e2ret/NOEMA-RNSGate-FULL)
 
 FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate-Lite) — the key architectural difference is that the dashboard itself owns the Reticulum instance directly, giving it real access to RF telemetry from RNode interfaces.
