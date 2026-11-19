@@ -6,7 +6,7 @@
   "initial_lat": 55.7558,
   "initial_lon": 37.6173,
   "nodes_radius_km": 50,
-  "welcome_message": "NOEMA Wardrive collector. Sends GPS beacons from Sideband wardrive plugin to this gateway.",
+  "welcome_message": "NOEMA Wardrive collector. Receives GPS beacons from NOEMA Beacon and stores LoRa coverage on this gateway.",
   "icon_name": "radio-tower",
   "icon_fg_color": "FFFFFF",
   "icon_bg_color": "F59E0B"
