@@ -11,6 +11,30 @@
 
 FULL is a sibling to [NOEMA RNSGate Lite](https://github.com/e2ret/NOEMA-RNSGate-Lite) — the key architectural difference is that the dashboard itself owns the Reticulum instance directly, giving it real access to RF telemetry from RNode interfaces.
 
+> [!CAUTION]
+> **Reticulum 1.6.x — network stamps (transition in 3 stages)**
+>
+> RNS is rolling out cryptographic **stamps** against spam. This affects every gateway.
+>
+> | Stage | Version | What happens |
+> |-------|---------|--------------|
+> | 1 | **1.6.0** | Stamps mostly off by default; checked but **not enforced** |
+> | 2 | **1.6.1** *(current)* | Stamp **generation/emission ON** by default; enforcement still off |
+> | 3 | **1.6.2** | **Enforcement ON** — announces / path / link requests without a valid stamp are **dropped** |
+>
+> **After upgrading the gateway venv to 1.6.1**, the first start can load the CPU hard for several minutes (one-time stamp generation for chat, bridge, wardrive, nomadnet destinations). That is expected; stamps are then saved and later restarts are quieter.
+>
+> **Before 1.6.2:** update the gateway to RNS **≥ 1.6.1**, keep phones/Beacon/friends on compatible clients, or older nodes may stop talking to stamp-enforcing peers. Old transport nodes can still *carry* stamped traffic, but cannot fully *talk* as peers once enforcement is on.
+>
+> Check the version used by NOEMA (not system Python):
+> ```bash
+> /root/NOEMA-RNSGate-FULL/.venv/bin/python3 -c "import RNS; print(RNS.__version__)"
+> /root/NOEMA-RNSGate-FULL/.venv/bin/pip install -U rns
+> sudo systemctl restart dashboard wardrive_bot noema_lxmf_bridge nomadnet
+> ```
+>
+> Details: [RNS Changelog](https://github.com/markqvist/Reticulum/blob/master/Changelog.md) · [Protecting Open Networks](https://reticulum.network/manual/protecting.html)
+
 ### Key difference from Lite
 
 | | Lite | FULL |
