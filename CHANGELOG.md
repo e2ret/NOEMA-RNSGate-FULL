@@ -10,7 +10,8 @@
 - **Chat compose bar stays visible with many contacts.** A long contact list no longer stretches the chat grid and clips the message input. Contacts scroll inside their column; the compose bar stays pinned at the bottom.
 
 ### Changed
-- **Wardrive collector branding.** Welcome / display name no longer mentions Sideband. Default text refers to **NOEMA Beacon**. Existing installs that still have “Sideband” in `/etc/reticulum/wardrive_bot.json` are refreshed on reinstall.
+- **Wardrive bot is beacon-only (0.2.0).** Listens for `wardrive.beacon` from NOEMA Beacon and writes the map DB. Removed LXMF chat, collector, probe, ping, and aggregator destinations (no more multi-destination announce spam). Config is just `display_name` + `db_path`.
+- **Wardrive collector branding.** Display name no longer mentions Sideband. Existing installs that still have “Sideband” in `/etc/reticulum/wardrive_bot.json` are refreshed on reinstall.
 - **Dashboard copy** no longer names third-party LXMF apps in chat/bridge address hints (generic “LXMF client” wording).
 - **Wardrive map layer picker (OSM provider).** With `basemap_provider: "osm"`, the map shows a tileset dropdown: **Dark** / **Liberty** / **Light** via [OpenFreeMap](https://openfreemap.org/) (no API key), plus **OSM** raster with building footprints. Choice is kept in the browser. Changing the layer only swaps the map tiles — page chrome (panels, stream) stays on its own theme.
 - **Signal Overlay** is a simple on/off for gateway-heard beacon heat. Uplink / Downlink / Both cycling removed (probe-mode leftover).
