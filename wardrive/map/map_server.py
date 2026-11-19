@@ -829,6 +829,7 @@ body.light-theme #filter-apply:hover { background: #d5edf7; color: #104d6b; }
       background: var(--bg2); border: 1px solid var(--border2); color: var(--text-dim);
       font: 11px monospace; padding: 2px 4px; border-radius: 4px; cursor: pointer;
     }
+    #tileset-select { min-width: 7.5em; }
     #tileset-select:hover, #size-select:hover { color: var(--text); }
     #discovery-warning {
       display: none;
@@ -1046,10 +1047,9 @@ const VECTOR_TILESETS = [
   { id: 'dark-matter',      label: 'Dark', labelKey: 'tileset.dark', style: '/basemap/dark-matter.json', dark: true },
 ];
 
-// A raster provider is one fixed picture of the world, so it is a single entry whose
-// style is built here rather than fetched: one source, one layer, no glyphs or sprite.
-// tileSize has to match what the server renders (256 for OSM) or MapLibre asks for a
-// zoom level that makes every label half or double its intended size.
+// A raster style is built here rather than fetched: one source, one layer, no glyphs
+// or sprite. tileSize has to match what the server renders (256 for OSM/CARTO) or
+// MapLibre asks for a zoom level that makes every label half or double its intended size.
 function rasterStyle(r) {
   return {
     version: 8,
@@ -1061,22 +1061,52 @@ function rasterStyle(r) {
   };
 }
 
+// Free layers for basemap_provider "osm" — no API keys.
+// OpenFreeMap styles are MapLibre style URLs (vector, free public instance).
+// OSM raster keeps building footprints. CARTO CDN now requires an API key, so it
+// is not used. A single custom "raster" provider stays a one-item list.
+const _OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const OSM_LAYER_TILESETS = [
+  { id: 'ofi-dark',     label: 'Dark',    labelKey: 'tileset.dark',
+    style: 'https://tiles.openfreemap.org/styles/dark', dark: true },
+  { id: 'osm',          label: 'OSM',     labelKey: 'tileset.osm',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: _OSM_ATTR, max_zoom: 19, tile_size: 256, dark: false },
+  { id: 'ofi-liberty',  label: 'Liberty', labelKey: 'tileset.voyager',
+    style: 'https://tiles.openfreemap.org/styles/liberty', dark: false },
+  { id: 'ofi-positron', label: 'Light',   labelKey: 'tileset.light',
+    style: 'https://tiles.openfreemap.org/styles/positron', dark: false },
+];
+
 // Styles of a remote basemap are fetched from the install that owns the tiles, which
 // also pins them to its current archive version.
 const TILESETS = RASTER
-  ? [{ id: 'raster', label: RASTER.label || 'Map', style: rasterStyle(RASTER), dark: false }]
+  ? (BASEMAP.provider === 'osm'
+      ? OSM_LAYER_TILESETS.map(t => ({
+          id: t.id, label: t.label, labelKey: t.labelKey, dark: t.dark,
+          style: t.style || rasterStyle(t),
+        }))
+      : [{ id: 'raster', label: RASTER.label || 'Map', style: rasterStyle(RASTER), dark: false }])
   : VECTOR_TILESETS.map(t => Object.assign({}, t, { style: ASSET_BASE + t.style }));
 const tilesetIndex = id => TILESETS.findIndex(t => t.id === id);
 
-// The theme toggle pairs page chrome with a basemap: dark chrome gets the site-themed
-// green basemap, light chrome gets Positron. Looked up by id so reordering the list
-// cannot repoint them.
-const DARK_TILESET  = tilesetIndex('green');
-const LIGHT_TILESET = tilesetIndex('positron');
-// False for a raster provider, which has one basemap and so nothing to pair. The theme
-// toggle then recolours the page chrome only.
+// The theme toggle pairs page chrome with a basemap: dark chrome gets the dark
+// basemap, light chrome gets the building-rich OSM (raster) or Positron (vector).
+// First match wins so vector installs keep green↔positron and osm installs get
+// ofi-dark↔osm (with building footprints).
+function _firstTileset() {
+  for (let i = 0; i < arguments.length; i++) {
+    const idx = tilesetIndex(arguments[i]);
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+const DARK_TILESET  = _firstTileset('ofi-dark', 'carto-dark', 'green', 'dark-matter');
+const LIGHT_TILESET = _firstTileset('osm', 'positron');
+// False when there is no dark/light pair (single custom raster). Theme toggle then
+// recolours the page chrome only.
 const THEME_PAIRED  = DARK_TILESET >= 0 && LIGHT_TILESET >= 0;
-// What a visitor with no usable stored choice gets.
+// What a visitor with no usable stored choice gets — prefer the dark layer.
 const DEFAULT_TILESET = Math.max(0, DARK_TILESET);
 
 // Order of the list back when the index was what got persisted. A stored number is read
@@ -1088,7 +1118,13 @@ const _LEGACY_ORDER = ['dark-matter', 'voyager', 'voyager-nolabels', 'positron',
 // retired once the label toggle made it redundant; anyone still holding it -- by id, or
 // by the legacy index that resolves to it -- lands on Positron rather than being bounced
 // to the default.
-const _RETIRED = { 'voyager-nolabels': 'positron' };
+const _RETIRED = {
+  'voyager-nolabels': 'positron',
+  // CARTO XYZ tiles now require an API key — migrate prior choices to OpenFreeMap.
+  'carto-dark': 'ofi-dark',
+  'carto-voyager': 'ofi-liberty',
+  'carto-light': 'ofi-positron',
+};
 
 function _restoreTileset() {
   const raw = localStorage.getItem('tileset');
@@ -1313,6 +1349,8 @@ const I18N = {
     'tileset.green':   'Зелёная',
     'tileset.light':   'Светлая',
     'tileset.dark':    'Тёмная',
+    'tileset.osm':     'OSM (дома)',
+    'tileset.voyager': 'Liberty',
     'title.lang':      'Язык',
     'title.home':      'Вернуться к домашней точке шлюза',
     'title.hideLabels':'Скрыть подписи на карте',
@@ -1340,9 +1378,7 @@ const I18N = {
     'stream.title':    'Список маяков',
     'stream.filtered': 'Список маяков (фильтр)',
     'overlay.off':     'Наложение сигнала',
-    'overlay.ul':      'Восходящий',
-    'overlay.dl':      'Нисходящий',
-    'overlay.uldl':    'Оба направления',
+    'overlay.on':      'Наложение сигнала',
     'filter.day':      'День',
     'filter.week':     'Неделя',
     'filter.month':    'Месяц',
@@ -1523,19 +1559,18 @@ function setUiLang(lang, propagate) {
   if (propagate) refreshLocalisedViews();
 }
 
+// NOEMA Beacon only needs the gateway-heard heat (uplink). Uplink/downlink/both
+// cycling was for bidirectional probe surveys — keep a simple on/off toggle.
 const OVERLAY_MODES = [
-  { key: 'overlay.off',  en: 'Signal Overlay',      ul: false, dl: false },
-  { key: 'overlay.ul',   en: 'Uplink',               ul: true,  dl: false },
-  { key: 'overlay.dl',   en: 'Downlink',             ul: false, dl: true  },
-  { key: 'overlay.uldl', en: 'Both directions',      ul: true,  dl: true  },
+  { key: 'overlay.off', en: 'Signal Overlay', ul: false, dl: false },
+  { key: 'overlay.on',  en: 'Signal Overlay', ul: true,  dl: false },
 ];
 let overlayModeIdx = parseInt(localStorage.getItem('overlay-mode') || '0', 10);
-if (overlayModeIdx < 0 || overlayModeIdx >= OVERLAY_MODES.length) overlayModeIdx = 0;
+// Old 4-step modes (ul/dl/both) collapse to on.
+if (overlayModeIdx > 1) overlayModeIdx = 1;
+if (overlayModeIdx < 0) overlayModeIdx = 0;
 
 const heatBtn = document.getElementById('heatmap-toggle');
-const ICON_UP = '<svg class="ico" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l0 10"/><path d="M12 4l4 4"/><path d="M12 4l-4 4"/><path d="M4 20l16 0"/></svg>';
-const ICON_DOWN = '<svg class="ico" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20l0 -10"/><path d="M12 20l4 -4"/><path d="M12 20l-4 -4"/><path d="M4 4l16 0"/></svg>';
-const ICON_BOTH = '<svg class="ico" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h-6"/><path d="M5 15l-3 -3l3 -3"/><path d="M22 12h-6"/><path d="M19 15l3 -3l-3 -3"/><path d="M12 4v16"/></svg>';
 function setPanelTitle(iconHtml, text) {
   const el = document.getElementById('panel-title');
   el.innerHTML = iconHtml + ' ';
@@ -1546,28 +1581,28 @@ const SIGNAL_ICON = '<svg class="ico" aria-hidden="true" xmlns="http://www.w3.or
 
 function applyOverlayMode() {
   const m = OVERLAY_MODES[overlayModeIdx];
-  heatBtn.innerHTML = (m.ul && m.dl ? ICON_BOTH : m.ul ? ICON_UP : m.dl ? ICON_DOWN : SIGNAL_ICON) + ' ';
+  heatBtn.innerHTML = SIGNAL_ICON + ' ';
   heatBtn.appendChild(document.createTextNode(t(m.key, m.en)));
   heatBtn.classList.toggle('active', m.ul || m.dl);
   if (!styleReady) return;   // map 'load' calls this again once the layers exist
   map.setLayoutProperty('heat-ul', 'visibility', m.ul ? 'visible' : 'none');
-  map.setLayoutProperty('heat-dl', 'visibility', m.dl ? 'visible' : 'none');
+  map.setLayoutProperty('heat-dl', 'visibility', 'none');
   if (map.getLayer('heat-ul-dots')) {
     map.setLayoutProperty('heat-ul-dots', 'visibility', m.ul ? 'visible' : 'none');
   }
   if (map.getLayer('heat-dl-dots')) {
-    map.setLayoutProperty('heat-dl-dots', 'visibility', m.dl ? 'visible' : 'none');
+    map.setLayoutProperty('heat-dl-dots', 'visibility', 'none');
   }
   if (COMMUNITY) {
     map.setLayoutProperty('comm-ul', 'visibility', commOn && m.ul ? 'visible' : 'none');
-    map.setLayoutProperty('comm-dl', 'visibility', commOn && m.dl ? 'visible' : 'none');
+    map.setLayoutProperty('comm-dl', 'visibility', 'none');
   }
 }
 applyOverlayMode();
 
 heatBtn.addEventListener('click', () => {
   const wasOff = overlayModeIdx === 0;
-  overlayModeIdx = (overlayModeIdx + 1) % OVERLAY_MODES.length;
+  overlayModeIdx = overlayModeIdx === 0 ? 1 : 0;
   localStorage.setItem('overlay-mode', overlayModeIdx);
   applyOverlayMode();
   if (wasOff) scheduleCommunityFetch(0);   // a no-op until the community block below has run, or when sharing is off
@@ -2074,7 +2109,7 @@ async function openFiles(files) {
   });
   syncHeat();
   // Show something: a file's signal is the whole point of opening it.
-  if (overlayModeIdx === 0) { overlayModeIdx = heatDlFeatures.length ? 3 : 1; applyOverlayMode(); }
+  if (overlayModeIdx === 0) { overlayModeIdx = 1; applyOverlayMode(); }
 
   setPanelTitle(ICON_FILE, names.join(', '));
   document.getElementById('file-close').style.display = '';
@@ -3568,31 +3603,14 @@ loadDiscovered();
 setInterval(loadDiscovered, 300000); // refresh every 5 minutes
 
 // ---- Theme toggle ----
+// Page chrome (panels, buttons, stream) and basemap are independent: picking Dark /
+// Liberty / OSM only swaps map tiles; the theme toggle (or parent postMessage) only
+// recolours the UI around the map.
 function applyTheme(light) {
   document.body.classList.toggle('light-theme', light);
   try { applyRuler(); applyQuickRuler(); } catch (e) {}   // the rulers' colour follows the theme
 }
-// The basemap is authoritative for chrome on load, not the stored theme. Both the
-// toggle and the selector always write the two together, so they only diverge from a
-// stale localStorage -- which is exactly the state anyone who picked a dark basemap
-// before it carried a `dark` flag is currently stuck in.
-//
-// Without a dark/light pair of basemaps the two are independent, and the stored theme
-// is the only record of what the visitor chose.
-if (THEME_PAIRED) {
-  applyTheme(!TILESETS[currentTileset].dark);
-  localStorage.setItem('theme', TILESETS[currentTileset].dark ? 'dark' : 'light');
-} else {
-  applyTheme(localStorage.getItem('theme') === 'light');
-}
-function applyThemeTileset(newLight) {
-  if (!THEME_PAIRED) return;
-  const idx = newLight ? LIGHT_TILESET : DARK_TILESET;
-  const sel = document.getElementById('tileset-select');
-  if (sel) sel.value = idx;
-  setBasemap(idx);
-  localStorage.setItem('tileset', TILESETS[idx].id);
-}
+applyTheme(localStorage.getItem('theme') === 'light');
 
 window.addEventListener('message', function(e) {
   if (e.source !== window.parent || window.parent === window) return;
@@ -3603,9 +3621,7 @@ window.addEventListener('message', function(e) {
     return;
   }
   if (e.data === 'light' || e.data === 'dark') {
-    const newLight = e.data === 'light';
-    applyTheme(newLight);
-    applyThemeTileset(newLight);
+    applyTheme(e.data === 'light');
     localStorage.setItem('theme', e.data);
   }
 });
@@ -3613,7 +3629,6 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
   const newLight = !document.body.classList.contains('light-theme');
   localStorage.setItem('theme', newLight ? 'light' : 'dark');
   applyTheme(newLight);
-  applyThemeTileset(newLight);
 });
 
 // ---- Language toggle ----
@@ -3663,11 +3678,6 @@ tilesetSel.addEventListener('change', () => {
   const idx = parseInt(tilesetSel.value, 10);
   localStorage.setItem('tileset', TILESETS[idx].id);
   setBasemap(idx);
-  // Chrome follows the basemap's own `dark` flag, so a dark basemap keeps dark
-  // buttons and tabs no matter where it sits in the list.
-  const newLight = !TILESETS[idx].dark;
-  localStorage.setItem('theme', newLight ? 'light' : 'dark');
-  applyTheme(newLight);
 });
 </script>
 </body>
