@@ -672,7 +672,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
     <div class="logo" style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:28px;width:28px;object-fit:contain;border-radius:12px;border:1px solid var(--bd)"><b>NOEMA <span style="color:var(--teal)">RNSGATE</span> · FULL</b></div>
     <div id="git-update-wrap" class="git-update-wrap">
       <button type="button" id="git-update-badge" class="git-update-badge" onclick="if(confirm(t('txt_noema_update_confirm')))runCmd('noema_update')" title="Update NOEMA from GitHub" aria-label="Update NOEMA from GitHub"><span class="git-update-icon" aria-hidden="true">↑</span><span data-i18n="btn_update_available">UPDATE AVAILABLE</span><span class="git-update-count" id="git-update-count">0</span></button>
-      <a id="git-update-notes" class="git-update-notes" href="https://github.com/e2ret/NOEMA-RNSGate-FULL/releases" target="_blank" rel="noopener" data-i18n="txt_noema_update_notes">What’s in this update?</a>
+      <a id="git-update-notes" class="git-update-notes" href="https://github.com/e2ret/NOEMA-RNSGate-FULL/blob/main/CHANGELOG.md" target="_blank" rel="noopener" data-i18n="txt_noema_update_notes">What’s in this update?</a>
     </div>
     <div class="sb-meta">
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="uptime-lbl">—</div>
@@ -1692,7 +1692,7 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
           <button class="sys-btn" onclick="runCmd('uptime')" data-i18n="btn_uptime">Uptime</button>
           <button class="sys-btn rd" onclick="runCmd('log_cleanup')">🗑 Clean Logs</button>
           <button class="sys-btn teal" onclick="if(confirm(t('txt_noema_update_confirm'))) runCmd('noema_update')" data-i18n="btn_update_noema">⬆ Update NOEMA</button>
-          <a id="noema-update-notes" href="https://github.com/e2ret/NOEMA-RNSGate-FULL/releases" target="_blank" rel="noopener" class="sys-btn" style="text-decoration:none" data-i18n="txt_noema_update_notes">What’s in this update?</a>
+          <a id="noema-update-notes" href="https://github.com/e2ret/NOEMA-RNSGate-FULL/blob/main/CHANGELOG.md" target="_blank" rel="noopener" class="sys-btn" style="text-decoration:none" data-i18n="txt_noema_update_notes">What’s in this update?</a>
         </div>
         <div id="cmd-output" style="font-family:var(--fn);font-size:11px;color:var(--teal);background:var(--bg);border-radius:12px;padding:8px 10px;min-height:32px;white-space:pre-wrap;display:none"></div>
       </div>
@@ -2721,9 +2721,7 @@ async function checkGitUpdate(){
     const badge = document.getElementById("git-update-badge");
     const notes = document.getElementById("git-update-notes");
     const notesSys = document.getElementById("noema-update-notes");
-    const notesUrl = d.commit && d.commit !== "unknown"
-      ? `https://github.com/e2ret/NOEMA-RNSGate-FULL/compare/${encodeURIComponent(d.commit)}...main`
-      : "https://github.com/e2ret/NOEMA-RNSGate-FULL/releases";
+    const notesUrl = "https://github.com/e2ret/NOEMA-RNSGate-FULL/blob/main/CHANGELOG.md";
     if(notes) notes.href = notesUrl;
     if(notesSys) notesSys.href = notesUrl;
     if(!wrap || !badge) return;
