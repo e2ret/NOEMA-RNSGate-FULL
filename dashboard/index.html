@@ -238,6 +238,10 @@ body{
 .main:has(#panel-nodes.active){overflow-y:hidden}
 .main:has(#panel-system.active){overflow-y:hidden}
 .main:has(#panel-rnode.active){overflow-y:hidden}
+.main:has(#panel-chat.active){overflow-y:hidden}
+#chat-grid > *{min-height:0;min-width:0}
+#chat-contacts-list{min-height:0}
+#chat-compose{flex-shrink:0}
 .panel{display:none}
 .panel.active{display:flex;flex-direction:column;flex:1;min-height:0;animation:panel-in .18s var(--ease)}
 @keyframes panel-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
@@ -402,6 +406,7 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
   .main:has(#panel-nodes.active){overflow-y:visible}
   .main:has(#panel-system.active){overflow-y:visible}
   .main:has(#panel-rnode.active){overflow-y:visible}
+  .main:has(#panel-chat.active){overflow-y:visible}
 }
 </style>
 
@@ -645,8 +650,9 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 .dg-i.err{border-color:var(--rd)}
 .dg-h{font-size:12px;font-weight:700;color:var(--tx);word-break:break-word}
 .dg-a{font-size:11px;color:var(--mu);margin-top:3px;line-height:1.5}
+.git-update-wrap{display:none;flex-direction:column;align-items:flex-start;gap:5px;align-self:flex-start}
 .git-update-badge{
-  display:none;align-items:center;gap:7px;align-self:flex-start;min-height:26px;
+  display:inline-flex;align-items:center;gap:7px;min-height:26px;
   padding:0 9px;border:1px solid rgba(245,158,11,.48);border-radius:999px;
   background:rgba(245,158,11,.12);color:#fbbf24;font:700 10px/1 var(--mono);
   letter-spacing:.1em;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s
@@ -654,6 +660,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 .git-update-badge:hover{background:rgba(245,158,11,.2);border-color:#f59e0b;box-shadow:0 0 14px rgba(245,158,11,.18)}
 .git-update-icon{font-size:12px;line-height:1}
 .git-update-count{min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#f59e0b;color:#111827;font-size:9px;line-height:16px;text-align:center;letter-spacing:0}
+.git-update-notes{font:600 10px/1.3 var(--mono);color:var(--teal);text-decoration:none;letter-spacing:.04em}
+.git-update-notes:hover{text-decoration:underline;color:#7dd3fc}
 </style>
 </head>
 <body>
@@ -662,7 +670,10 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
     <div class="logo" style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:28px;width:28px;object-fit:contain;border-radius:12px;border:1px solid var(--bd)"><b>NOEMA <span style="color:var(--teal)">RNSGATE</span> · FULL</b></div>
-    <button type="button" id="git-update-badge" class="git-update-badge" onclick="if(confirm('Update NOEMA from GitHub and restart services?'))runCmd('noema_update')" title="Update NOEMA from GitHub" aria-label="Update NOEMA from GitHub"><span class="git-update-icon" aria-hidden="true">↑</span><span>UPDATE AVAILABLE</span><span class="git-update-count" id="git-update-count">0</span></button>
+    <div id="git-update-wrap" class="git-update-wrap">
+      <button type="button" id="git-update-badge" class="git-update-badge" onclick="if(confirm(t('txt_noema_update_confirm')))runCmd('noema_update')" title="Update NOEMA from GitHub" aria-label="Update NOEMA from GitHub"><span class="git-update-icon" aria-hidden="true">↑</span><span data-i18n="btn_update_available">UPDATE AVAILABLE</span><span class="git-update-count" id="git-update-count">0</span></button>
+      <a id="git-update-notes" class="git-update-notes" href="https://github.com/e2ret/NOEMA-RNSGate-FULL/releases" target="_blank" rel="noopener" data-i18n="txt_noema_update_notes">What’s in this update?</a>
+    </div>
     <div class="sb-meta">
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="uptime-lbl">—</div>
       <div class="skel" style="font-size:10px;color:var(--mu);font-family:var(--mono)" id="rns-ver-lbl">—</div>
@@ -1132,13 +1143,13 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
     <div class="panel" id="panel-chat">
       <div id="chat-grid" style="display:grid;grid-template-columns:220px minmax(0,1fr);flex:1;border:1px solid var(--bd);border-radius:8px;overflow:hidden;min-height:0">
         <!-- Contacts list -->
-        <div id="chat-contacts-pane" style="border-right:1px solid var(--bd);display:flex;flex-direction:column">
-          <div style="padding:10px 12px;border-bottom:1px solid var(--bd);display:flex;gap:6px;align-items:center">
+        <div id="chat-contacts-pane" style="border-right:1px solid var(--bd);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+          <div style="padding:10px 12px;border-bottom:1px solid var(--bd);display:flex;gap:6px;align-items:center;flex-shrink:0">
             <input id="chat-new-addr" placeholder="LXMF address..." data-i18n-placeholder="ph_lxmf_address" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:5px 8px">
             <button class="sys-btn teal" style="padding:4px 8px;font-size:11px;flex-shrink:0" onclick="chatAddContact()">+</button>
           </div>
-          <div id="chat-contacts-list" style="flex:1;overflow-y:auto"></div>
-          <div style="padding:8px 12px;border-top:1px solid var(--bd)">
+          <div id="chat-contacts-list" style="flex:1;min-height:0;overflow-y:auto"></div>
+          <div style="padding:8px 12px;border-top:1px solid var(--bd);flex-shrink:0">
             <div style="font-size:10px;color:var(--mu);font-family:var(--fn);margin-bottom:4px" id="chat-my-addr">My address: —</div>
             <div style="display:flex;gap:4px">
               <input id="chat-display-name" type="text" placeholder="My name…" maxlength="64"
@@ -1149,8 +1160,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
           </div>
         </div>
         <!-- Messages -->
-        <div id="chat-msgs-pane" style="display:flex;flex-direction:column;min-height:0;min-width:0">
-          <div style="padding:8px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+        <div id="chat-msgs-pane" style="display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden">
+          <div style="padding:8px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
             <button id="chat-back-btn" onclick="chatShowContacts()" style="display:none;background:none;border:none;color:var(--teal);font-size:18px;cursor:pointer;padding:0 8px 0 0;line-height:1">‹</button>
             <div>
               <div style="display:flex;align-items:center;gap:6px">
@@ -1162,14 +1173,14 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
             </div>
             <button id="chat-remove-btn" class="sys-btn rd" style="display:none;padding:2px 8px;font-size:11px" onclick="chatRemoveContact()" data-i18n="btn_remove">Remove</button>
           </div>
-          <div id="chat-messages" style="flex:1;min-width:0;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:6px" ondragover="event.preventDefault();this.style.outline='2px dashed var(--teal)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';if(event.dataTransfer.files[0]){const fi=document.getElementById('chat-file-input');const dt=new DataTransfer();dt.items.add(event.dataTransfer.files[0]);fi.files=dt.files;uploadChatFile(fi);}">
+          <div id="chat-messages" style="flex:1;min-height:0;min-width:0;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:6px" ondragover="event.preventDefault();this.style.outline='2px dashed var(--teal)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';if(event.dataTransfer.files[0]){const fi=document.getElementById('chat-file-input');const dt=new DataTransfer();dt.items.add(event.dataTransfer.files[0]);fi.files=dt.files;uploadChatFile(fi);}">
             <div style="color:var(--mu);font-size:12px;text-align:center;margin-top:40px" data-i18n="txt_select_contact">Select a contact</div>
           </div>
-          <div id="chat-file-preview" style="display:none;padding:6px 12px;background:var(--s3);border-top:1px solid var(--bd);align-items:center;gap:8px">
+          <div id="chat-file-preview" style="display:none;padding:6px 12px;background:var(--s3);border-top:1px solid var(--bd);align-items:center;gap:8px;flex-shrink:0">
             <span id="chat-file-preview-name" style="font-size:11px;color:var(--teal);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
             <button onclick="chatCancelFile()" style="background:none;border:none;color:var(--rd);cursor:pointer;font-size:14px;padding:0 4px">✕</button>
           </div>
-          <div style="padding:10px 12px;border-top:1px solid var(--bd);display:flex;gap:6px;align-items:center">
+          <div id="chat-compose" style="padding:10px 12px;border-top:1px solid var(--bd);display:flex;gap:6px;align-items:center">
             <input type="file" id="chat-file-input" style="display:none" onchange="uploadChatFile(this)">
             <button class="sys-btn" onclick="document.getElementById('chat-file-input').click()" title="Attach file" data-i18n-title="ph_attach_file" style="padding:5px 9px;font-size:14px;flex-shrink:0">📎</button>
             <input id="chat-input" placeholder="Message..." data-i18n-placeholder="ph_message" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:6px 10px" onkeydown="if(event.key==='Enter')sendChatMsg()">
@@ -1680,7 +1691,8 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
           <button class="sys-btn" onclick="runCmd('free_mem')" data-i18n="btn_memory">Memory</button>
           <button class="sys-btn" onclick="runCmd('uptime')" data-i18n="btn_uptime">Uptime</button>
           <button class="sys-btn rd" onclick="runCmd('log_cleanup')">🗑 Clean Logs</button>
-          <button class="sys-btn teal" onclick="if(confirm('Update NOEMA from GitHub and restart services?')) runCmd('noema_update')">⬆ Update NOEMA</button>
+          <button class="sys-btn teal" onclick="if(confirm(t('txt_noema_update_confirm'))) runCmd('noema_update')" data-i18n="btn_update_noema">⬆ Update NOEMA</button>
+          <a id="noema-update-notes" href="https://github.com/e2ret/NOEMA-RNSGate-FULL/releases" target="_blank" rel="noopener" class="sys-btn" style="text-decoration:none" data-i18n="txt_noema_update_notes">What’s in this update?</a>
         </div>
         <div id="cmd-output" style="font-family:var(--fn);font-size:11px;color:var(--teal);background:var(--bg);border-radius:12px;padding:8px 10px;min-height:32px;white-space:pre-wrap;display:none"></div>
       </div>
@@ -1766,7 +1778,7 @@ sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
             <input id="chat-display-name" type="text" placeholder="NOEMA Chat" maxlength="64" style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fn);font-size:12px;padding:5px 8px">
             <button class="sys-btn teal" onclick="saveChatDisplayName()" data-i18n="btn_save">Save</button>
           </div>
-          <div style="font-size:10px;color:var(--mu);margin-top:4px" data-i18n="txt_chat_display_name_hint">Visible to others in Sideband / Crosstalk as your gateway name</div>
+          <div style="font-size:10px;color:var(--mu);margin-top:4px" data-i18n="txt_chat_display_name_hint">Visible to other LXMF clients as your gateway name</div>
         </div>
         <div style="margin-bottom:12px">
           <div style="font-size:11px;color:var(--mu);margin-bottom:4px" data-i18n="txt_propagation_node">LXMF Propagation Node</div>
@@ -2074,7 +2086,11 @@ const I18N = {
     nav_group_apps: "Apps", nav_group_settings: "Settings",
     sec_quick_commands: "Quick Commands", sec_maintenance: "Maintenance", sec_system: "System",
     sec_backup_restore: "Backup & Restore", sec_versions: "Versions", sec_chat_settings: "Chat Settings",
-    txt_chat_display_name: "Chat display name", txt_chat_display_name_hint: "Visible to others in Sideband / Crosstalk as your gateway name",
+    btn_update_available: "UPDATE AVAILABLE",
+    btn_update_noema: "⬆ Update NOEMA",
+    txt_noema_update_confirm: "Update NOEMA from GitHub and restart services?",
+    txt_noema_update_notes: "What’s in this update?",
+    txt_chat_display_name: "Chat display name", txt_chat_display_name_hint: "Visible to other LXMF clients as your gateway name",
     txt_propagation_node: "LXMF Propagation Node", txt_propagation_node_hint: "Where offline messages are picked up from. Pick any node from the PropNode tab in Nodes — takes effect immediately, no restart needed.",
     sec_bridge_access: "Bridge Access Control", sec_chat_access: "Chat Access Control",
     sys_tab_ops: "Operations", sys_tab_access: "Chat & Access", sys_tab_globe: "Globe", sec_svc_addr: "Services & addresses",
@@ -2154,11 +2170,11 @@ const I18N = {
     txt_nn_display_name: "Node name", ph_nn_node_name: "NOEMA RNSGate",
     txt_nn_node_name_hint: "Visible to other peers in announces — helps tell multiple gateways apart",
     toast_nn_name_saved: "Node name saved", toast_nn_name_error: "Could not save node name",
-    txt_addr_bridge_desc: "For receiving commands from Reticulum to MQTT / Home Assistant. Add to Sideband as a contact.",
+    txt_addr_bridge_desc: "For receiving commands from Reticulum to MQTT / Home Assistant. Add as a contact in any LXMF client.",
     txt_addr_i2p_desc: "Anonymous connection without public IP. Share with another gateway.",
     txt_addr_nn_node_desc: "Gateway info page in the Reticulum network.",
     txt_addr_nn_chat_desc: "IRC-style chat in the Nomadnet network. Open in Nomadnet browser.",
-    txt_addr_noema_chat_desc: "LXMF address of the gateway chat. Add to Sideband or CrossTalk to message the gateway directly.",
+    txt_addr_noema_chat_desc: "LXMF address of the gateway chat. Add as a contact in any LXMF client to message the gateway directly.",
     ifg_radio: "Radio", ifg_net: "Network", ifg_other: "Local", ifg_off: "Disabled ({n})",
     prof_title: "Interface profiles", prof_hint: "A profile is a set of interfaces that are on together. Applying it turns all other interfaces off. The configuration is backed up first; restart the dashboard afterwards.",
     prof_new: "+ New", prof_will: "Applying “{name}”:", prof_on: "turn on: {list}", prof_off: "turn off: {list}", prof_same: "Nothing to change: the interfaces already match this profile.",
@@ -2254,7 +2270,11 @@ const I18N = {
     wardrive_db_clear: "Очистить БД", wardrive_db_clear_confirm: "Удалить все точки покрытия из базы wardrive на этом шлюзе?", wardrive_db_clear_done: "Удалено точек: {n}",
     sec_quick_commands: "Быстрые команды", sec_maintenance: "Обслуживание", sec_system: "Система",
     sec_backup_restore: "Резервная копия", sec_versions: "Версии", sec_chat_settings: "Настройки чата",
-    txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в Sideband / Crosstalk как имя вашего шлюза",
+    btn_update_available: "ЕСТЬ ОБНОВЛЕНИЕ",
+    btn_update_noema: "⬆ Обновить NOEMA",
+    txt_noema_update_confirm: "Обновить NOEMA с GitHub и перезапустить сервисы?",
+    txt_noema_update_notes: "О чём это обновление?",
+    txt_chat_display_name: "Имя чата", txt_chat_display_name_hint: "Отображается в LXMF-клиентах как имя вашего шлюза",
     txt_propagation_node: "LXMF Propagation Node", txt_propagation_node_hint: "Откуда забираются сообщения, пришедшие пока вы были офлайн. Скопируйте любой адрес из вкладки PropNode в Nodes — применяется сразу, без перезапуска.",
     sec_bridge_access: "Доступ к мосту", sec_chat_access: "Доступ к чату",
     sys_tab_ops: "Операции", sys_tab_access: "Чат и Доступ", sys_tab_globe: "Глобус", sec_svc_addr: "Сервисы и адреса",
@@ -2334,11 +2354,11 @@ const I18N = {
     txt_nn_display_name: "Имя узла", ph_nn_node_name: "NOEMA RNSGate",
     txt_nn_node_name_hint: "Видно другим узлам в анонсах — помогает различать несколько шлюзов",
     toast_nn_name_saved: "Имя узла сохранено", toast_nn_name_error: "Не удалось сохранить имя узла",
-    txt_addr_bridge_desc: "Для приёма команд из Reticulum в MQTT / Home Assistant. Добавьте как контакт в Sideband.",
+    txt_addr_bridge_desc: "Для приёма команд из Reticulum в MQTT / Home Assistant. Добавьте как контакт в любом LXMF-клиенте.",
     txt_addr_i2p_desc: "Анонимное соединение без публичного IP. Поделитесь с другим шлюзом.",
     txt_addr_nn_node_desc: "Информационная страница шлюза в сети Reticulum.",
     txt_addr_nn_chat_desc: "IRC-чат в сети Nomadnet. Откройте в браузере Nomadnet.",
-    txt_addr_noema_chat_desc: "LXMF-адрес чата шлюза. Добавьте в Sideband или CrossTalk чтобы написать шлюзу напрямую.",
+    txt_addr_noema_chat_desc: "LXMF-адрес чата шлюза. Добавьте как контакт в любом LXMF-клиенте чтобы написать шлюзу напрямую.",
     ifg_radio: "Радио", ifg_net: "Сеть", ifg_other: "Локальные", ifg_off: "Отключённые ({n})",
     prof_title: "Профили интерфейсов", prof_hint: "Профиль это набор интерфейсов, которые включены вместе. При применении все остальные интерфейсы выключаются. Сначала делается резервная копия конфигурации; после этого перезапустите дашборд.",
     prof_new: "+ Новый", prof_will: "Применение «{name}»:", prof_on: "включить: {list}", prof_off: "выключить: {list}", prof_same: "Менять нечего: интерфейсы уже соответствуют этому профилю.",
@@ -2697,15 +2717,23 @@ async function doResetIdentity(){
 async function checkGitUpdate(){
   try{
     const d = await fetch(API+"/api/git_status").then(r=>r.json());
+    const wrap = document.getElementById("git-update-wrap");
     const badge = document.getElementById("git-update-badge");
-    if(!badge) return;
+    const notes = document.getElementById("git-update-notes");
+    const notesSys = document.getElementById("noema-update-notes");
+    const notesUrl = d.commit && d.commit !== "unknown"
+      ? `https://github.com/e2ret/NOEMA-RNSGate-FULL/compare/${encodeURIComponent(d.commit)}...main`
+      : "https://github.com/e2ret/NOEMA-RNSGate-FULL/releases";
+    if(notes) notes.href = notesUrl;
+    if(notesSys) notesSys.href = notesUrl;
+    if(!wrap || !badge) return;
     if(d.update_available){
-      badge.style.display="inline-flex";
+      wrap.style.display="flex";
       badge.title=d.behind+" commit(s) behind";
       const count = document.getElementById("git-update-count");
       if(count) count.textContent = d.behind;
     }
-    else { badge.style.display="none"; }
+    else { wrap.style.display="none"; }
   }catch(e){}
 }
 async function checkRnsVersion(){
