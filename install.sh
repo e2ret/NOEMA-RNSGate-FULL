@@ -1,5 +1,5 @@
 #!/bin/bash
-# NOEMA RNSGate FULL install script — 1.1.19
+# NOEMA RNSGate FULL install script — 1.1.20
 # Supports: Debian / Ubuntu / Armbian
 
 set -e
@@ -15,7 +15,7 @@ CURRENT_USER="${SUDO_USER:-$USER}"
 CURRENT_HOME=$(eval echo "~$CURRENT_USER")
 
 echo "========================================"
-echo "  NOEMA RNSGate FULL 1.1.19"
+echo "  NOEMA RNSGate FULL 1.1.20"
 echo "========================================"
 echo ""
 
@@ -681,6 +681,23 @@ if [ -f "$WARDRIVE_DIR/bot/wardrive_bot.py" ] && [ -f "$WARDRIVE_DIR/map/map_ser
     mkdir -p /etc/reticulum
     if [ ! -f /etc/reticulum/wardrive_bot.json ]; then
         cp "$WARDRIVE_DIR/config/wardrive_bot.json" /etc/reticulum/wardrive_bot.json
+    elif grep -q 'Sideband' /etc/reticulum/wardrive_bot.json 2>/dev/null; then
+        # Refresh branding on existing installs that still mention Sideband
+        "$PYTHON" - <<'PY'
+import json
+path = "/etc/reticulum/wardrive_bot.json"
+with open(path) as f:
+    cfg = json.load(f)
+cfg["display_name"] = "NOEMA Wardrive"
+cfg["welcome_message"] = (
+    "NOEMA Wardrive collector. Receives GPS beacons from NOEMA Beacon "
+    "and stores LoRa coverage on this gateway."
+)
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+print("      Updated wardrive_bot.json branding (removed Sideband).")
+PY
     fi
     if [ ! -f /etc/reticulum/wardrive_map.json ]; then
         sed "s|/root/.reticulum/storage|$RNS_CONFIG_DIR/storage|" \
