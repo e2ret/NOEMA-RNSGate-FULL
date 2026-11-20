@@ -1,3 +1,8 @@
+## 1.1.24
+
+### Fixed
+- **Discovery tab.** Icon-only control (no vertical “Discovery” label); status dots kept.
+
 ## 1.1.23
 
 ### Fixed

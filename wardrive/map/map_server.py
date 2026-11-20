@@ -681,25 +681,29 @@ body.light-theme #filter-apply:hover { background: #d5edf7; color: #104d6b; }
     .node-entry-coords { font-size: 10px; color: var(--text-faint); }
     .node-entry-age { font-size: 10px; color: var(--text-faint); }
     #discovery-container {
-      position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+      position: fixed; left: 8px; top: 50%; transform: translateY(-50%);
       z-index: 599;
     }
     #discovery-open-wrap {
       cursor: pointer;
       background: var(--border2);
-      clip-path: polygon(0 0, 100% 8px, 100% calc(100% - 8px), 0 100%);
+      border-radius: 8px;
     }
+    /* Icon-only tab — the "Discovery" label ate vertical space on phones. */
     #discovery-open {
-      display: block; writing-mode: vertical-rl;
-      background: var(--bg); border: none;
-      color: var(--text-dim); cursor: pointer; font: 11px monospace;
-      padding: 12px 4px;
-      clip-path: polygon(0 1px, calc(100% - 1px) 9px, calc(100% - 1px) calc(100% - 9px), 0 calc(100% - 1px));
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      writing-mode: horizontal-tb;
+      background: var(--bg); border: 1px solid var(--border2);
+      color: var(--text-dim); cursor: pointer;
+      width: 36px; min-height: 36px; padding: 8px 0; border-radius: 8px;
+      box-sizing: border-box;
     }
-    #discovery-open-wrap:hover #discovery-open { background: var(--bg2); color: var(--text); }
+    #discovery-open .ico { width: 18px; height: 18px; margin: 0; vertical-align: 0; }
+    #discovery-open [data-i18n="disc.title"] { display: none; }
+    #discovery-open-wrap:hover #discovery-open { background: var(--bg2); color: var(--text); border-color: var(--border3); }
     /* Inline SVG icons that replace emoji: sized to the text, coloured by it. */
     .ico { width: 1.2em; height: 1.2em; vertical-align: -0.2em; flex: none; }
-    .tab-dot { display: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; }
+    .tab-dot { display: none; width: 6px; height: 6px; border-radius: 50%; margin: 0; }
     #discovery-options {
       padding: 6px 10px 8px; border-top: 1px solid var(--bg3);
     }
