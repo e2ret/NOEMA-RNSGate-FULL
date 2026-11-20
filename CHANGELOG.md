@@ -1,3 +1,8 @@
+## 1.1.25
+
+### Fixed
+- **OSM info “hole”.** Collapsed attribution is a proper 32×32 “i” button (no empty dark pill, readable icon on light maps).
+
 ## 1.1.24
 
 ### Fixed

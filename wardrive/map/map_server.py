@@ -387,32 +387,60 @@ MAP_HTML = """<!DOCTYPE html>
       padding: 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border);
     }
     .map-topbar-group { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
-    /* OSM/OpenFreeMap credit: icon only — full text appears on tap (compact-show).
-       Expanded text was eating the bottom bar and colliding with map-controls. */
+    /* OSM credit: one clear "i" button (MapLibre's compact mode leaves an empty
+       padded pill that looked like a black hole on the light basemap). */
     .maplibregl-ctrl-logo { display: none; }
     .maplibregl-ctrl-bottom-right {
       bottom: 8px; right: 8px; z-index: 500;
     }
-    .maplibregl-ctrl-attrib {
-      background: var(--bg2) !important; color: var(--text-dim) !important;
-      font: 10px/1.4 monospace; border-radius: 4px !important;
-      min-width: 28px; min-height: 28px;
-      display: flex !important; align-items: center; justify-content: center;
+    .maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show) {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+      width: 32px !important;
+      height: 32px !important;
+      overflow: visible !important;
     }
     .maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner {
-      display: none !important;   /* icon only until tapped */
+      display: none !important;
     }
     .maplibregl-ctrl-attrib.maplibregl-compact-show {
+      background: rgba(7,10,19,.92) !important;
+      color: #e2e8f0 !important;
+      font: 10px/1.4 monospace;
+      border: 1px solid rgba(148,163,184,.4) !important;
+      border-radius: 8px !important;
       max-width: min(70vw, 280px);
-      padding: 4px 8px;
+      padding: 6px 32px 6px 10px !important;
+      min-height: 32px;
     }
     .maplibregl-ctrl-attrib-inner,
-    .maplibregl-ctrl-attrib a,
-    .maplibregl-ctrl-attrib button { color: var(--text-dim) !important; }
-    .maplibregl-ctrl-attrib a:hover { color: var(--text) !important; }
-    .maplibregl-ctrl-attrib-button {
-      background-color: var(--bg2) !important; color: var(--text-dim) !important;
-      width: 28px; height: 28px; margin: 0 !important;
+    .maplibregl-ctrl-attrib a { color: #cbd5e1 !important; }
+    .maplibregl-ctrl-attrib a:hover { color: #fff !important; }
+    .maplibregl-ctrl-attrib-button,
+    .maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button {
+      position: absolute !important;
+      right: 0 !important; top: 0 !important;
+      width: 32px !important; height: 32px !important;
+      margin: 0 !important; padding: 0 !important;
+      border: 1px solid rgba(148,163,184,.45) !important;
+      border-radius: 8px !important;
+      background-color: rgba(7,10,19,.92) !important;
+      /* light "i" so it reads on dark chrome */
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23e2e8f0' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m6-2a1 1 0 1 1 0 2 1 1 0 1 1 0-2m0 3a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-3a1 1 0 0 1 1-1'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+      background-size: 20px 20px !important;
+      box-shadow: 0 1px 4px rgba(0,0,0,.35);
+      cursor: pointer;
+    }
+    .maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-button {
+      background-color: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none;
     }
     #follow-control {
       position: absolute; top: 10px; left: 10px; z-index: 400;
