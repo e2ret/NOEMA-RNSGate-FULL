@@ -387,19 +387,33 @@ MAP_HTML = """<!DOCTYPE html>
       padding: 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border);
     }
     .map-topbar-group { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
-    /* OpenMapTiles is CC-BY and OSM data is ODbL: both require visible credit, so
-       unlike the old CARTO raster layers the attribution cannot simply be hidden.
-       Compact mode keeps it to a single small button until clicked. */
+    /* OSM/OpenFreeMap credit: icon only — full text appears on tap (compact-show).
+       Expanded text was eating the bottom bar and colliding with map-controls. */
     .maplibregl-ctrl-logo { display: none; }
+    .maplibregl-ctrl-bottom-right {
+      bottom: 8px; right: 8px; z-index: 500;
+    }
     .maplibregl-ctrl-attrib {
       background: var(--bg2) !important; color: var(--text-dim) !important;
-      font: 10px/1.4 monospace; border-radius: 3px 0 0 0;
+      font: 10px/1.4 monospace; border-radius: 4px !important;
+      min-width: 28px; min-height: 28px;
+      display: flex !important; align-items: center; justify-content: center;
+    }
+    .maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner {
+      display: none !important;   /* icon only until tapped */
+    }
+    .maplibregl-ctrl-attrib.maplibregl-compact-show {
+      max-width: min(70vw, 280px);
+      padding: 4px 8px;
     }
     .maplibregl-ctrl-attrib-inner,
     .maplibregl-ctrl-attrib a,
     .maplibregl-ctrl-attrib button { color: var(--text-dim) !important; }
     .maplibregl-ctrl-attrib a:hover { color: var(--text) !important; }
-    .maplibregl-ctrl-attrib-button { background-color: var(--bg2) !important; color: var(--text-dim) !important; }
+    .maplibregl-ctrl-attrib-button {
+      background-color: var(--bg2) !important; color: var(--text-dim) !important;
+      width: 28px; height: 28px; margin: 0 !important;
+    }
     #follow-control {
       position: absolute; top: 10px; left: 10px; z-index: 400;
       display: flex; flex-direction: column; gap: 6px;
@@ -751,12 +765,17 @@ body.light-theme #filter-apply:hover { background: #d5edf7; color: #104d6b; }
     #check-ygg      { accent-color: #b45cff; }
     #map-controls {
       position: fixed; bottom: 16px; left: 16px; z-index: 600;
-      display: flex; gap: 6px; align-items: stretch;   /* the selects take the icon button's height */
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      max-width: calc(100vw - 56px);   /* leave room for attrib icon on the right */
+      padding: 4px; border-radius: 8px;
+      background: rgba(7,10,19,.82); border: 1px solid var(--border2);
+      box-sizing: border-box;
     }
     #theme-toggle {
       background: var(--bg2); border: 1px solid var(--border2);
       color: var(--text-dim); cursor: pointer; font: 16px monospace;
-      padding: 2px 6px; border-radius: 4px; line-height: 1;
+      width: 32px; height: 32px; padding: 0; border-radius: 4px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     #theme-toggle:hover { background: var(--bg3); color: var(--text); }
     .overlay-btn {
@@ -813,8 +832,10 @@ body.light-theme #filter-apply:hover { background: #d5edf7; color: #104d6b; }
         position: fixed !important; top: 58px; right: 8px; left: auto;
         justify-content: flex-end; max-width: calc(100vw - 16px); z-index: 630;
       }
-      #map-controls { bottom: 58px !important; left: 8px !important; }
+      #map-controls { bottom: 58px !important; left: 8px !important; right: auto; max-width: calc(100vw - 52px); }
       body.panel-expanded #map-controls { bottom: calc(45vh + 10px) !important; }
+      .maplibregl-ctrl-bottom-right { bottom: 58px; right: 8px; }
+      body.panel-expanded .maplibregl-ctrl-bottom-right { bottom: calc(45vh + 10px); }
       #filter-btns { flex-wrap: wrap; }
       #filter-btns .panel-btn { flex: 1 1 calc(33% - 4px); min-width: 0; text-align: center; padding: 6px 4px; }
       .entry-hash { overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; vertical-align: bottom; }
@@ -871,9 +892,11 @@ body.light-theme #filter-apply:hover { background: #d5edf7; color: #104d6b; }
     #lang-toggle { display: none; font-weight: bold; letter-spacing: 0.5px; align-items: center; }
     #tileset-select, #size-select {
       background: var(--bg2); border: 1px solid var(--border2); color: var(--text-dim);
-      font: 11px monospace; padding: 2px 4px; border-radius: 4px; cursor: pointer;
+      font: 11px monospace; padding: 0 8px; border-radius: 4px; cursor: pointer;
+      height: 32px; box-sizing: border-box; flex: 0 1 auto; min-width: 0;
     }
-    #tileset-select { min-width: 7.5em; }
+    #size-select { width: 4.5em; }
+    #tileset-select { width: 6.5em; max-width: 42vw; }
     #tileset-select:hover, #size-select:hover { color: var(--text); }
     #discovery-warning {
       display: none;
@@ -1193,15 +1216,22 @@ const map = new maplibregl.Map({
   center:            [{{ init_lon }}, {{ init_lat }}],
   zoom:              toMapZoom({{ init_zoom }}),
   maxZoom:           toMapZoom(19),
-  attributionControl: { compact: true },
+  attributionControl: false,
   dragRotate:        false,
   pitchWithRotate:   false,
 });
+// Icon-only credit bottom-right; tap expands the legal text (ODbL / CC-BY).
+map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 const mapAttributionRoot = document.getElementById('map');
 function openAttributionLinksExternally() {
   mapAttributionRoot.querySelectorAll('.maplibregl-ctrl-attrib a').forEach(link => {
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
+  });
+  // Keep collapsed until the user taps the "i" — MapLibre sometimes opens it on wide maps.
+  mapAttributionRoot.querySelectorAll('.maplibregl-ctrl-attrib').forEach(el => {
+    el.classList.add('maplibregl-compact');
+    el.classList.remove('maplibregl-compact-show');
   });
 }
 new MutationObserver(openAttributionLinksExternally).observe(mapAttributionRoot, { childList: true, subtree: true });

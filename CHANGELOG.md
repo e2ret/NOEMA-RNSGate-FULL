@@ -1,3 +1,9 @@
+## 1.1.23
+
+### Fixed
+- **Wardrive map bottom controls.** Theme / size / tileset sit in a clear bar and no longer merge with OSM credit.
+- **OSM attribution.** Shows as an info icon only; full OpenStreetMap text opens on tap.
+
 ## 1.1.22
 
 ### Fixed
