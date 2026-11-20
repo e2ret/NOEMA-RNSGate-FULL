@@ -1,3 +1,17 @@
+## 1.1.21
+
+### Added
+- **Home panel toggles on the Services page.** Buttons at the top show/hide Globe, Services, Architecture; remaining columns stretch. Kept in the browser.
+- **Globe animation pause.** Play/pause on the globe stops auto-rotate and pulses; drag still works.
+
+### Fixed
+- **Mobile Wardrive map.** Beacon toolbar no longer overlaps; map is full-width; beacons are a collapsible bottom bar (tap header to expand); Signal Overlay top-right.
+- **Mobile Chat.** Full-height layout so contacts / messages / compose stay usable.
+- **Mobile Nomadnet editor.** The page/script textarea stretches to fill the remaining screen height instead of staying a short strip.
+- **Mobile Configs tabs.** LXMF / Nomadnet / Reticulum tabs wrap like System (no horizontal clip).
+- **Main menu height.** Sidebar nav items match System control height (32px), not the shorter compact padding.
+- **Home panel toggles.** On phone, Globe / Services / Architecture always stack (no cramped 2-column); without Globe the side panel fills the row; toggle buttons match control height.
+
 ## 1.1.20
 
 > [!CAUTION]

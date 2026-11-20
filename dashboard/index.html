@@ -239,6 +239,7 @@ body{
 .main:has(#panel-system.active){overflow-y:hidden}
 .main:has(#panel-rnode.active){overflow-y:hidden}
 .main:has(#panel-chat.active){overflow-y:hidden}
+.main:has(#panel-nomadnet.active){overflow-y:hidden}
 #chat-grid > *{min-height:0;min-width:0}
 #chat-contacts-list{min-height:0}
 #chat-compose{flex-shrink:0}
@@ -307,12 +308,14 @@ select{
   border-radius:var(--radius);color:var(--tx)
 }
 
-.cfg-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to right,black 0,black calc(100% - 28px),transparent 100%)}
-.cfg-tabs::-webkit-scrollbar{display:none}
-.ctab{font-size:12px;padding:8px 15px;cursor:pointer;color:var(--mu);border-radius:var(--radius);border:1px solid var(--bd);background:var(--s2);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:.15s;white-space:nowrap;flex-shrink:0}
+.cfg-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;overflow:visible}
+.ctab{font-size:12px;padding:8px 15px;cursor:pointer;color:var(--mu);border-radius:var(--radius);border:1px solid var(--bd);background:var(--s2);font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:.15s;white-space:nowrap;flex:1 1 auto;text-align:center}
 .ctab:hover{color:var(--tx);border-color:var(--mu)}
 .ctab.active{color:#070a13;background:var(--teal);border-color:var(--teal);font-weight:700;box-shadow:var(--glow)}
 .ctab:hover:not(.active){color:var(--tx)}
+@media(max-width:768px){
+  .ctab{flex:1 1 auto;min-width:calc(50% - 4px);justify-content:center}
+}
 .cfg-path{font-size:11px;color:var(--mu);margin-bottom:8px;font-family:var(--mono)}
 
 textarea{
@@ -401,21 +404,56 @@ textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 1px var(--
   .hub-pill{padding-right:14px}
 }
 @media(max-width:900px){
-  .body{overflow-y:auto}
+  .body{overflow-y:auto;min-height:0}
   .main{flex:none;overflow-y:visible}
   .main:has(#panel-nodes.active){overflow-y:visible}
   .main:has(#panel-system.active){overflow-y:visible}
   .main:has(#panel-rnode.active){overflow-y:visible}
-  .main:has(#panel-chat.active){overflow-y:visible}
+  /* Chat / Wardrive / Nomadnet need a real flex height on phones */
+  .body:has(#panel-chat.active),
+  .body:has(#panel-wardrive.active),
+  .body:has(#panel-nomadnet.active){overflow:hidden;display:flex;flex-direction:column;min-height:0}
+  .main:has(#panel-chat.active),
+  .main:has(#panel-wardrive.active),
+  .main:has(#panel-nomadnet.active){
+    flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .main:has(#panel-chat.active),
+  .main:has(#panel-wardrive.active){padding:0}
+  #panel-chat.active,#panel-wardrive.active,#panel-nomadnet.active{flex:1;min-height:0;height:100%}
+  #chat-grid{flex:1;min-height:0;height:100%;border-radius:0!important;border-left:none!important;border-right:none!important}
+  #panel-nomadnet.active > div{flex:1;min-height:0}
+  #nn-editor{flex:1 1 auto!important;min-height:220px!important}
 }
 </style>
 
 <style>
+.wd-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-shrink:0;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.wd-toolbar-title{display:flex;align-items:baseline;gap:6px;min-width:0}
+.wd-title{font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap}
+.wd-hint{font-size:11px;color:var(--mu)}
+.wd-toolbar-controls{margin-left:auto;display:flex;align-items:center;gap:7px;min-width:0;flex:1;justify-content:flex-end;flex-wrap:wrap}
+.wd-beacon-lbl{font-size:11px;color:var(--mu);white-space:nowrap}
+.wd-beacon-input{flex:1;min-width:140px;max-width:360px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font:11px var(--mono);padding:5px 8px}
+.wd-toolbar-btns{display:flex;gap:6px;flex-shrink:0}
+.wd-toolbar-btns .sys-btn{font-size:11px;padding:5px 8px}
+@media(max-width:720px){
+  .wd-toolbar{flex-direction:column;align-items:stretch;gap:8px;padding:8px 10px}
+  .wd-hint{display:none}
+  .wd-toolbar-controls{margin-left:0;flex:none;width:100%;justify-content:stretch}
+  .wd-beacon-lbl{display:none}
+  .wd-beacon-input{flex:1 1 100%;min-width:0;max-width:none;width:100%;box-sizing:border-box}
+  .wd-toolbar-btns{width:100%}
+  .wd-toolbar-btns .sys-btn{flex:1 1 0;justify-content:center;min-width:0}
+}
 @media(max-width:600px){
   #chat-grid{ grid-template-columns:minmax(0,1fr) !important; }
-  #chat-contacts-pane{ display:flex; }
-  #chat-msgs-pane{ display:none; }
+  #chat-contacts-pane{ display:flex; min-height:0; }
+  #chat-msgs-pane{ display:none; min-height:0; }
   #chat-back-btn{ display:block !important; }
+  #panel-chat.active{ min-height:0; }
+  #chat-compose{ padding:8px 10px; }
+  #chat-messages{ padding:10px 12px; }
 }
 </style>
 <script>
@@ -445,17 +483,20 @@ function chatShowMessages(){
 .sb-ip{align-self:flex-start}
 .shell .hub-col{flex-direction:column;flex-wrap:nowrap;justify-content:flex-start;align-items:stretch;gap:2px;overflow:visible}
 .shell .hub-pill-ic{display:none}   /* no icons in the menu: text only */
-.shell .hub-pill{padding:7px 12px}
-.shell .hub-pill span,.shell .hub-pill:hover span,.shell .hub-pill.active span{margin-left:0}
 .shell .hub-pill-ic svg{width:14px;height:14px}
-.shell .hub-pill span{font-size:13px}
+.shell .hub-pill span{font-size:12px}
 .sb-brand .logo{font-size:13px}
 .sb-sec{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mu);padding:9px 8px 3px}
-.shell .hub-pill{border-radius:var(--radius);padding:4px 8px;background:transparent;border-color:transparent;box-shadow:none}
+/* same height as System / ctl buttons (32px) */
+.shell .hub-pill{
+  height:var(--ctl-h);min-height:var(--ctl-h);box-sizing:border-box;
+  border-radius:var(--radius);padding:0 12px;background:transparent;border-color:transparent;box-shadow:none;
+  display:flex;align-items:center;line-height:1
+}
 .shell .hub-pill:hover{background:var(--s2);border-color:var(--bd);box-shadow:none}
 .shell .hub-pill.active{background:var(--s3);border-color:var(--teal);box-shadow:var(--glow)}
-.shell .hub-pill span,.shell .hub-pill:hover span,.shell .hub-pill.active span,.shell .hub-pill:focus-visible span{max-width:none;opacity:1;margin-left:10px;overflow:visible}
-.shell .hub-pill,.shell .hub-pill:hover,.shell .hub-pill.active,.shell .hub-pill:focus-visible{padding-right:8px}
+.shell .hub-pill span,.shell .hub-pill:hover span,.shell .hub-pill.active span,.shell .hub-pill:focus-visible span{max-width:none;opacity:1;margin-left:0;overflow:visible}
+.shell .hub-pill,.shell .hub-pill:hover,.shell .hub-pill.active,.shell .hub-pill:focus-visible{padding-right:12px}
 .sb-meters{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--bd)}
 .sb-meters .mc{border:1px solid var(--bd);border-radius:8px;padding:6px 10px;background:var(--s1)}
 .sb-meters .mc-inner{margin-bottom:5px}
@@ -490,11 +531,14 @@ function chatShowMessages(){
 .nm-globe-box{position:relative;min-height:340px;border:1px solid var(--bd);border-radius:12px;background:radial-gradient(circle at 50% 45%,rgba(56,189,248,.06),transparent 70%),var(--s1);overflow:hidden}
 .nm-globe-box canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
 .nm-globe-box canvas:active{cursor:grabbing}
-.nm-legend{position:absolute;left:12px;bottom:10px;display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:var(--mu);pointer-events:none}
+.nm-legend{position:absolute;left:12px;right:12px;bottom:10px;display:flex;gap:10px 12px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:var(--mu);pointer-events:none;z-index:1}
 .nm-legend span{display:inline-flex;align-items:center;gap:5px}
 .nm-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
 .nm-legend b{font-weight:600}
-.nm-credit{position:absolute;right:12px;bottom:10px;max-width:50%;text-align:right;font-family:var(--mono);font-size:9px;color:var(--mu);pointer-events:none}
+.nm-credit{position:absolute;left:12px;right:12px;bottom:28px;max-width:none;text-align:left;font-family:var(--mono);font-size:9px;color:var(--mu);pointer-events:none;z-index:1}
+@media(min-width:700px){
+  .nm-credit{left:auto;right:12px;bottom:10px;max-width:46%;text-align:right}
+}
 .nm-side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}
 .nm-card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;font-size:12px;flex-shrink:0}
 .nm-list{display:flex;flex-direction:column;gap:6px}
@@ -515,24 +559,51 @@ function chatShowMessages(){
 @media(max-width:900px){.nm-wrap{grid-template-columns:minmax(0,1fr);flex:none}.nm-globe-box{height:min(96vw,440px);min-height:0}.nm-side{overflow:visible}}
 </style>
 <style id="home-css">
+#panel-home.active{display:flex;flex-direction:column;gap:10px}
+.home-panel-bar{display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0;align-items:center}
+.home-tog{appearance:none;border:1px solid var(--bd);background:var(--s2);color:var(--mu);font:600 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;height:var(--ctl-h);min-height:var(--ctl-h);padding:0 12px;border-radius:8px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;box-sizing:border-box}
+.home-tog:hover{color:var(--tx);border-color:var(--mu)}
+.home-tog.on{color:#070a13;background:var(--teal);border-color:var(--teal)}
 .home-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) clamp(360px,26vw,500px);gap:14px}
-.home-side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}
+.home-grid>*{min-width:0}
+.home-side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;min-width:0}
+.home-side>*{min-width:0}
 .home-diag{flex:1;min-height:150px;display:flex;flex-direction:column}
 .home-diag .svc-arch-diagram{flex:1;min-height:0;max-width:none;margin:0;position:relative}
 .home-diag svg{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;height:100% !important;max-height:none !important}
+.home-off{display:none !important}
+.home-grid[data-home-n="1"]{grid-template-columns:minmax(0,1fr) !important}
+.home-grid[data-home-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+/* without globe the outer grid has only .home-side — don't leave an empty second track */
+@media(max-width:1299px){
+  .home-grid:has(#home-globe.home-off){grid-template-columns:minmax(0,1fr) !important}
+}
 @media(max-width:900px){.home-diag{flex:none;min-height:0}.home-diag .svc-arch-diagram{position:static;max-width:360px;margin:0 auto}.home-diag svg{position:static;transform:none;left:auto;height:auto !important;max-height:420px !important}}
-.svc-mini{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.svc-mini{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd);min-width:0}
 .svc-mini:last-child{border-bottom:none}
 .svc-mini .svc-n{min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.svc-mini .badge{padding:3px 7px;font-size:9px}
-.svc-ib{display:inline-flex;gap:4px}
+.svc-mini .badge{padding:3px 7px;font-size:9px;flex-shrink:0}
+.svc-ib{display:inline-flex;gap:4px;flex-shrink:0}
 .svc-ib .sys-btn{width:var(--ctl-h);height:var(--ctl-h);padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
 .nm-hint{position:absolute;left:12px;right:12px;top:12px;z-index:2;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(5,8,16,.9);border:1px solid var(--bd-hi);border-radius:10px;padding:8px 10px;font-size:11.5px;color:var(--am)}
-@media(max-width:900px){.home-grid{grid-template-columns:minmax(0,1fr);flex:none}.home-grid .nm-globe-box{height:min(96vw,440px);min-height:0}.home-side{overflow:visible}}
+/* phone: always one column — data-home-n="2" must not force a cramped dual layout */
+@media(max-width:900px){
+  .home-grid,
+  .home-grid[data-home-n="1"],
+  .home-grid[data-home-n="2"]{grid-template-columns:minmax(0,1fr) !important;flex:none}
+  .home-grid .nm-globe-box{height:min(96vw,440px);min-height:0}
+  .home-side{overflow:visible}
+  #home-panel-svc{overflow:visible}
+  #svc-compact{min-width:0}
+  .svc-addr{grid-template-columns:minmax(72px,96px) minmax(0,1fr)}
+}
 </style>
 <style id="svc-addr-css">
 .nm-pal-btn{position:absolute;top:10px;right:10px;z-index:3;width:28px;height:28px;padding:0;border-radius:8px;border:1px solid var(--bd-hi);background:rgba(5,8,16,.7);color:var(--tx);font-size:15px;line-height:1;cursor:pointer}
 .nm-pal-btn:hover{border-color:var(--teal)}
+.nm-anim-btn{position:absolute;top:10px;right:10px;z-index:3;min-width:28px;height:28px;padding:0 8px;border-radius:8px;border:1px solid var(--bd-hi);background:rgba(5,8,16,.7);color:var(--tx);font:600 11px/1 var(--mono);letter-spacing:.04em;cursor:pointer}
+.nm-anim-btn:hover{border-color:var(--teal);color:var(--teal)}
+.nm-anim-btn.is-paused{color:var(--am);border-color:var(--am)}
 .nm-hint{right:48px !important}
 .svc-block{border-bottom:1px solid var(--bd);padding:5px 0}
 .svc-block:last-child{border-bottom:none}
@@ -549,9 +620,12 @@ function chatShowMessages(){
 /* wide screens: three cards in a row; services keep their labelled buttons, addresses get a description line */
 @media(min-width:1300px){
   .home-grid{grid-template-columns:minmax(0,1fr) clamp(400px,26vw,480px) minmax(0,.95fr)}
+  .home-grid[data-home-n="1"]{grid-template-columns:minmax(0,1fr) !important}
+  .home-grid[data-home-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
   .home-side{display:contents}
-  .home-side>.nm-card:first-child{display:flex;flex-direction:column;min-height:0}
-  .home-side>.nm-card:first-child .brow{margin-top:10px !important;padding-top:8px;flex-shrink:0}
+  .home-side>#home-panel-svc{display:flex;flex-direction:column;min-height:0}
+  .home-side>#home-panel-svc.home-off{display:none !important}
+  .home-side>#home-panel-svc .brow{margin-top:10px !important;padding-top:8px;flex-shrink:0}
   #svc-compact{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
   .svc-block{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;padding:6px 0}
   .svc-mini{display:flex;flex-wrap:nowrap;align-items:center;gap:8px}
@@ -574,8 +648,10 @@ function chatShowMessages(){
 
 /* 901..1299 px: globe + services side by side, the diagram keeps its natural size and the page scrolls */
 @media(min-width:901px) and (max-width:1299px){
-  #panel-home.active{flex:none;min-height:auto}
+  #panel-home.active{flex:none;min-height:auto;display:flex;flex-direction:column;gap:10px}
   .home-grid{flex:none;grid-template-columns:minmax(0,1fr) 360px}
+  .home-grid[data-home-n="1"]{grid-template-columns:minmax(0,1fr) !important}
+  .home-grid[data-home-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
   .home-grid #home-globe{min-height:520px}
   .home-side{overflow:visible}
   .home-diag{flex:none;min-height:0}
@@ -591,7 +667,7 @@ function chatShowMessages(){
   .svc-addr .addr-row{margin-top:0}
   .svc-addr .sys-btn{padding:2px 7px}
   .svc-mini .sys-btn{padding:3px 6px}
-  .home-side>.nm-card:first-child .brow{margin-top:6px !important;padding-top:4px}
+  .home-side>#home-panel-svc .brow{margin-top:6px !important;padding-top:4px}
 }
 
 /* the flash of the status dot must not be cut by the scrolling list: smaller ring and room around it */
@@ -723,15 +799,21 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 
     <!-- HOME / SERVICES -->
     <div class="panel active" id="panel-home">
-      <div class="home-grid">
+      <div class="home-panel-bar" id="home-panel-bar" role="toolbar" aria-label="Home panels">
+        <button type="button" class="home-tog on" id="home-tog-globe" onclick="setHomePanel('globe',!_homePanelOn('globe'))" data-i18n="home_panel_globe">Globe</button>
+        <button type="button" class="home-tog on" id="home-tog-svc" onclick="setHomePanel('svc',!_homePanelOn('svc'))" data-i18n="home_panel_svc">Services &amp; addresses</button>
+        <button type="button" class="home-tog on" id="home-tog-arch" onclick="setHomePanel('arch',!_homePanelOn('arch'))" data-i18n="home_panel_arch">System architecture</button>
+      </div>
+      <div class="home-grid" id="home-grid" data-home-n="3">
         <div class="nm-globe-box" id="home-globe">
           <canvas id="nm-canvas-home"></canvas>
+          <button type="button" class="nm-anim-btn" id="nm-anim-btn-home" onclick="nmToggleAnim()" data-i18n-title="nm_anim_toggle" title="Pause / resume globe animation">❚❚</button>
           <div class="nm-hint" id="nm-hint-home" style="display:none"></div>
           <div class="nm-legend"><span><i class="lg-up" style="background:var(--gr)"></i><b data-i18n="nm_st_up">Connected</b></span><span><i class="lg-down" style="background:var(--rd)"></i><b data-i18n="nm_st_down">No link</b></span><span><i class="lg-home" style="background:var(--am)"></i><b data-i18n="nm_legend_home">Gateway</b></span></div>
           <div class="nm-credit" data-i18n="nm_credit">IP geolocation by DB-IP.com (CC BY 4.0) · map: Natural Earth</div>
         </div>
-        <div class="home-side">
-          <div class="nm-card">
+        <div class="home-side" id="home-side">
+          <div class="nm-card" id="home-panel-svc">
             <div class="section-lbl" style="margin-bottom:6px" data-i18n="sec_svc_addr">Services &amp; addresses</div>
             <div id="svc-compact"></div>
             <div class="brow" style="margin-top:10px">
@@ -740,7 +822,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
             </div>
             <div id="ap-toast" style="display:none;color:var(--gr);font-size:12px;margin-top:6px"><span data-i18n="txt_copied">✓ Copied</span></div>
           </div>
-          <div class="nm-card home-diag">
+          <div class="nm-card home-diag" id="home-panel-arch">
             <div class="section-lbl" style="margin-bottom:6px" data-i18n="sec_arch_live">System architecture — live</div>
         <div class="svc-arch-diagram">
         <style>
@@ -1066,21 +1148,25 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
 
     <!-- WARDRIVE COVERAGE MAP -->
     <div class="panel" id="panel-wardrive">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;flex-shrink:0;border-bottom:1px solid var(--bd);flex-wrap:wrap">
-        <span style="font-size:12px;font-weight:700;color:var(--tx)" data-i18n="nav_wardrive">Wardrive map</span>
-        <span style="font-size:11px;color:var(--mu)">· <span data-i18n="wardrive_map_hint">coverage points received by this gateway</span></span>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:7px;min-width:0;flex:1;justify-content:flex-end">
-          <span style="font-size:11px;color:var(--mu);white-space:nowrap" data-i18n="wardrive_beacon_label">Beacon hash</span>
+      <div class="wd-toolbar">
+        <div class="wd-toolbar-title">
+          <span class="wd-title" data-i18n="nav_wardrive">Wardrive map</span>
+          <span class="wd-hint">· <span data-i18n="wardrive_map_hint">coverage points received by this gateway</span></span>
+        </div>
+        <div class="wd-toolbar-controls">
+          <span class="wd-beacon-lbl" data-i18n="wardrive_beacon_label">Beacon hash</span>
           <input id="wardrive-beacon" type="text" spellcheck="false" autocomplete="off"
             placeholder="paste from the phone"
             data-i18n-placeholder="wardrive_beacon_ph"
-            style="flex:1;min-width:140px;max-width:360px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font:11px var(--mono);padding:5px 8px">
-          <button type="button" class="sys-btn" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="applyWardriveBeacon()" data-i18n="wardrive_beacon_apply">Show</button>
-          <button type="button" class="sys-btn" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="clearWardriveBeacon()" data-i18n="wardrive_beacon_clear">All</button>
-          <button type="button" class="sys-btn rd" style="font-size:11px;padding:5px 8px;white-space:nowrap" onclick="clearWardriveDb()" data-i18n="wardrive_db_clear">Clear DB</button>
+            class="wd-beacon-input">
+          <div class="wd-toolbar-btns">
+            <button type="button" class="sys-btn" onclick="applyWardriveBeacon()" data-i18n="wardrive_beacon_apply">Show</button>
+            <button type="button" class="sys-btn" onclick="clearWardriveBeacon()" data-i18n="wardrive_beacon_clear">All</button>
+            <button type="button" class="sys-btn rd" onclick="clearWardriveDb()" data-i18n="wardrive_db_clear">Clear DB</button>
+          </div>
         </div>
       </div>
-      <iframe id="wardrive-frame" title="Wardrive coverage map" style="width:100%;flex:1;min-height:300px;border:0;background:var(--bg)"></iframe>
+      <iframe id="wardrive-frame" title="Wardrive coverage map" style="width:100%;flex:1;min-height:0;border:0;background:var(--bg)"></iframe>
       <script>
         // Default 5001; overwritten from /etc/reticulum/wardrive_map.json via API so a
         // manual port change (e.g. 8082 when 5001 is taken) still drives the iframe.
@@ -2073,7 +2159,7 @@ const I18N = {
     nm_st_up: "Connected", nm_st_down: "No link", nm_st_unknown: "Unknown", nm_st_off: "Off",
     nm_no_links: "No interfaces with a remote host in the Reticulum config.",
     nm_reason_private: "private address", nm_reason_dns: "name not resolved", nm_reason_no_db: "no geo database", nm_reason_no_lib: "maxminddb not installed", nm_reason_not_found: "not in the database", nm_reason_db_error: "database error",
-    nm_db_missing: "The geo database is not installed, so connections can't be placed on the map.", nm_db_upload: "Choose file…", nm_db_uploading: "Uploading and unpacking, this can take a minute…", nm_hint_origin: "Set where your gateway is (System → Globe) to draw the arcs.", nm_hint_db: "Install the geo database (System → Globe) to see cities.", nm_hint_open: "Open settings", sec_globe: "Globe (home page)", nm_origin_tip: "Tip: right-click your place on openstreetmap.org and copy the coordinates.", nm_db_hint: "Choose the geo database file: ipcity.bin (from Noema Snitch) or dbip-city-lite.mmdb (db-ip.com).", nm_db_download: "Download (~100 MB)", nm_db_update: "Update", nm_db_progress: "Downloading…", nm_db_ok: "Database: DB-IP City Lite, {date}",
+    nm_db_missing: "The geo database is not installed, so connections can't be placed on the map.", nm_db_upload: "Choose file…", nm_db_uploading: "Uploading and unpacking, this can take a minute…", nm_hint_origin: "Set where your gateway is (System → Globe) to draw the arcs.", nm_hint_db: "Install the geo database (System → Globe) to see cities.", nm_hint_open: "Open settings", sec_globe: "Globe (home page)", home_panel_globe: "Globe", home_panel_svc: "Services", home_panel_arch: "Architecture", nm_anim_toggle: "Pause / resume globe animation", nm_origin_tip: "Tip: right-click your place on openstreetmap.org and copy the coordinates.", nm_db_hint: "Choose the geo database file: ipcity.bin (from Noema Snitch) or dbip-city-lite.mmdb (db-ip.com).", nm_db_download: "Download (~100 MB)", nm_db_update: "Update", nm_db_progress: "Downloading…", nm_db_ok: "Database: DB-IP City Lite, {date}",
     nm_db_nolib: "The Python package maxminddb is missing: run pip install maxminddb in the dashboard environment and restart the dashboard.",
     nm_origin_hint: "Set where this gateway is: the arcs start from this point.", nm_lat: "Latitude", nm_lon: "Longitude", nm_label: "Name", nm_pick: "Pick on globe", nm_save: "Save", nm_change: "Change",
     flt_hops: "Hops", flt_any: "Any", flt_tcp_hint: "Show only nodes whose announces reached us over TCP / the network (not LoRa) — works together with the other filters",
@@ -2257,7 +2343,7 @@ const I18N = {
     nm_st_up: "Подключён", nm_st_down: "Нет связи", nm_st_unknown: "Неизвестно", nm_st_off: "Выключен",
     nm_no_links: "В конфиге Reticulum нет интерфейсов с удалённым хостом.",
     nm_reason_private: "частный адрес", nm_reason_dns: "имя не разрешилось", nm_reason_no_db: "нет базы геолокации", nm_reason_no_lib: "не установлен maxminddb", nm_reason_not_found: "нет в базе", nm_reason_db_error: "ошибка базы",
-    nm_db_missing: "База геолокации не установлена, поэтому соединения нельзя разместить на карте.", nm_db_upload: "Выбрать файл…", nm_db_uploading: "Загрузка и распаковка, это может занять минуту…", nm_hint_origin: "Укажите положение шлюза (Система → Глобус), чтобы появились дуги.", nm_hint_db: "Установите базу геолокации (Система → Глобус), чтобы увидеть города.", nm_hint_open: "Открыть настройки", sec_globe: "Глобус (главная)", nm_origin_tip: "Подсказка: нажмите правой кнопкой на своё место на openstreetmap.org и скопируйте координаты.", nm_db_hint: "Выберите файл геобазы: ipcity.bin (из Noema Snitch) или dbip-city-lite.mmdb (с db-ip.com).", nm_db_download: "Скачать (~100 МБ)", nm_db_update: "Обновить", nm_db_progress: "Загрузка…", nm_db_ok: "База: DB-IP City Lite, {date}",
+    nm_db_missing: "База геолокации не установлена, поэтому соединения нельзя разместить на карте.", nm_db_upload: "Выбрать файл…", nm_db_uploading: "Загрузка и распаковка, это может занять минуту…", nm_hint_origin: "Укажите положение шлюза (Система → Глобус), чтобы появились дуги.", nm_hint_db: "Установите базу геолокации (Система → Глобус), чтобы увидеть города.", nm_hint_open: "Открыть настройки", sec_globe: "Глобус (главная)", home_panel_globe: "Глобус", home_panel_svc: "Сервисы", home_panel_arch: "Архитектура", nm_anim_toggle: "Пауза / продолжить анимацию глобуса", nm_origin_tip: "Подсказка: нажмите правой кнопкой на своё место на openstreetmap.org и скопируйте координаты.", nm_db_hint: "Выберите файл геобазы: ipcity.bin (из Noema Snitch) или dbip-city-lite.mmdb (с db-ip.com).", nm_db_download: "Скачать (~100 МБ)", nm_db_update: "Обновить", nm_db_progress: "Загрузка…", nm_db_ok: "База: DB-IP City Lite, {date}",
     nm_db_nolib: "Не установлен пакет maxminddb: выполните pip install maxminddb в окружении дашборда и перезапустите дашборд.",
     nm_origin_hint: "Укажите, где находится шлюз: от этой точки пойдут дуги.", nm_lat: "Широта", nm_lon: "Долгота", nm_label: "Название", nm_pick: "Выбрать на глобусе", nm_save: "Сохранить", nm_change: "Изменить",
     flt_hops: "Хопы", flt_any: "Любые", flt_tcp_hint: "Только узлы, чьи анонсы пришли по TCP / сети (не по LoRa) — работает вместе с остальными фильтрами",
@@ -5797,6 +5883,59 @@ setInterval(()=>{
 },250);
 
 const POLLING_MULTIPLIERS = {fast: 1, normal: 2, slow: 4};
+const _HOME_PANEL_KEYS = {globe:"noema_home_globe", svc:"noema_home_svc", arch:"noema_home_arch"};
+function _homePanelOn(key){
+  try{ return localStorage.getItem(_HOME_PANEL_KEYS[key]) !== "0"; }catch(e){ return true; }
+}
+function syncHomePanelToggles(){
+  ["globe","svc","arch"].forEach(k => {
+    const el = document.getElementById("home-tog-"+k);
+    if(el) el.classList.toggle("on", _homePanelOn(k));
+  });
+}
+function setHomePanel(key, on){
+  const keys = Object.keys(_HOME_PANEL_KEYS);
+  let next = {};
+  keys.forEach(k => { next[k] = (k===key) ? !!on : _homePanelOn(k); });
+  if(!next.globe && !next.svc && !next.arch) next[key] = true;
+  keys.forEach(k => {
+    try{ localStorage.setItem(_HOME_PANEL_KEYS[k], next[k] ? "1" : "0"); }catch(e){}
+  });
+  applyHomePanels();
+}
+function applyHomePanels(){
+  const show = {
+    globe: _homePanelOn("globe"),
+    svc: _homePanelOn("svc"),
+    arch: _homePanelOn("arch"),
+  };
+  if(!show.globe && !show.svc && !show.arch) show.svc = true;
+  const globe = document.getElementById("home-globe");
+  const svc = document.getElementById("home-panel-svc");
+  const arch = document.getElementById("home-panel-arch");
+  const side = document.getElementById("home-side");
+  const grid = document.getElementById("home-grid");
+  if(globe) globe.classList.toggle("home-off", !show.globe);
+  if(svc) svc.classList.toggle("home-off", !show.svc);
+  if(arch) arch.classList.toggle("home-off", !show.arch);
+  if(side) side.classList.toggle("home-off", !show.svc && !show.arch);
+  // wide (≥1300): display:contents → each panel is a grid cell
+  // narrower: outer grid is globe + side only
+  const wide = window.matchMedia("(min-width:1300px)").matches;
+  const n = wide
+    ? (show.globe?1:0) + (show.svc?1:0) + (show.arch?1:0)
+    : (show.globe?1:0) + ((show.svc||show.arch)?1:0);
+  if(grid) grid.dataset.homeN = String(n);
+  syncHomePanelToggles();
+  try{ if(typeof nmResize === "function") setTimeout(nmResize, 40); }catch(e){}
+}
+let _homeResizeT=0;
+window.addEventListener("resize", ()=>{
+  clearTimeout(_homeResizeT);
+  _homeResizeT=setTimeout(()=>{ try{ applyHomePanels(); }catch(e){} }, 120);
+});
+applyHomePanels();
+
 const _pollingMode = localStorage.getItem("noema_polling_mode") || "fast";
 const _pollMul = POLLING_MULTIPLIERS[_pollingMode] || 1;
 
@@ -6824,8 +6963,23 @@ function sysTab(id) {
 const NM = {
   data: null, status: {}, land: null, rot: [20, 25], zoom: 1, sel: null,
   run: false, raf: 0, last: 0, interact: 0, drag: null, pick: false, focus: null,
-  cols: null, hits: [], timers: [], dlTimer: 0, auto: true, w: 0, h: 0, dpr: 1, ro: null, bound: {}, cid: "nm-canvas"
+  cols: null, hits: [], timers: [], dlTimer: 0, auto: true, animPaused: false, animFreeze: 0,
+  w: 0, h: 0, dpr: 1, ro: null, bound: {}, cid: "nm-canvas"
 };
+try{ NM.animPaused = localStorage.getItem("noema_globe_anim") === "0"; }catch(e){}
+function nmSyncAnimBtn(){
+  document.querySelectorAll(".nm-anim-btn").forEach(b => {
+    b.classList.toggle("is-paused", !!NM.animPaused);
+    b.textContent = NM.animPaused ? "▶" : "❚❚";
+    b.setAttribute("aria-pressed", NM.animPaused ? "true" : "false");
+  });
+}
+function nmToggleAnim(){
+  NM.animPaused = !NM.animPaused;
+  if(NM.animPaused) NM.animFreeze = performance.now();
+  try{ localStorage.setItem("noema_globe_anim", NM.animPaused ? "0" : "1"); }catch(e){}
+  nmSyncAnimBtn();
+}
 
 const NM_PALS = {
   /* both palettes are single-tone with a wide brightness range: near-black ocean, mid-tone land, bright arcs, almost white gateway */
@@ -6932,6 +7086,7 @@ function nmRoundRect(ctx, x, y, w, h, r){
 function nmDraw(now){
   const cv = document.getElementById(NM.cid); if(!cv || !NM.w) return;
   const ctx = cv.getContext("2d"), C = NM.cols;
+  const animT = NM.animPaused ? (NM.animFreeze || now) : now;
   ctx.setTransform(NM.dpr, 0, 0, NM.dpr, 0, 0); ctx.clearRect(0, 0, NM.w, NM.h);
   NM.cx = NM.w / 2; NM.cy = NM.h / 2; NM.R = Math.min(NM.w, NM.h) * 0.42 * NM.zoom;
   const R = NM.R;
@@ -7002,7 +7157,7 @@ function nmDraw(now){
       ctx.setLineDash(up ? [] : [4, 5]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
       if(up){ // pulses travelling from the gateway to the peer
         for(let n = 0; n < 2; n++){
-          const t = ((now / 2600) + x.i * 0.173 + n * 0.5) % 1, pt = gc.at(t), p = nmProj(pt[0], pt[1], 1 + hgt * Math.sin(Math.PI * t));
+          const t = ((animT / 2600) + x.i * 0.173 + n * 0.5) % 1, pt = gc.at(t), p = nmProj(pt[0], pt[1], 1 + hgt * Math.sin(Math.PI * t));
           if(!p.vis) continue;
           ctx.beginPath(); ctx.arc(p.x, p.y, sel ? 3.2 : 2.4, 0, 6.2832); ctx.fillStyle = NM.pal.pulse; ctx.shadowColor = col; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0;
         }
@@ -7024,7 +7179,7 @@ function nmDraw(now){
   if(o){
     const p = nmProj(o.lon, o.lat);
     if(p.c > 0){
-      const pulse = (now / 1400) % 1;
+      const pulse = (animT / 1400) % 1;
       ctx.beginPath(); ctx.arc(p.x, p.y, 5 + pulse * 14, 0, 6.2832); ctx.strokeStyle = NM.pal.gwRing; ctx.globalAlpha = 0.5 * (1 - pulse); ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
       ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, 6.2832); ctx.fillStyle = NM.pal.gateway; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.bg; ctx.stroke();
       labels.push({ x: p.x, y: p.y, text: o.label || t("nm_home"), pri: 3 });
@@ -7056,7 +7211,7 @@ function nmFrame(ts){
     const k = 1 - Math.exp(-dt * 4);
     NM.rot[0] += dl * k; NM.rot[1] += (NM.focus[1] - NM.rot[1]) * k;
     if(Math.abs(dl) < 0.3 && Math.abs(NM.focus[1] - NM.rot[1]) < 0.3) NM.focus = null;
-  } else if(NM.auto && !NM.drag && NM.sel === null && !NM.pick && ts - NM.interact > 8000){
+  } else if(!NM.animPaused && NM.auto && !NM.drag && NM.sel === null && !NM.pick && ts - NM.interact > 8000){
     NM.rot[0] += dt * 5;
   }
   NM.rot[0] = ((NM.rot[0] + 540) % 360) - 180;
@@ -7223,13 +7378,14 @@ function nmRenderAll(){ nmRenderDb(); nmRenderOrigin(); nmRenderList(); nmRender
 /* --- lifecycle --- */
 async function netmapOpen(which){
   NM.cid = which === "home" ? "nm-canvas-home" : "nm-canvas";
-  nmColors(); nmBind(); nmResize();
+  nmColors(); nmBind(); nmResize(); nmSyncAnimBtn();
   await nmLoadLand();
   setTimeout(nmResize, 60);
   if(NM.run) return; NM.run = true; NM.last = 0; NM.raf = requestAnimationFrame(nmFrame);
   nmFetchData(); nmFetchStatus();
   NM.timers = [setInterval(() => { if(!document.hidden) nmFetchData(); }, 60000), setInterval(() => { if(!document.hidden) nmFetchStatus(); }, 60000), setInterval(() => { if(!document.hidden) loadAddressesPanel(); }, 120000)];
 }
+nmSyncAnimBtn();
 /* diagnostics: localStorage.nm_debug=1 and reload; the console then lists main-thread stalls and the requests around them */
 try{ if(localStorage.getItem("nm_debug")){
   const _f = window.fetch, _rq = []; window.fetch = function(u){ _rq.push([Math.round(performance.now()), String(u).split("?")[0]]); if(_rq.length > 60) _rq.shift(); return _f.apply(this, arguments); };
