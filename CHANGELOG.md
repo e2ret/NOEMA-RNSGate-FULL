@@ -1,3 +1,8 @@
+## 1.1.22
+
+### Fixed
+- **English UI still showed Russian.** Sidebar clock and chat timestamps followed a hardcoded `ru` locale; wardrive map tileset names (Dark / Light / OSM) could stay Russian after switching the dashboard to EN because English label defaults were poisoned.
+
 ## 1.1.21
 
 ### Added

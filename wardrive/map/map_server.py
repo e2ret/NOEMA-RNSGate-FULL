@@ -1520,6 +1520,9 @@ const DEFAULT_PAGE_TITLE = document.title;
 const EMBEDDED = window.self !== window.top;
 
 function _defaultUiLang() {
+  // Embedded: parent drives language via postMessage — don't start on a stale
+  // map-only 'lang' (would paint RU labels before EN arrives and poison defaults).
+  if (EMBEDDED) return 'en';
   const saved = localStorage.getItem('lang');
   if (saved === 'ru' || saved === 'en') return saved;
   const nav = (navigator.languages && navigator.languages[0]) || navigator.language || '';
@@ -1544,18 +1547,19 @@ function applyI18n() {
   document.title = uiLang === 'ru' ? 'Карта покрытия Wardrive' : DEFAULT_PAGE_TITLE;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const k = el.getAttribute('data-i18n');
-    if (_EN_DEFAULTS[k] === undefined) _EN_DEFAULTS[k] = el.textContent;
-    el.textContent = t(k);
+    // Only capture English source text — capturing while uiLang is ru poisons EN forever.
+    if (_EN_DEFAULTS[k] === undefined && uiLang === 'en') _EN_DEFAULTS[k] = el.textContent;
+    el.textContent = t(k, _EN_DEFAULTS[k] !== undefined ? _EN_DEFAULTS[k] : el.textContent);
   });
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     const k = el.getAttribute('data-i18n-title');
-    if (_EN_DEFAULTS[k] === undefined) _EN_DEFAULTS[k] = el.getAttribute('title') || '';
-    el.title = t(k);
+    if (_EN_DEFAULTS[k] === undefined && uiLang === 'en') _EN_DEFAULTS[k] = el.getAttribute('title') || '';
+    el.title = t(k, _EN_DEFAULTS[k] !== undefined ? _EN_DEFAULTS[k] : (el.getAttribute('title') || ''));
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const k = el.getAttribute('data-i18n-placeholder');
-    if (_EN_DEFAULTS[k] === undefined) _EN_DEFAULTS[k] = el.placeholder || '';
-    el.placeholder = t(k);
+    if (_EN_DEFAULTS[k] === undefined && uiLang === 'en') _EN_DEFAULTS[k] = el.placeholder || '';
+    el.placeholder = t(k, _EN_DEFAULTS[k] !== undefined ? _EN_DEFAULTS[k] : (el.placeholder || ''));
   });
   const homeBtn = document.getElementById('home-btn');
   if (homeBtn) {
@@ -3742,7 +3746,10 @@ const tilesetSel = document.getElementById('tileset-select');
 TILESETS.forEach((tileset, i) => {
   const opt = document.createElement('option');
   opt.value = i;
-  if (tileset.labelKey) opt.setAttribute('data-i18n', tileset.labelKey);
+  if (tileset.labelKey) {
+    _EN_DEFAULTS[tileset.labelKey] = tileset.label; // English label is the source of truth
+    opt.setAttribute('data-i18n', tileset.labelKey);
+  }
   opt.textContent = tileset.labelKey ? t(tileset.labelKey, tileset.label) : tileset.label;
   tilesetSel.appendChild(opt);
 });
