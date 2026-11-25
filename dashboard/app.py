@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = "1.1.25"
+__version__ = "1.1.27"
 import subprocess, threading, os
 from collections import deque
 from flask import Flask, jsonify, request, send_file, send_from_directory
@@ -227,6 +227,39 @@ def _find_rns_bin(name):
     return found or name
 _RNS_BIN = os.path.dirname(_find_rns_bin("rnstatus"))
 
+# One shared rnstatus run — UI + collectors used to stampede concurrent
+# subprocesses (5+ at once), pegging CPU and making /api/* return 500.
+_rnstatus_lock = threading.Lock()
+_rnstatus_cache = {"ts": 0.0, "stdout": "", "ok": False}
+_RNSTATUS_CACHE_SECS = 8.0
+
+
+def _rnstatus_stdout(force=False):
+    """Return rnstatus stdout, refreshed at most every _RNSTATUS_CACHE_SECS."""
+    import time as _t
+    now = _t.time()
+    if (not force) and _rnstatus_cache["ok"] and (now - _rnstatus_cache["ts"]) < _RNSTATUS_CACHE_SECS:
+        return _rnstatus_cache["stdout"]
+    with _rnstatus_lock:
+        now = _t.time()
+        if (not force) and _rnstatus_cache["ok"] and (now - _rnstatus_cache["ts"]) < _RNSTATUS_CACHE_SECS:
+            return _rnstatus_cache["stdout"]
+        try:
+            r = subprocess.run(
+                f"{_RNS_BIN}/rnstatus", shell=True,
+                capture_output=True, text=True, timeout=15,
+            )
+            out = r.stdout or ""
+            _rnstatus_cache["stdout"] = out
+            _rnstatus_cache["ok"] = True
+            _rnstatus_cache["ts"] = _t.time()
+            return out
+        except Exception:
+            # Keep last good output if a run fails/times out
+            if _rnstatus_cache["ok"]:
+                return _rnstatus_cache["stdout"]
+            return ""
+
 SERVICES = ["dashboard", "noema_lxmf_bridge", "i2pd", "nomadnet", "rbrowser", "wardrive_bot", "wardrive_map"]
 
 NOMADNET_PAGE = f"{_HOME}/.nomadnetwork/storage/pages/index.mu"
@@ -291,14 +324,14 @@ _rf_activity_log = _dq(maxlen=200)
 _noise_last: dict = {}  # iface -> last logged noise value (for change detection)
 
 def collect_metrics():
-    import time as _t, subprocess as _sp
+    import time as _t
     while True:
         try:
-            r = _sp.run(f"{_RNS_BIN}/rnstatus", shell=True, capture_output=True, text=True, timeout=15)
+            out = _rnstatus_stdout()
             ts = int(_t.time())
             interfaces = {}
             cur = None
-            for line in r.stdout.splitlines():
+            for line in out.splitlines():
                 line = line.strip()
                 if not line: continue
                 if "[" in line and "]" in line:
@@ -598,21 +631,15 @@ def svc_action(name, action):
 
 @app.route("/api/debug/rnstatus_raw")
 def debug_rnstatus_raw():
-    """
-    TEMPORARY diagnostic — runs the EXACT same subprocess call that
-    collect_metrics() uses, from within the live dashboard process, and
-    returns raw stdout/stderr/returncode. This is to compare against a
-    manual `rnstatus` run in a separate shell, which may differ in subtle
-    environment/path ways from what systemd actually gives this process.
-    """
-    import subprocess as _sp
+    """TEMPORARY diagnostic — same cached rnstatus path as collect_metrics /api/rnstatus."""
     try:
-        r = _sp.run(f"{_RNS_BIN}/rnstatus", shell=True, capture_output=True, text=True, timeout=15)
+        out = _rnstatus_stdout(force=True)
         return jsonify({
             "cmd": f"{_RNS_BIN}/rnstatus",
-            "returncode": r.returncode,
-            "stdout": r.stdout,
-            "stderr": r.stderr,
+            "returncode": 0,
+            "stdout": out,
+            "stderr": "",
+            "cached_age_s": round(__import__("time").time() - _rnstatus_cache["ts"], 2),
         })
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -1410,6 +1437,9 @@ def _sdr_rtl_power_bin():
     )
 
 
+
+
+
 def _sdr_detect_band():
     """Read the RNode interface's configured frequency from .reticulum/config
     and match it to a known LoRa ISM band. Falls back to EU868."""
@@ -1613,12 +1643,82 @@ def _sdr_stop():
         return True
 
 
+# Realtek RTL2832U family — what almost every RTL-SDR stick enumerates as.
+_SDR_USB_PIDS = ("2832", "2838", "2839", "2837", "2836", "2830")
+
+
+def _sdr_usb_present():
+    """Detect RTL-SDR stick without claiming it (sysfs first, then lsusb)."""
+    try:
+        import glob as _glob
+        for vend in _glob.glob("/sys/bus/usb/devices/*/idVendor"):
+            try:
+                if open(vend).read().strip().lower() != "0bda":
+                    continue
+                prod_path = vend.replace("idVendor", "idProduct")
+                prod = open(prod_path).read().strip().lower()
+                if prod in _SDR_USB_PIDS:
+                    return f"0bda:{prod}"
+            except Exception:
+                continue
+    except Exception:
+        pass
+    try:
+        r = subprocess.run(
+            ["lsusb"], capture_output=True, text=True, timeout=3
+        )
+        out = (r.stdout or "").lower()
+    except Exception:
+        out = ""
+    for pid in _SDR_USB_PIDS:
+        token = f"0bda:{pid}"
+        if token in out:
+            return token
+    # Some images omit usbutils; string match still helps when lsusb works
+    # but uses a verbose product name without the hex id on the same line.
+    if any(s in out for s in ("rtl283", "rtl-sdr", "rtl sdr", "realtek")):
+        if "0bda" in out or "rtl283" in out or "rtl-sdr" in out or "rtl sdr" in out:
+            return "rtl-sdr"
+    return None
+
+
+def _sdr_receiver_info():
+    """Is an RTL-SDR USB dongle present? (tools installed ≠ stick plugged in).
+
+    If waterfall/packet mode is already talking to the stick, that counts as
+    connected even when USB enumeration is flaky (no lsusb, odd product strings).
+    """
+    try:
+        if _sdr_proc is not None and _sdr_proc.poll() is None:
+            return {"connected": True, "detail": "in_use"}
+    except Exception:
+        pass
+    try:
+        if _sdr_pkt_proc is not None and _sdr_pkt_proc.poll() is None:
+            return {"connected": True, "detail": "in_use"}
+    except Exception:
+        pass
+    try:
+        if _sdr_scan_is_active():
+            return {"connected": True, "detail": "in_use"}
+    except Exception:
+        pass
+    found = _sdr_usb_present()
+    if found:
+        return {"connected": True, "detail": found}
+    return {"connected": False, "detail": "missing"}
+
+
 @app.route("/api/sdr/status")
 def sdr_status():
     running = _sdr_proc is not None and _sdr_proc.poll() is None
+    rx = _sdr_receiver_info()
+    if running and not rx.get("connected"):
+        rx = {"connected": True, "detail": "in_use"}
     return jsonify({
         "running": running, "meta": _sdr_meta, "error": _sdr_error,
         "installed": _sdr_rtl_power_bin() is not None,
+        "receiver": rx,
     })
 
 
@@ -1736,14 +1836,45 @@ _sdr_pkt_port = 47100  # local-only UDP port lorarx's -J output is sent to
 #   pretty much all of Europe and the UK", but with no single agreed
 #   frequency to point at (unlike Meshtastic's slot hash) — offered as a
 #   Scan preset across the EU868 band instead of one fixed frequency.
+# World + RU community centers. Frontend usually sends explicit freq/bw;
+# keys remain for older clients and Scan presets. SF in the label is the
+# community modem preset — the demodulator still listens on SF7–12 at once.
 _SDR_PROTOCOL_PRESETS = {
-    "meshtastic_eu868": {"freq": 869_525_000, "sf": 11, "bw_code": 8, "label": "Meshtastic EU868 (SF11 / BW250)"},
-    "meshtastic_us915": {"freq": 906_875_000, "sf": 11, "bw_code": 8, "label": "Meshtastic US915 (SF11 / BW250)"},
-    "meshcore_us915": {"freq": 910_525_000, "sf": 7, "bw_code": 6, "label": "MeshCore US/Canada (SF7 / BW62.5)"},
-    # No single agreed EU frequency — freq here is only the single-listen
-    # fallback if Scan is off; meant to be used with Scan across the whole
-    # EU868 band instead (frontend SDR_SCAN_RANGES covers the range).
-    "meshcore_eu868": {"freq": 869_525_000, "sf": 8, "bw_code": 6, "label": "MeshCore EU/UK (SF8 / BW62.5)"},
+    # Meshtastic
+    "meshtastic_eu868": {"freq": 869_525_000, "sf": 11, "bw_code": 8, "label": "Meshtastic EU868 (869.525 / BW250)"},
+    "meshtastic_eu433": {"freq": 433_875_000, "sf": 11, "bw_code": 8, "label": "Meshtastic EU433 (433.875 / BW250)"},
+    "meshtastic_us915": {"freq": 906_875_000, "sf": 11, "bw_code": 8, "label": "Meshtastic US (906.875 / BW250)"},
+    "meshtastic_ru_slot2": {"freq": 869_075_000, "sf": 11, "bw_code": 8, "label": "Meshtastic RU slot2 (869.075 / BW250)"},
+    "meshtastic_nsk": {"freq": 868_825_000, "sf": 8, "bw_code": 8, "label": "Meshtastic Novosibirsk (868.825 / BW250)"},
+    "meshtastic_ru": {"freq": 869_075_000, "sf": 11, "bw_code": 8, "label": "Meshtastic RU (869.075 / BW250)"},
+    "meshtastic_anz": {"freq": 919_875_000, "sf": 11, "bw_code": 8, "label": "Meshtastic ANZ (919.875 / BW250)"},
+    "meshtastic_nz865": {"freq": 865_250_000, "sf": 11, "bw_code": 8, "label": "Meshtastic NZ_865 (865.250 / BW250)"},
+    "meshtastic_ua868": {"freq": 868_300_000, "sf": 11, "bw_code": 8, "label": "Meshtastic UA_868 (868.300 / BW250)"},
+    "meshtastic_jp": {"freq": 920_800_000, "sf": 11, "bw_code": 8, "label": "Meshtastic JP (920.800 / BW250)"},
+    "meshtastic_kr": {"freq": 921_900_000, "sf": 11, "bw_code": 8, "label": "Meshtastic KR (921.900 / BW250)"},
+    "meshtastic_tw": {"freq": 923_200_000, "sf": 11, "bw_code": 8, "label": "Meshtastic TW/SG (923.200 / BW250)"},
+    "meshtastic_in": {"freq": 865_062_500, "sf": 11, "bw_code": 8, "label": "Meshtastic IN (865.0625 / BW250)"},
+    # MeshCore (official app API + RU city tables)
+    "meshcore_us915": {"freq": 910_525_000, "sf": 7, "bw_code": 6, "label": "MeshCore US/Canada (910.525 / BW62.5)"},
+    "meshcore_us": {"freq": 910_525_000, "sf": 7, "bw_code": 6, "label": "MeshCore US/Canada (910.525 / BW62.5)"},
+    "meshcore_eu_uk": {"freq": 869_618_000, "sf": 8, "bw_code": 6, "label": "MeshCore EU/UK Narrow (869.618 / BW62.5)"},
+    "meshcore_eu868": {"freq": 869_618_000, "sf": 8, "bw_code": 6, "label": "MeshCore EU/UK Narrow (869.618 / BW62.5)"},
+    "meshcore_mow": {"freq": 868_731_000, "sf": 7, "bw_code": 6, "label": "MeshCore Moscow (868.731 / BW62.5)"},
+    "meshcore_spb": {"freq": 868_856_000, "sf": 7, "bw_code": 6, "label": "MeshCore SPb (868.856 / BW62.5)"},
+    "meshcore_cz": {"freq": 869_432_000, "sf": 7, "bw_code": 6, "label": "MeshCore Czechia (869.432 / BW62.5)"},
+    "meshcore_au": {"freq": 915_800_000, "sf": 10, "bw_code": 8, "label": "MeshCore Australia (915.800 / BW250)"},
+    "meshcore_au_n": {"freq": 916_575_000, "sf": 7, "bw_code": 6, "label": "MeshCore Australia Narrow (916.575 / BW62.5)"},
+    "meshcore_nz": {"freq": 917_375_000, "sf": 7, "bw_code": 6, "label": "MeshCore NZ Narrow (917.375 / BW62.5)"},
+    "meshcore_br": {"freq": 923_125_000, "sf": 8, "bw_code": 6, "label": "MeshCore Brazil (923.125 / BW62.5)"},
+    "meshcore_vn": {"freq": 920_250_000, "sf": 8, "bw_code": 6, "label": "MeshCore Vietnam Narrow (920.250 / BW62.5)"},
+    "meshcore_eu433": {"freq": 433_650_000, "sf": 8, "bw_code": 6, "label": "MeshCore EU 433 (433.650 / BW62.5)"},
+    # Reticulum / RNode
+    "reticulum_mow": {"freq": 868_825_000, "sf": 7, "bw_code": 7, "label": "Reticulum Moscow (868.825 / BW125)"},
+    "reticulum_eu_868": {"freq": 868_000_000, "sf": 7, "bw_code": 7, "label": "Reticulum EU typical (868.000 / BW125)"},
+    "reticulum_eu_869525": {"freq": 869_525_000, "sf": 7, "bw_code": 7, "label": "Reticulum EU alt (869.525 / BW125)"},
+    "reticulum_us": {"freq": 914_875_000, "sf": 8, "bw_code": 7, "label": "RNode US default (914.875 / BW125)"},
+    "reticulum_ua": {"freq": 868_300_000, "sf": 7, "bw_code": 7, "label": "Reticulum UA typical (868.300 / BW125)"},
+    "reticulum_433": {"freq": 433_575_000, "sf": 7, "bw_code": 7, "label": "Reticulum 433 typical (433.575 / BW125)"},
 }
 
 
@@ -1942,11 +2073,15 @@ def sdr_packets_stop():
 def sdr_packets_list():
     scanning = _sdr_scan_is_active()
     running = scanning or (_sdr_pkt_proc is not None and _sdr_pkt_proc.poll() is None)
+    rx = _sdr_receiver_info()
+    if running and not rx.get("connected"):
+        rx = {"connected": True, "detail": "in_use"}
     return jsonify({
         "running": running,
         "scanning": scanning,
         "meta": _sdr_scan_meta if scanning else _sdr_pkt_meta,
         "installed": _sdr_rtl_sdr_bin() is not None and _sdr_lorarx_bin() is not None,
+        "receiver": rx,
         "packets": list(_sdr_pkt_log)[:100],
     })
 
@@ -2167,9 +2302,7 @@ def rnode_history_api():
 
 @app.route("/api/rnstatus")
 def rnstatus():
-    import subprocess as _sp
-    r = _sp.run(f"{_RNS_BIN}/rnstatus", shell=True, capture_output=True, text=True, timeout=15)
-    out = r.stdout
+    out = _rnstatus_stdout()
     interfaces = []
     cur = None
     for line in out.splitlines():

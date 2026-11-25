@@ -1,3 +1,17 @@
+## 1.1.27
+
+### Fixed
+- **Dashboard CPU stampede.** Concurrent `/api/rnstatus` + collector used to spawn many `rnstatus` processes at once (UI 500 / high CPU). Shared 8s cache + lock — one run at a time.
+
+## 1.1.26
+
+### Fixed
+- **SDR frequency inputs.** Packet-mode MHz fields widened so values like `868.825` are not clipped.
+- **SDR receiver badge.** Shows whether an RTL-SDR USB dongle is plugged in (connected / in use / missing), separate from “tools installed”.
+- **SDR receiver badge false “not connected”.** If waterfall/packet is already running (or USB shows Realtek 0bda via sysfs), badge shows connected/in use — no longer depends only on flaky `lsusb` string match.
+- **SDR waterfall look.** Colormap and spectrum line use Noema cyan (navy → ice) instead of green/amber heat.
+- **SDR world region presets.** Waterfall + Packet Detect catalogs cover RU cities and world regions (EU/UK, US/CA, AU/NZ, UA, KZ, JP/KR/TW/SG, IN, CN, BR, 433) for Meshtastic, MeshCore and Reticulum/RNode — with reference markers on the plot.
+
 ## 1.1.25
 
 ### Fixed

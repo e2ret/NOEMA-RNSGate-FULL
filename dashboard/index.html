@@ -1550,7 +1550,10 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
     <!-- SDR SPECTRUM MONITOR -->
     <div class="panel" id="panel-sdr">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-        <div class="section-lbl" style="margin:0" data-i18n="sec_sdr">SDR Spectrum</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="section-lbl" style="margin:0" data-i18n="sec_sdr">SDR Spectrum</div>
+          <span id="sdr-receiver-badge" class="badge" style="display:none;letter-spacing:.06em"></span>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
             <span data-i18n="txt_sdr_mode">Mode</span>
@@ -1565,8 +1568,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
             <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
               <span data-i18n="txt_sdr_preset">Range</span>
               <select id="sdr-preset" onchange="sdrPresetChange()" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+                <!-- filled by sdrRebuildWorldPresetSelects() -->
                 <option value="auto" data-i18n="opt_sdr_preset_auto">Full band (auto)</option>
-                <option value="meshtastic_eu868" data-i18n="opt_sdr_preset_mt_eu">Meshtastic EU868 (869.40–869.65)</option>
                 <option value="__custom__" data-i18n="opt_sdr_preset_custom">Custom range…</option>
               </select>
             </label>
@@ -1584,18 +1587,15 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):
             <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
               <span data-i18n="txt_sdr_protocol">Protocol</span>
               <select id="sdr-pkt-preset" onchange="sdrPktPresetChange()" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
-                <option value="meshtastic_eu868" data-i18n="opt_sdr_pkt_mt_eu">Meshtastic EU868 (SF11/BW250)</option>
-                <option value="meshtastic_us915" data-i18n="opt_sdr_pkt_mt_us">Meshtastic US915 (SF11/BW250)</option>
-                <option value="meshcore_us915" data-i18n="opt_sdr_pkt_mc_us">MeshCore US/Canada (SF7/BW62.5)</option>
-                <option value="meshcore_eu868" data-i18n="opt_sdr_pkt_mc_eu">MeshCore EU/UK (SF8/BW62.5, scan recommended)</option>
+                <!-- filled by sdrRebuildWorldPresetSelects() -->
                 <option value="__custom__" data-i18n="opt_sdr_pkt_custom">Custom…</option>
               </select>
             </label>
             <span id="sdr-pkt-custom" style="display:none;align-items:center;gap:4px;font-size:11px;color:var(--mu)">
-              <input id="sdr-pkt-freq" type="number" step="0.001" placeholder="869.525" style="width:72px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+              <input id="sdr-pkt-freq" type="number" step="0.001" placeholder="869.525" style="width:96px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
               <span id="sdr-pkt-freq-to-wrap" style="display:none;align-items:center;gap:4px">
                 <span>–</span>
-                <input id="sdr-pkt-freq-to" type="number" step="0.001" placeholder="869.65" style="width:72px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
+                <input id="sdr-pkt-freq-to" type="number" step="0.001" placeholder="869.65" style="width:96px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:var(--fn);font-size:11px;padding:3px 6px">
               </span>
               <span>MHz</span>
               <span data-i18n="txt_sdr_bw">BW</span>
@@ -1640,11 +1640,11 @@ cd ~/dxlAPRS/src && make lorarx
 sudo cp ../out-*/lorarx /usr/local/bin/lorarx</pre>
       </div>
 
-      <div id="sdr-waterfall-view" style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px;min-height:0;flex:1;display:flex;flex-direction:column">
-        <div style="position:relative;flex:1;min-height:220px">
+      <div id="sdr-waterfall-view" style="background:linear-gradient(180deg,rgba(56,189,248,.05),rgba(6,10,26,.35)),var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px;min-height:0;flex:1;display:flex;flex-direction:column;box-shadow:inset 0 0 0 1px rgba(56,189,248,.04)">
+        <div style="position:relative;flex:1;min-height:220px;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 40px rgba(0,0,0,.45)">
           <canvas id="sdr-waterfall" style="width:100%;height:100%;display:block;border-radius:8px"></canvas>
         </div>
-        <div style="position:relative;height:70px;margin-top:8px">
+        <div style="position:relative;height:78px;margin-top:8px;border-radius:8px;overflow:hidden;background:rgba(6,10,26,.35);border:1px solid rgba(56,189,248,.10)">
           <canvas id="sdr-linechart" style="width:100%;height:100%;display:block"></canvas>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);font-family:var(--mono);margin-top:4px">
@@ -2198,8 +2198,29 @@ const I18N = {
     sec_interference: "⚡ Interference Events", txt_interference_empty: "No interference events detected.",
     sec_rf_activity: "📡 RF Activity (LoRa)", txt_rf_activity_empty: "No LoRa packets received yet.",
     sec_sdr: "SDR Spectrum", txt_sdr_gain: "Gain", txt_sdr_preset: "Range", btn_sdr_start: "▶ START", btn_sdr_stop: "■ STOP",
-    opt_sdr_preset_auto: "Full band (auto)", opt_sdr_preset_mt_eu: "Meshtastic EU868 (869.40–869.65)",
-    txt_sdr_band_mt_eu: "Meshtastic EU868", txt_sdr_marker_mt_eu: "Meshtastic EU868 default", txt_sdr_marker_mt_us: "Meshtastic US915 default",
+    opt_sdr_preset_auto: "Full band (auto)",
+    opt_sdr_preset_ru_lora: "RU LoRa overview (868.0–869.2)",
+    opt_sdr_preset_mt_ru: "Meshtastic RU (868.70–869.20)",
+    opt_sdr_preset_mt_ru_s2: "Meshtastic RU slot2 · Moscow/SPb/… (869.075)",
+    opt_sdr_preset_mt_nsk: "Meshtastic Novosibirsk slot1 (868.825)",
+    opt_sdr_preset_mt_eu: "Meshtastic EU868 (869.40–869.65)",
+    opt_sdr_preset_mc_mow: "MeshCore Moscow / Ivanovo (868.731)",
+    opt_sdr_preset_mc_spb: "MeshCore SPb (868.856)",
+    opt_sdr_preset_rns_mow: "Reticulum Moscow (868.825)",
+    txt_sdr_band_ru_lora: "RU LoRa overview",
+    txt_sdr_band_mt_ru: "Meshtastic RU",
+    txt_sdr_band_mt_ru_s2: "Meshtastic RU slot2",
+    txt_sdr_band_mt_nsk: "Meshtastic Novosibirsk",
+    txt_sdr_band_mt_eu: "Meshtastic EU868",
+    txt_sdr_band_mc_mow: "MeshCore Moscow",
+    txt_sdr_band_mc_spb: "MeshCore SPb",
+    txt_sdr_band_rns_mow: "Reticulum Moscow",
+    txt_sdr_marker_mt_eu: "Meshtastic EU868 default",
+    txt_sdr_marker_mt_us: "Meshtastic US915 default",
+    txt_sdr_marker_mt_ru: "Meshtastic RU slot2",
+    txt_sdr_marker_rns_mow: "RNS Moscow · Meshtastic NSK",
+    txt_sdr_marker_mc_mow: "MeshCore Moscow",
+    txt_sdr_marker_mc_spb: "MeshCore SPb",
     txt_sdr_missing_title: "rtl_power not found",
     txt_sdr_missing_body: "Install the RTL-SDR Blog driver fork first (needed for V4 dongles — the stock apt package is too old):",
     txt_sdr_hint: "Raw RF around the LoRa band — separate from the RNode's own RSSI/SNR, useful for spotting other transmitters or interference. Needs its own RTL-SDR USB receiver. Minimum: ~1GB free RAM and a Pi 4 / Pi Zero 2W class board or better — not recommended on an Orange Pi Zero (512MB).",
@@ -2213,8 +2234,14 @@ const I18N = {
     txt_sdr_confirm_delete_preset: "Delete preset \"{name}\"?",
     txt_sdr_mode: "Mode", opt_sdr_mode_waterfall: "Waterfall", opt_sdr_mode_packets: "Packet Detect",
     txt_sdr_protocol: "Protocol",
+    opt_sdr_pkt_mt_ru_s2: "Meshtastic RU slot2 · Moscow/SPb/… (869.075 / BW250)",
+    opt_sdr_pkt_mt_nsk: "Meshtastic Novosibirsk slot1 (868.825 / BW250)",
+    opt_sdr_pkt_mt_ru: "Meshtastic RU scan (868.70–869.20 / BW250)",
     opt_sdr_pkt_mt_eu: "Meshtastic EU868 (SF11/BW250)", opt_sdr_pkt_mt_us: "Meshtastic US915 (SF11/BW250)",
+    opt_sdr_pkt_mc_mow: "MeshCore Moscow / Ivanovo (868.731 / BW62.5)",
+    opt_sdr_pkt_mc_spb: "MeshCore SPb (868.856 / BW62.5)",
     opt_sdr_pkt_mc_us: "MeshCore US/Canada (SF7/BW62.5)", opt_sdr_pkt_mc_eu: "MeshCore EU/UK (SF8/BW62.5, scan recommended)",
+    opt_sdr_pkt_rns_mow: "Reticulum Moscow (868.825 / BW125)",
     opt_sdr_pkt_custom: "Custom…",
     txt_sdr_sf: "SF", txt_sdr_bw: "BW", txt_sdr_all_sf: "all SF",
     txt_sdr_pkt_missing_title: "rtl_sdr / lorarx not found",
@@ -2223,6 +2250,8 @@ const I18N = {
     txt_sdr_pkt_empty: "No packets detected yet.",
     txt_sdr_pkt_recent: "recent",
     txt_sdr_scan: "Scan", txt_sdr_scan_title: "Cycle through several frequencies automatically instead of needing the exact one",
+    txt_sdr_rx_ok: "RTL-SDR connected", txt_sdr_rx_busy: "RTL-SDR in use", txt_sdr_rx_missing: "RTL-SDR not connected",
+    txt_sdr_rx_missing_hint: "No RTL-SDR USB receiver detected — plug it in and refresh",
     txt_sdr_scanning: "Scanning",
     btn_ports: "Ports", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Restart Core Services",
     btn_restart_lxmf: "Restart LXMF", btn_memory: "Memory", btn_uptime: "Uptime",
@@ -2382,8 +2411,29 @@ const I18N = {
     sec_interference: "⚡ События помех", txt_interference_empty: "Событий помех не обнаружено.",
     sec_rf_activity: "📡 RF Активность (LoRa)", txt_rf_activity_empty: "Пакеты LoRa ещё не получены.",
     sec_sdr: "SDR-спектр", txt_sdr_gain: "Усиление", txt_sdr_preset: "Диапазон", btn_sdr_start: "▶ СТАРТ", btn_sdr_stop: "■ СТОП",
-    opt_sdr_preset_auto: "Весь диапазон (авто)", opt_sdr_preset_mt_eu: "Meshtastic EU868 (869.40–869.65)",
-    txt_sdr_band_mt_eu: "Meshtastic EU868", txt_sdr_marker_mt_eu: "Meshtastic EU868 дефолт", txt_sdr_marker_mt_us: "Meshtastic US915 дефолт",
+    opt_sdr_preset_auto: "Весь диапазон (авто)",
+    opt_sdr_preset_ru_lora: "Обзор RU LoRa (868.0–869.2)",
+    opt_sdr_preset_mt_ru: "Meshtastic RU (868.70–869.20)",
+    opt_sdr_preset_mt_ru_s2: "Meshtastic RU слот2 · МСК/СПб/… (869.075)",
+    opt_sdr_preset_mt_nsk: "Meshtastic Новосибирск слот1 (868.825)",
+    opt_sdr_preset_mt_eu: "Meshtastic EU868 (869.40–869.65)",
+    opt_sdr_preset_mc_mow: "MeshCore Москва / Иваново (868.731)",
+    opt_sdr_preset_mc_spb: "MeshCore СПб (868.856)",
+    opt_sdr_preset_rns_mow: "Reticulum Москва (868.825)",
+    txt_sdr_band_ru_lora: "Обзор RU LoRa",
+    txt_sdr_band_mt_ru: "Meshtastic RU",
+    txt_sdr_band_mt_ru_s2: "Meshtastic RU слот2",
+    txt_sdr_band_mt_nsk: "Meshtastic Новосибирск",
+    txt_sdr_band_mt_eu: "Meshtastic EU868",
+    txt_sdr_band_mc_mow: "MeshCore Москва",
+    txt_sdr_band_mc_spb: "MeshCore СПб",
+    txt_sdr_band_rns_mow: "Reticulum Москва",
+    txt_sdr_marker_mt_eu: "Meshtastic EU868 дефолт",
+    txt_sdr_marker_mt_us: "Meshtastic US915 дефолт",
+    txt_sdr_marker_mt_ru: "Meshtastic RU слот2",
+    txt_sdr_marker_rns_mow: "RNS Москва · Meshtastic НСК",
+    txt_sdr_marker_mc_mow: "MeshCore Москва",
+    txt_sdr_marker_mc_spb: "MeshCore СПб",
     txt_sdr_missing_title: "rtl_power не найден",
     txt_sdr_missing_body: "Сначала поставь форк драйвера RTL-SDR Blog (нужен для донглов V4 — штатный пакет apt слишком старый):",
     txt_sdr_hint: "Сырой радиоэфир вокруг LoRa-диапазона — отдельно от RSSI/SNR самого RNode, удобно для поиска помех и посторонних передатчиков. Нужен отдельный RTL-SDR USB-приёмник. Минимум: ~1ГБ свободной RAM и плата не слабее Pi 4 / Pi Zero 2W — на Orange Pi Zero (512МБ) не рекомендуется.",
@@ -2397,8 +2447,14 @@ const I18N = {
     txt_sdr_confirm_delete_preset: "Удалить пресет «{name}»?",
     txt_sdr_mode: "Режим", opt_sdr_mode_waterfall: "Водопад", opt_sdr_mode_packets: "Детекция пакетов",
     txt_sdr_protocol: "Протокол",
+    opt_sdr_pkt_mt_ru_s2: "Meshtastic RU слот2 · МСК/СПб/… (869.075 / BW250)",
+    opt_sdr_pkt_mt_nsk: "Meshtastic Новосибирск слот1 (868.825 / BW250)",
+    opt_sdr_pkt_mt_ru: "Meshtastic RU скан (868.70–869.20 / BW250)",
     opt_sdr_pkt_mt_eu: "Meshtastic EU868 (SF11/BW250)", opt_sdr_pkt_mt_us: "Meshtastic US915 (SF11/BW250)",
+    opt_sdr_pkt_mc_mow: "MeshCore Москва / Иваново (868.731 / BW62.5)",
+    opt_sdr_pkt_mc_spb: "MeshCore СПб (868.856 / BW62.5)",
     opt_sdr_pkt_mc_us: "MeshCore US/Canada (SF7/BW62.5)", opt_sdr_pkt_mc_eu: "MeshCore EU/UK (SF8/BW62.5, лучше со Scan)",
+    opt_sdr_pkt_rns_mow: "Reticulum Москва (868.825 / BW125)",
     opt_sdr_pkt_custom: "Свои параметры…",
     txt_sdr_sf: "SF", txt_sdr_bw: "BW", txt_sdr_all_sf: "все SF",
     txt_sdr_pkt_missing_title: "rtl_sdr / lorarx не найдены",
@@ -2407,6 +2463,8 @@ const I18N = {
     txt_sdr_pkt_empty: "Пакетов пока не обнаружено.",
     txt_sdr_pkt_recent: "недавних",
     txt_sdr_scan: "Скан", txt_sdr_scan_title: "Перебирать несколько частот автоматически вместо ввода точной",
+    txt_sdr_rx_ok: "RTL-SDR подключён", txt_sdr_rx_busy: "RTL-SDR занят", txt_sdr_rx_missing: "RTL-SDR не подключён",
+    txt_sdr_rx_missing_hint: "RTL-SDR USB-приёмник не найден — воткни и обнови страницу",
     txt_sdr_scanning: "Сканирую",
     btn_ports: "Порты", btn_rnstatus: "RNStatus", btn_restart_rnsd: "Перезапуск сервисов",
     btn_restart_lxmf: "Перезапуск LXMF", btn_memory: "Память", btn_uptime: "Аптайм",
@@ -2550,6 +2608,7 @@ function applyLang(){
     const key = el.getAttribute("data-i18n-html");
     if(dict[key]) el.innerHTML = dict[key];
   });
+  if(typeof sdrLoadPresets === "function") sdrLoadPresets();
   syncWardriveLanguage();
 }
 
@@ -4119,11 +4178,34 @@ async function sdrPoll(){
   return sdrWaterfallPoll();
 }
 
+function sdrPaintReceiverBadge(d){
+  const badge = document.getElementById("sdr-receiver-badge");
+  if(!badge) return;
+  const rx = d && d.receiver;
+  // Waterfall/packet already running ⇒ stick is there, even if USB probe
+  // (lsusb/sysfs) failed or an older backend omitted `receiver`.
+  const connected = !!(rx && rx.connected) || !!(d && d.running);
+  badge.style.display = "inline-flex";
+  if(connected){
+    const busy = (rx && rx.detail === "in_use") || !!(d && d.running);
+    badge.textContent = busy ? t("txt_sdr_rx_busy") : t("txt_sdr_rx_ok");
+    badge.className = "badge active";
+    badge.style.color = "var(--gr)";
+    badge.style.borderColor = "rgba(56,189,248,.35)";
+  } else {
+    badge.textContent = t("txt_sdr_rx_missing");
+    badge.className = "badge";
+    badge.style.color = "var(--rd)";
+    badge.style.borderColor = "rgba(234,249,255,.3)";
+  }
+}
+
 async function sdrWaterfallRefreshStatus(){
   try{
     const d = await fetch(API+"/api/sdr/status").then(r=>r.json());
     const notInstalled = document.getElementById("sdr-not-installed");
     if(notInstalled) notInstalled.style.display = d.installed ? "none" : "block";
+    sdrPaintReceiverBadge(d);
     const btnStart = document.getElementById("sdr-btn-start");
     const btnStop = document.getElementById("sdr-btn-stop");
     if(btnStart) btnStart.style.display = d.running ? "none" : "inline-flex";
@@ -4144,43 +4226,233 @@ async function sdrWaterfallRefreshStatus(){
     if(st){
       if(d.error){ st.textContent = "Error: "+d.error; st.style.color = "var(--rd)"; }
       else if(d.running){ st.textContent = `Running — gain ${meta.gain ?? "?"} dB, step ${meta.step ? (meta.step/1000)+" kHz" : "?"}`; st.style.color = "var(--teal)"; }
+      else if(d.receiver && !d.receiver.connected){ st.textContent = t("txt_sdr_rx_missing_hint"); st.style.color = "var(--am)"; }
       else { st.textContent = "Stopped"; st.style.color = "var(--mu)"; }
     }
   }catch(e){}
 }
 
-// Known reference frequencies drawn as labeled ticks on the waterfall/line
-// chart when they fall inside whatever range is currently being swept —
-// NOT a claim about protocol identification (rtl_power only measures power,
-// it can't demodulate), just "this is where that protocol's default
-// channel sits, if you're using default settings".
-const SDR_PRESETS = {
-  auto: null,
-  meshtastic_eu868: {freq_start: 869_400_000, freq_stop: 869_650_000, labelKey: "txt_sdr_band_mt_eu"},
-};
+// Reference ticks on the waterfall when a known community center falls
+// inside the swept window. `label` is shown as-is (world names stay Latin).
 const SDR_REF_MARKERS = [
-  {freq: 869_525_000, labelKey: "txt_sdr_marker_mt_eu"},
-  {freq: 906_875_000, labelKey: "txt_sdr_marker_mt_us"},
+  {freq: 433_575_000, label: "RNS 433"},
+  {freq: 433_650_000, label: "MeshCore EU433"},
+  {freq: 433_875_000, label: "Meshtastic EU433"},
+  {freq: 865_062_500, label: "Meshtastic IN"},
+  {freq: 865_250_000, label: "Meshtastic NZ_865"},
+  {freq: 868_300_000, label: "Meshtastic/RNS UA"},
+  {freq: 868_731_000, label: "MeshCore Moscow"},
+  {freq: 868_825_000, label: "RNS Moscow · Meshtastic NSK"},
+  {freq: 868_856_000, label: "MeshCore SPb"},
+  {freq: 869_075_000, label: "Meshtastic RU slot2"},
+  {freq: 869_525_000, label: "Meshtastic EU868"},
+  {freq: 869_618_000, label: "MeshCore EU/UK"},
+  {freq: 906_875_000, label: "Meshtastic US"},
+  {freq: 910_525_000, label: "MeshCore US/CA"},
+  {freq: 914_875_000, label: "RNode US"},
+  {freq: 915_800_000, label: "MeshCore AU"},
+  {freq: 916_575_000, label: "MeshCore AU Narrow"},
+  {freq: 917_375_000, label: "MeshCore NZ"},
+  {freq: 919_875_000, label: "Meshtastic ANZ"},
+  {freq: 920_250_000, label: "MeshCore VN"},
+  {freq: 920_800_000, label: "Meshtastic JP"},
+  {freq: 921_900_000, label: "Meshtastic KR"},
+  {freq: 923_200_000, label: "Meshtastic TW/SG"},
 ];
 
-// User-saved custom ranges, kept on the backend (data/sdr_presets.json) so
-// they're the same from any device/browser opening the dashboard, not just
-// this one's localStorage.
+// Waterfall range windows — world ISM overview + protocol/region slices.
+// Community city centers kept for RU; elsewhere band / published defaults.
+const SDR_WF_CATALOG = [
+  {group: null, items: [
+    {id:"auto", labelKey:"opt_sdr_preset_auto", label:"Full band (auto)"},
+    {id:"ru_lora", label:"RU LoRa overview (868.0–869.2)", freq_start:868_000_000, freq_stop:869_200_000},
+    {id:"eu_lora", label:"EU/UK LoRa overview (863–870)", freq_start:863_000_000, freq_stop:870_000_000},
+    {id:"us915", label:"US/CA 915 overview (902–928)", freq_start:902_000_000, freq_stop:928_000_000},
+    {id:"anz915", label:"AU/NZ 915 overview (915–928)", freq_start:915_000_000, freq_stop:928_000_000},
+    {id:"as920", label:"Asia 920 overview (920–925)", freq_start:920_000_000, freq_stop:925_000_000},
+    {id:"in865", label:"IN/NP 865 overview (865–867)", freq_start:865_000_000, freq_stop:867_000_000},
+    {id:"ua868", label:"UA 868 overview (868.0–868.6)", freq_start:868_000_000, freq_stop:868_600_000},
+    {id:"kz863", label:"KZ 863 overview (863–868)", freq_start:863_000_000, freq_stop:868_000_000},
+    {id:"cn470", label:"CN 470 overview (470–510)", freq_start:470_000_000, freq_stop:510_000_000},
+    {id:"eu433", label:"EU 433 overview (433.05–434.79)", freq_start:433_050_000, freq_stop:434_790_000},
+  ]},
+  {group:"Meshtastic", items: [
+    {id:"meshtastic_ru", label:"Meshtastic RU (868.70–869.20)", freq_start:868_700_000, freq_stop:869_200_000},
+    {id:"meshtastic_ru_slot2", label:"Meshtastic RU slot2 · МСК/СПб/… (869.075)", freq_start:868_950_000, freq_stop:869_200_000},
+    {id:"meshtastic_nsk", label:"Meshtastic Новосибирск slot1 (868.825)", freq_start:868_700_000, freq_stop:868_950_000},
+    {id:"meshtastic_eu868", label:"Meshtastic EU868 (869.40–869.65)", freq_start:869_400_000, freq_stop:869_650_000},
+    {id:"meshtastic_eu433", label:"Meshtastic EU433 (433.05–434.0)", freq_start:433_050_000, freq_stop:434_000_000},
+    {id:"meshtastic_us915", label:"Meshtastic US (902–928)", freq_start:902_000_000, freq_stop:928_000_000},
+    {id:"meshtastic_anz", label:"Meshtastic ANZ (915–928)", freq_start:915_000_000, freq_stop:928_000_000},
+    {id:"meshtastic_nz865", label:"Meshtastic NZ_865 (864–868)", freq_start:864_000_000, freq_stop:868_000_000},
+    {id:"meshtastic_ua868", label:"Meshtastic UA_868 (868.0–868.6)", freq_start:868_000_000, freq_stop:868_600_000},
+    {id:"meshtastic_jp", label:"Meshtastic JP (920.5–923.5)", freq_start:920_500_000, freq_stop:923_500_000},
+    {id:"meshtastic_kr", label:"Meshtastic KR (920–923)", freq_start:920_000_000, freq_stop:923_000_000},
+    {id:"meshtastic_tw", label:"Meshtastic TW/SG (920–925)", freq_start:920_000_000, freq_stop:925_000_000},
+    {id:"meshtastic_in", label:"Meshtastic IN (865–867)", freq_start:865_000_000, freq_stop:867_000_000},
+    {id:"meshtastic_cn", label:"Meshtastic CN (470–510)", freq_start:470_000_000, freq_stop:510_000_000},
+  ]},
+  {group:"MeshCore", items: [
+    {id:"meshcore_mow", label:"MeshCore Москва / Иваново (868.731)", freq_start:868_600_000, freq_stop:868_850_000},
+    {id:"meshcore_spb", label:"MeshCore СПб (868.856)", freq_start:868_750_000, freq_stop:869_000_000},
+    {id:"meshcore_eu_uk", label:"MeshCore EU/UK Narrow (869.618)", freq_start:869_500_000, freq_stop:869_750_000},
+    {id:"meshcore_cz", label:"MeshCore Czechia (869.432)", freq_start:869_300_000, freq_stop:869_550_000},
+    {id:"meshcore_us", label:"MeshCore US/Canada (910.525)", freq_start:910_400_000, freq_stop:910_650_000},
+    {id:"meshcore_au", label:"MeshCore Australia (915.800)", freq_start:915_650_000, freq_stop:915_950_000},
+    {id:"meshcore_au_n", label:"MeshCore Australia Narrow (916.575)", freq_start:916_450_000, freq_stop:916_700_000},
+    {id:"meshcore_nz", label:"MeshCore NZ Narrow (917.375)", freq_start:917_250_000, freq_stop:917_500_000},
+    {id:"meshcore_br", label:"MeshCore Brazil (923.125)", freq_start:923_000_000, freq_stop:923_250_000},
+    {id:"meshcore_vn", label:"MeshCore Vietnam Narrow (920.250)", freq_start:920_100_000, freq_stop:920_400_000},
+    {id:"meshcore_eu433", label:"MeshCore EU 433 (433.650)", freq_start:433_500_000, freq_stop:433_800_000},
+  ]},
+  {group:"Reticulum", items: [
+    {id:"reticulum_mow", label:"Reticulum Москва (868.825)", freq_start:868_700_000, freq_stop:868_950_000},
+    {id:"reticulum_eu", label:"Reticulum EU typical (867.5–869.6)", freq_start:867_500_000, freq_stop:869_600_000},
+    {id:"reticulum_us", label:"RNode US default (914.875)", freq_start:914_700_000, freq_stop:915_050_000},
+    {id:"reticulum_ua", label:"Reticulum UA typical (868.300)", freq_start:868_150_000, freq_stop:868_450_000},
+    {id:"reticulum_anz", label:"Reticulum AU/NZ local (915–927)", freq_start:915_000_000, freq_stop:927_000_000},
+    {id:"reticulum_433", label:"Reticulum 433 typical (433.575)", freq_start:433_450_000, freq_stop:433_700_000},
+  ]},
+];
+
+const SDR_PRESETS = Object.fromEntries(
+  SDR_WF_CATALOG.flatMap(g => g.items)
+    .filter(it => it.freq_start != null)
+    .map(it => [it.id, {freq_start: it.freq_start, freq_stop: it.freq_stop, label: it.label}])
+);
+
+// Packet Detect: published community centers. SF is always all (7–12) on the
+// backend; bw_code is what matters for lorarx. Optional scan_* for Scan mode.
+const SDR_PKT_SF_ALL = 11;
+const SDR_PKT_CATALOG = [
+  {group:"Meshtastic", items: [
+    {id:"meshtastic_ru_slot2", label:"Meshtastic RU slot2 · МСК/СПб/… (869.075 / BW250)", freq:869_075_000, bw_code:8, scan_start:868_700_000, scan_stop:869_200_000, scan_step:50_000},
+    {id:"meshtastic_nsk", label:"Meshtastic Новосибирск slot1 (868.825 / BW250)", freq:868_825_000, bw_code:8, scan_start:868_700_000, scan_stop:869_200_000, scan_step:50_000},
+    {id:"meshtastic_ru", label:"Meshtastic RU scan (868.70–869.20 / BW250)", freq:869_075_000, bw_code:8, scan_start:868_700_000, scan_stop:869_200_000, scan_step:50_000},
+    {id:"meshtastic_eu868", label:"Meshtastic EU868 (869.525 / BW250)", freq:869_525_000, bw_code:8, scan_start:869_400_000, scan_stop:869_650_000, scan_step:50_000},
+    {id:"meshtastic_eu433", label:"Meshtastic EU433 (433.875 / BW250)", freq:433_875_000, bw_code:8, scan_start:433_050_000, scan_stop:434_000_000, scan_step:50_000},
+    {id:"meshtastic_us915", label:"Meshtastic US (906.875 / BW250)", freq:906_875_000, bw_code:8, scan_start:902_000_000, scan_stop:928_000_000, scan_step:500_000},
+    {id:"meshtastic_anz", label:"Meshtastic ANZ (919.875 / BW250)", freq:919_875_000, bw_code:8, scan_start:915_000_000, scan_stop:928_000_000, scan_step:500_000},
+    {id:"meshtastic_nz865", label:"Meshtastic NZ_865 (865.250 / BW250)", freq:865_250_000, bw_code:8, scan_start:864_000_000, scan_stop:868_000_000, scan_step:50_000},
+    {id:"meshtastic_ua868", label:"Meshtastic UA_868 (868.300 / BW250)", freq:868_300_000, bw_code:8, scan_start:868_000_000, scan_stop:868_600_000, scan_step:50_000},
+    {id:"meshtastic_jp", label:"Meshtastic JP (920.800 / BW250)", freq:920_800_000, bw_code:8, scan_start:920_500_000, scan_stop:923_500_000, scan_step:100_000},
+    {id:"meshtastic_kr", label:"Meshtastic KR (921.900 / BW250)", freq:921_900_000, bw_code:8, scan_start:920_000_000, scan_stop:923_000_000, scan_step:100_000},
+    {id:"meshtastic_tw", label:"Meshtastic TW/SG (923.200 / BW250)", freq:923_200_000, bw_code:8, scan_start:920_000_000, scan_stop:925_000_000, scan_step:100_000},
+    {id:"meshtastic_in", label:"Meshtastic IN (865.0625 / BW250)", freq:865_062_500, bw_code:8, scan_start:865_000_000, scan_stop:867_000_000, scan_step:50_000},
+  ]},
+  {group:"MeshCore", items: [
+    {id:"meshcore_mow", label:"MeshCore Москва / Иваново (868.731 / BW62.5)", freq:868_731_000, bw_code:6, scan_start:868_600_000, scan_stop:868_900_000, scan_step:25_000},
+    {id:"meshcore_spb", label:"MeshCore СПб (868.856 / BW62.5)", freq:868_856_000, bw_code:6, scan_start:868_700_000, scan_stop:869_000_000, scan_step:25_000},
+    {id:"meshcore_eu_uk", label:"MeshCore EU/UK Narrow (869.618 / BW62.5)", freq:869_618_000, bw_code:6, scan_start:869_400_000, scan_stop:869_650_000, scan_step:25_000},
+    {id:"meshcore_eu868", label:"MeshCore EU/UK Narrow (869.618 / BW62.5)", freq:869_618_000, bw_code:6, scan_start:869_400_000, scan_stop:869_650_000, scan_step:25_000},
+    {id:"meshcore_cz", label:"MeshCore Czechia (869.432 / BW62.5)", freq:869_432_000, bw_code:6},
+    {id:"meshcore_us915", label:"MeshCore US/Canada (910.525 / BW62.5)", freq:910_525_000, bw_code:6},
+    {id:"meshcore_us", label:"MeshCore US/Canada (910.525 / BW62.5)", freq:910_525_000, bw_code:6},
+    {id:"meshcore_au", label:"MeshCore Australia (915.800 / BW250)", freq:915_800_000, bw_code:8},
+    {id:"meshcore_au_n", label:"MeshCore Australia Narrow (916.575 / BW62.5)", freq:916_575_000, bw_code:6},
+    {id:"meshcore_nz", label:"MeshCore NZ Narrow (917.375 / BW62.5)", freq:917_375_000, bw_code:6},
+    {id:"meshcore_br", label:"MeshCore Brazil (923.125 / BW62.5)", freq:923_125_000, bw_code:6},
+    {id:"meshcore_vn", label:"MeshCore Vietnam Narrow (920.250 / BW62.5)", freq:920_250_000, bw_code:6},
+    {id:"meshcore_eu433", label:"MeshCore EU 433 Narrow (433.650 / BW62.5)", freq:433_650_000, bw_code:6},
+  ]},
+  {group:"Reticulum", items: [
+    {id:"reticulum_mow", label:"Reticulum Москва (868.825 / BW125)", freq:868_825_000, bw_code:7},
+    {id:"reticulum_eu_868", label:"Reticulum EU typical (868.000 / BW125)", freq:868_000_000, bw_code:7, scan_start:867_500_000, scan_stop:869_600_000, scan_step:25_000},
+    {id:"reticulum_eu_869525", label:"Reticulum EU alt (869.525 / BW125)", freq:869_525_000, bw_code:7},
+    {id:"reticulum_us", label:"RNode US default (914.875 / BW125)", freq:914_875_000, bw_code:7},
+    {id:"reticulum_ua", label:"Reticulum UA typical (868.300 / BW125)", freq:868_300_000, bw_code:7},
+    {id:"reticulum_433", label:"Reticulum 433 typical (433.575 / BW125)", freq:433_575_000, bw_code:7},
+  ]},
+];
+
+const _SDR_PROTOCOL_PRESETS_JS = Object.fromEntries(
+  SDR_PKT_CATALOG.flatMap(g => g.items).map(it => [it.id, {
+    sf: SDR_PKT_SF_ALL, bw_code: it.bw_code, freq: it.freq, label: it.label,
+    scan_start: it.scan_start, scan_stop: it.scan_stop, scan_step: it.scan_step,
+  }])
+);
+const SDR_SCAN_RANGES = Object.fromEntries(
+  SDR_PKT_CATALOG.flatMap(g => g.items)
+    .filter(it => it.scan_start != null)
+    .map(it => [it.id, {freq_start: it.scan_start, freq_stop: it.scan_stop, step: it.scan_step || 25_000}])
+);
+
+function sdrRebuildWorldPresetSelects(){
+  const wf = document.getElementById("sdr-preset");
+  if(wf){
+    const prev = wf.value;
+    const custom = [...wf.options].find(o => o.value === "__custom__");
+    const saved = [...wf.querySelectorAll('option[data-saved="1"]')];
+    wf.innerHTML = "";
+    const addOpt = (parent, it) => {
+      const o = document.createElement("option");
+      o.value = it.id;
+      o.textContent = it.labelKey ? (t(it.labelKey) || it.label) : it.label;
+      if(it.labelKey) o.setAttribute("data-i18n", it.labelKey);
+      parent.appendChild(o);
+    };
+    SDR_WF_CATALOG.forEach(g => {
+      const parent = g.group ? document.createElement("optgroup") : wf;
+      if(g.group){ parent.label = g.group; wf.appendChild(parent); }
+      g.items.forEach(it => addOpt(parent, it));
+    });
+    const cust = document.createElement("option");
+    cust.value = "__custom__";
+    cust.setAttribute("data-i18n", "opt_sdr_preset_custom");
+    cust.textContent = t("opt_sdr_preset_custom") || "Custom range…";
+    wf.appendChild(cust);
+    saved.forEach(o => wf.insertBefore(o, cust));
+    if([...wf.options].some(o => o.value === prev)) wf.value = prev;
+    else wf.value = "auto";
+  }
+  const pkt = document.getElementById("sdr-pkt-preset");
+  if(pkt){
+    const prev = pkt.value;
+    pkt.innerHTML = "";
+    SDR_PKT_CATALOG.forEach(g => {
+      // Hide alias duplicates that share the same label as a preferred id
+      const seen = new Set();
+      const og = document.createElement("optgroup");
+      og.label = g.group;
+      g.items.forEach(it => {
+        if(it.id === "meshcore_eu868" || it.id === "meshcore_us") return; // aliases kept in catalog for start API
+        if(seen.has(it.label)) return;
+        seen.add(it.label);
+        const o = document.createElement("option");
+        o.value = it.id;
+        o.textContent = it.label;
+        og.appendChild(o);
+      });
+      pkt.appendChild(og);
+    });
+    const cust = document.createElement("option");
+    cust.value = "__custom__";
+    cust.setAttribute("data-i18n", "opt_sdr_pkt_custom");
+    cust.textContent = t("opt_sdr_pkt_custom") || "Custom…";
+    pkt.appendChild(cust);
+    if([...pkt.options].some(o => o.value === prev)) pkt.value = prev;
+    else pkt.value = "meshtastic_ru_slot2";
+  }
+}
+
 let _sdrSavedPresets = [];
 
 async function sdrLoadPresets(){
+  sdrRebuildWorldPresetSelects();
   try{ _sdrSavedPresets = await fetch(API+"/api/sdr/presets").then(r=>r.json()); }
   catch(e){ _sdrSavedPresets = []; }
   const sel = document.getElementById("sdr-preset");
   if(!sel) return;
   const prevValue = sel.value;
   [...sel.querySelectorAll('option[data-saved="1"]')].forEach(o=>o.remove());
+  const customOpt = [...sel.options].find(o=>o.value==="__custom__");
   _sdrSavedPresets.forEach(p=>{
     const opt = document.createElement("option");
     opt.value = "saved:"+p.name;
     opt.textContent = `${p.name} (${(p.freq_start/1e6).toFixed(3)}–${(p.freq_stop/1e6).toFixed(3)})`;
     opt.dataset.saved = "1";
-    sel.appendChild(opt);
+    if(customOpt) sel.insertBefore(opt, customOpt);
+    else sel.appendChild(opt);
   });
   if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
 }
@@ -4211,7 +4483,7 @@ function _sdrCurrentRange(){
     return p ? {freq_start: p.freq_start, freq_stop: p.freq_stop, label: p.name} : null;
   }
   const preset = SDR_PRESETS[v];
-  return preset ? {freq_start: preset.freq_start, freq_stop: preset.freq_stop, label: t(preset.labelKey)} : null;
+  return preset ? {freq_start: preset.freq_start, freq_stop: preset.freq_stop, label: preset.label} : null;
 }
 
 async function sdrSavePreset(){
@@ -4317,27 +4589,10 @@ async function sdrWaterfallPoll(){
 const SDR_BW_LABELS = {0:"7.8k",1:"10.4k",2:"15.6k",3:"20.8k",4:"31.25k",5:"41.7k",6:"62.5k",7:"125k",8:"250k",9:"500k"};
 function _sdrBwLabel(code){ return SDR_BW_LABELS[code] ?? code; }
 
-// Scan ranges for the built-in protocol presets: since Meshtastic's actual
-// channel frequency depends on channel name/PSK (not always the well-known
-// default), Scan cycles across the whole regional allocation instead of
-// needing the exact one up front.
-const SDR_SCAN_RANGES = {
-  meshtastic_eu868: {freq_start: 869_400_000, freq_stop: 869_650_000, step: 50_000},
-  meshtastic_us915: {freq_start: 902_000_000, freq_stop: 928_000_000, step: 500_000},
-  // MeshCore has no agreed default frequency at all in EU/UK (unlike
-  // Meshtastic's hashed slot) — Scan across the whole allocation is the
-  // normal way to find it, not an edge case.
-  meshcore_eu868: {freq_start: 869_400_000, freq_stop: 869_650_000, step: 25_000},
-};
-
 function sdrPktPresetChange(){
   const v = document.getElementById("sdr-pkt-preset")?.value;
   const customEl = document.getElementById("sdr-pkt-custom");
   if(customEl) customEl.style.display = v === "__custom__" ? "inline-flex" : "none";
-  // A preset with a single known frequency (e.g. MeshCore US/Canada) has no
-  // scan range at all — leaving Scan checked from a previous preset (e.g.
-  // MeshCore EU/UK, which needs it) silently produced an empty profile and
-  // a confusing "invalid" error. Uncheck it automatically for those.
   const scanEl = document.getElementById("sdr-pkt-scan");
   if(scanEl && scanEl.checked && v !== "__custom__" && !SDR_SCAN_RANGES[v]){
     scanEl.checked = false;
@@ -4356,13 +4611,6 @@ function _sdrPktSyncScanUI(){
   if(toWrap) toWrap.style.display = (isCustom && isScan) ? "inline-flex" : "none";
 }
 
-// The backend always listens on every spreading factor (SF7-12) at once —
-// lorarx supports stacking multiple simultaneous demodulators on one
-// capture, so there's no real cost to just covering all of them instead of
-// making the user guess/try one at a time. `sf` here is a fixed placeholder
-// kept only because the backend's request shape still has the field.
-const SDR_PKT_SF_ALL = 11;
-
 function _sdrPktCurrentProfile(){
   const v = document.getElementById("sdr-pkt-preset")?.value;
   const scanning = !!document.getElementById("sdr-pkt-scan")?.checked;
@@ -4379,29 +4627,24 @@ function _sdrPktCurrentProfile(){
     return {freq: Math.round(freq*1e6), sf: SDR_PKT_SF_ALL, bw_code, label: `${freq} MHz`};
   }
   if(!v) return null;
+  const preset = _SDR_PROTOCOL_PRESETS_JS[v];
+  if(!preset) return null;
   if(scanning){
     const range = SDR_SCAN_RANGES[v];
     if(!range) return null;
-    const preset = _SDR_PROTOCOL_PRESETS_JS[v];
     return {scan:true, freq_start: range.freq_start, freq_stop: range.freq_stop, step: range.step,
-            sf: preset.sf, bw_code: preset.bw_code, label: preset.label + " (scan)"};
+            sf: SDR_PKT_SF_ALL, bw_code: preset.bw_code, label: preset.label + " (scan)"};
   }
-  return {preset: v};
+  // Explicit freq/bw so the backend does not need every world key hard-coded.
+  return {freq: preset.freq, sf: SDR_PKT_SF_ALL, bw_code: preset.bw_code, label: preset.label};
 }
-// Mirrors backend _SDR_PROTOCOL_PRESETS — only bw_code/label needed here
-// (scan mode reuses the BW, just cycles the frequency; SF is always "all").
-const _SDR_PROTOCOL_PRESETS_JS = {
-  meshtastic_eu868: {sf: SDR_PKT_SF_ALL, bw_code: 8, label: "Meshtastic EU868 (BW250)"},
-  meshtastic_us915: {sf: SDR_PKT_SF_ALL, bw_code: 8, label: "Meshtastic US915 (BW250)"},
-  meshcore_us915: {sf: SDR_PKT_SF_ALL, bw_code: 6, label: "MeshCore US/Canada (BW62.5)"},
-  meshcore_eu868: {sf: SDR_PKT_SF_ALL, bw_code: 6, label: "MeshCore EU/UK (BW62.5)"},
-};
 
 async function sdrPktRefreshStatus(){
   try{
     const d = await fetch(API+"/api/sdr/packets").then(r=>r.json());
     const notInstalled = document.getElementById("sdr-pkt-not-installed");
     if(notInstalled) notInstalled.style.display = d.installed ? "none" : "block";
+    sdrPaintReceiverBadge(d);
     const btnStart = document.getElementById("sdr-btn-start");
     const btnStop = document.getElementById("sdr-btn-stop");
     if(btnStart) btnStart.style.display = d.running ? "none" : "inline-flex";
@@ -4418,6 +4661,7 @@ async function sdrPktRefreshStatus(){
         st.style.color = "var(--teal)";
       }
       else if(d.running){ st.textContent = `Listening — ${t("txt_sdr_all_sf")} BW${_sdrBwLabel(meta.bw_code)} @ ${meta.freq?(meta.freq/1e6).toFixed(3):"?"} MHz, gain ${meta.gain ?? "?"} dB`; st.style.color = "var(--teal)"; }
+      else if(d.receiver && !d.receiver.connected){ st.textContent = t("txt_sdr_rx_missing_hint"); st.style.color = "var(--am)"; }
       else { st.textContent = "Stopped"; st.style.color = "var(--mu)"; }
     }
     const countEl = document.getElementById("sdr-pkt-count");
@@ -4493,7 +4737,19 @@ async function sdrPktPoll(){
 function _sdrColorRGB(db, lo, hi){
   let t = (db-lo)/(hi-lo);
   t = Math.max(0, Math.min(1, t));
-  const stops = [[7,11,9],[16,60,45],[61,220,132],[230,190,60],[230,70,60]];
+  // Soft perceptual lift so quiet floor stays navy and mid peaks read cyan sooner
+  t = Math.pow(t, 0.85);
+  // Noema dash palette: deep navy → cyan → ice (one hue, brightness = signal)
+  const stops = [
+    [6, 10, 26],       // --bg
+    [8, 28, 52],       // deep wash
+    [18, 72, 112],     // teal depth
+    [0, 174, 255],     // --bl
+    [56, 189, 248],    // --gr
+    [92, 203, 250],    // --teal
+    [169, 220, 240],   // --am
+    [234, 249, 255],   // ice peak
+  ];
   const seg = t*(stops.length-1);
   const i = Math.min(stops.length-2, Math.floor(seg));
   const f = seg-i;
@@ -4588,12 +4844,20 @@ function sdrDraw(){
     wctx.drawImage(_sdrOffscreen, 0, 0, nBins, rows.length, 0, 0, rectW, rectH);
     visibleMarkers.forEach(m=>{
       const x = ((m.freq-last.freq_start)/(last.freq_stop-last.freq_start))*rectW;
-      wctx.strokeStyle = "rgba(111,180,224,.55)";
+      wctx.strokeStyle = "rgba(92,203,250,.45)";
       wctx.lineWidth = 1;
       wctx.setLineDash([3,3]);
       wctx.beginPath(); wctx.moveTo(x,0); wctx.lineTo(x,rectH); wctx.stroke();
       wctx.setLineDash([]);
     });
+    // soft top/bottom vignette so the canvas sits in the Noema frame
+    const vig = wctx.createLinearGradient(0,0,0,rectH);
+    vig.addColorStop(0, "rgba(6,10,26,.35)");
+    vig.addColorStop(0.08, "rgba(6,10,26,0)");
+    vig.addColorStop(0.92, "rgba(6,10,26,0)");
+    vig.addColorStop(1, "rgba(6,10,26,.4)");
+    wctx.fillStyle = vig;
+    wctx.fillRect(0,0,rectW,rectH);
     _sdrGeom = {rectW, rectH, rows, nBins, rowH};
   }
 
@@ -4606,31 +4870,65 @@ function sdrDraw(){
       const lctx = lCanvas.getContext("2d");
       lctx.setTransform(dpr,0,0,dpr,0,0);
       lctx.clearRect(0,0,rectW2,rectH2);
+      // subtle grid in Noema cyan
+      lctx.strokeStyle = "rgba(56,189,248,.10)";
+      lctx.lineWidth = 1;
+      for(let g=1; g<4; g++){
+        const gy = (rectH2/4)*g;
+        lctx.beginPath(); lctx.moveTo(0,gy); lctx.lineTo(rectW2,gy); lctx.stroke();
+      }
       const bins = last.bins;
       const relBins = last.bins_rel || last.bins;
-      lctx.beginPath();
+      const pts = [];
       let peakRel=-1e9, peakIdx=0;
       relBins.forEach((rv,i)=>{
         if(rv>peakRel){ peakRel=rv; peakIdx=i; }
         const x = bins.length>1 ? (i/(bins.length-1))*rectW2 : 0;
-        const t = Math.max(0,Math.min(1,(rv-lo)/(hi-lo)));
-        const y = rectH2 - t*rectH2;
-        if(i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y);
+        const tt = Math.max(0,Math.min(1,(rv-lo)/(hi-lo)));
+        const y = rectH2 - tt*rectH2;
+        pts.push([x,y]);
       });
-      lctx.strokeStyle = "#3daddc";
-      lctx.lineWidth = 1.3;
-      lctx.stroke();
+      if(pts.length){
+        const fill = lctx.createLinearGradient(0,0,0,rectH2);
+        fill.addColorStop(0, "rgba(56,189,248,.35)");
+        fill.addColorStop(0.55, "rgba(0,174,255,.12)");
+        fill.addColorStop(1, "rgba(6,10,26,0)");
+        lctx.beginPath();
+        lctx.moveTo(pts[0][0], rectH2);
+        pts.forEach(([x,y],i)=>{ if(i===0) lctx.lineTo(x,y); else lctx.lineTo(x,y); });
+        lctx.lineTo(pts[pts.length-1][0], rectH2);
+        lctx.closePath();
+        lctx.fillStyle = fill;
+        lctx.fill();
+        lctx.beginPath();
+        pts.forEach(([x,y],i)=>{ if(i===0) lctx.moveTo(x,y); else lctx.lineTo(x,y); });
+        lctx.strokeStyle = "rgba(92,203,250,.35)";
+        lctx.lineWidth = 3.2;
+        lctx.stroke();
+        lctx.strokeStyle = "#5ccbfa";
+        lctx.lineWidth = 1.4;
+        lctx.stroke();
+        // peak marker
+        const [px,py] = pts[peakIdx] || pts[0];
+        lctx.beginPath();
+        lctx.arc(px, py, 3.2, 0, Math.PI*2);
+        lctx.fillStyle = "#eaf9ff";
+        lctx.fill();
+        lctx.strokeStyle = "rgba(56,189,248,.9)";
+        lctx.lineWidth = 1;
+        lctx.stroke();
+      }
 
       visibleMarkers.forEach(m=>{
         const x = ((m.freq-last.freq_start)/(last.freq_stop-last.freq_start))*rectW2;
-        lctx.strokeStyle = "rgba(111,180,224,.7)";
+        lctx.strokeStyle = "rgba(92,203,250,.55)";
         lctx.lineWidth = 1;
         lctx.setLineDash([3,3]);
         lctx.beginPath(); lctx.moveTo(x,0); lctx.lineTo(x,rectH2); lctx.stroke();
         lctx.setLineDash([]);
-        lctx.fillStyle = "rgba(111,180,224,.9)";
+        lctx.fillStyle = "rgba(207,232,245,.92)";
         lctx.font = "9px monospace";
-        const label = t(m.labelKey);
+        const label = m.label || t(m.labelKey);
         const labelW = lctx.measureText(label).width;
         const overflowsRight = x + 4 + labelW > rectW2;
         lctx.textAlign = overflowsRight ? "right" : "left";
